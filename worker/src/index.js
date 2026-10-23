@@ -12,6 +12,7 @@ import { PLATFORMS, findPlatform } from '../../assets/platforms.js';
 const IGDB_API = 'https://api.igdb.com/v4';
 const IGDB_IMG = (size, id) => `https://images.igdb.com/igdb/image/upload/t_${size}/${id}.jpg`;
 const SEARCH_TTL = 24 * 3600;
+const CACHE_VERSION = 2; // à augmenter quand le classement change, pour vider le cache
 
 let igdbToken = null; // { value, expires } — gardé tant que l'instance du Worker vit
 
@@ -116,7 +117,7 @@ async function handleSearch(request, env, ctx, cors) {
   if (term.length < 2) return json({ results: [] }, 200, cors);
 
   const cache = caches.default;
-  const key = new Request(`https://cache.ludotheque/search?q=${encodeURIComponent(simplify(term))}`);
+  const key = new Request(`https://cache.ludotheque/v${CACHE_VERSION}/search?q=${encodeURIComponent(simplify(term))}`);
   const cached = await cache.match(key);
   if (cached) return json(await cached.json(), 200, cors);
 
