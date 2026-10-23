@@ -1,0 +1,1285 @@
+{
+  "games": [
+    {
+      "id": "hades-ii-pc",
+      "name": "Hades II",
+      "platform": "PC",
+      "addedAt": "2026-10-22T12:00:00.000Z",
+      "releaseDate": "2024-05-06",
+      "summary": "Melinoë, sorcière et princesse des Enfers, part affronter Chronos, le Titan du temps. La suite de Hades, avec la magie en plus.",
+      "genres": [
+        "Rogue-like",
+        "Action",
+        "Indé"
+      ],
+      "developers": [
+        "Supergiant Games"
+      ],
+      "igdbId": 228525,
+      "igdbUrl": "https://www.igdb.com/games/hades-ii",
+      "sgdbId": 5376530,
+      "steamAppId": 1145350,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/ac0169aeecebc5576074bb1dce51e382.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/ac0169aeecebc5576074bb1dce51e382.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/1145350/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/a4d849d331d0a9857b8b599475460dad.jpg",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/a4d849d331d0a9857b8b599475460dad.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/73aaacf9803fed2a04f802f3f85225e5.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/3d3e9b54c139bb780189f8c1b4f3a1e8.png",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "U8lJRcUeEMs",
+        "name": "Release Date Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/1145350/1067641820/dfba9c6a8b09f5bd9b323d6e699ac685065b93d3/1758924611/hls_264_master.m3u8?t=1758942439",
+        "name": "Hades II – v1.0 Launch Trailer"
+      },
+      "igdbRating": 91,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 22,
+        "normally": 30,
+        "completely": 70
+      },
+      "status": "playing",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 8.5,
+        "story": 8,
+        "visuals": 8.5,
+        "audio": 9.5,
+        "lifespan": 8.5,
+        "fun": 8.5
+      },
+      "review": "",
+      "playtimeMinutes": 2280,
+      "playtimeSource": "steam",
+      "lastPlayedAt": "2026-10-21",
+      "achievements": {
+        "unlocked": 23,
+        "total": 50,
+        "source": "steam",
+        "percent": 46
+      },
+      "startedAt": "2026-09-02",
+      "finishedAt": null
+    },
+    {
+      "id": "elden-ring-ps5",
+      "name": "Elden Ring",
+      "platform": "PlayStation 5",
+      "addedAt": "2026-10-22T05:00:00.000Z",
+      "releaseDate": "2022-01-21",
+      "summary": "Un immense monde ouvert imaginé avec George R. R. Martin, où chaque boss se mérite et chaque recoin cache un secret.",
+      "genres": [
+        "RPG",
+        "Action",
+        "Monde ouvert"
+      ],
+      "developers": [
+        "FromSoftware"
+      ],
+      "igdbId": 119133,
+      "igdbUrl": "https://www.igdb.com/games/elden-ring",
+      "sgdbId": 5277816,
+      "steamAppId": 1245620,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/afae4a727a138b562116c01fcaac77c7.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/afae4a727a138b562116c01fcaac77c7.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/1245620/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/d1fcdf15cb97c47d0ed1e1e10773ae36.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/d1fcdf15cb97c47d0ed1e1e10773ae36.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/69f5d5c1249e17f4ac1d5b716db47105.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/82874a428711560cda5afa7aab6627bc.ico",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "qqiC88f9ogU",
+        "name": "Launch Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/1245620/443029/eeb27ee27beb23ff82f1360dcecc78923314ef40/1750650443/hls_264_master.m3u8?t=1646770156",
+        "name": "ELDEN RING Launch Trailer - DE USK"
+      },
+      "igdbRating": 95,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 42,
+        "normally": 58,
+        "completely": 133
+      },
+      "status": "completed",
+      "favorite": true,
+      "ratings": {
+        "gameplay": 9.5,
+        "story": 8.5,
+        "visuals": 9.5,
+        "audio": 9.5,
+        "lifespan": 10,
+        "fun": 9.5
+      },
+      "review": "Le boss de Malenia m'a pris 3 soirées. Aucun regret.",
+      "playtimeMinutes": 9900,
+      "playtimeSource": "manual",
+      "lastPlayedAt": null,
+      "achievements": {
+        "percent": 100,
+        "source": "manual"
+      },
+      "startedAt": "2022-02-25",
+      "finishedAt": "2022-06-14"
+    },
+    {
+      "id": "baldur-s-gate-iii-ps5",
+      "name": "Baldur's Gate III",
+      "platform": "PlayStation 5",
+      "addedAt": "2026-10-21T22:00:00.000Z",
+      "releaseDate": "2023-08-03",
+      "summary": "Un RPG au tour par tour tiré de Donjons & Dragons, où presque chaque choix change la suite de l'aventure, en solo ou en coop.",
+      "genres": [
+        "RPG",
+        "Tactique"
+      ],
+      "developers": [
+        "Larian Studios"
+      ],
+      "igdbId": 119171,
+      "igdbUrl": "https://www.igdb.com/games/baldurs-gate-iii",
+      "sgdbId": 5138060,
+      "steamAppId": 1086940,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/b122b82883a834cbcec5c2d2f5c0585c.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/b122b82883a834cbcec5c2d2f5c0585c.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/1086940/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/a68d46e355456aa6bb0940317bfee570.jpg",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/a68d46e355456aa6bb0940317bfee570.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/71d9945703c17fafe19f7dd1c706d448.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/ab968680ad9fa9909541f1225dcf0711.ico",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "XuCfkgaaa08",
+        "name": "Launch Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/1086940/593544/008e33be9c000c5fdb38e630f13b1d5917d4561d/1750615002/hls_264_master.m3u8?t=1695393579",
+        "name": "Baldur's Gate 3 - Launch Trailer"
+      },
+      "igdbRating": 95,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 60,
+        "normally": 75,
+        "completely": 140
+      },
+      "status": "finished",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 9,
+        "story": 10,
+        "visuals": 8.5,
+        "audio": 9,
+        "lifespan": 9,
+        "fun": 9
+      },
+      "review": "",
+      "playtimeMinutes": 7200,
+      "playtimeSource": "manual",
+      "lastPlayedAt": null,
+      "achievements": {
+        "percent": 62,
+        "source": "manual"
+      },
+      "startedAt": "2023-09-06",
+      "finishedAt": "2024-01-10"
+    },
+    {
+      "id": "hollow-knight-switch",
+      "name": "Hollow Knight",
+      "platform": "Nintendo Switch",
+      "addedAt": "2026-10-21T15:00:00.000Z",
+      "releaseDate": "2017-02-24",
+      "summary": "Un petit chevalier explore Hallownest, un royaume d'insectes en ruines, à travers des combats exigeants et une carte immense à dévoiler pas à pas.",
+      "genres": [
+        "Metroidvania",
+        "Plateforme",
+        "Indé"
+      ],
+      "developers": [
+        "Team Cherry"
+      ],
+      "igdbId": 14593,
+      "igdbUrl": "https://www.igdb.com/games/hollow-knight",
+      "sgdbId": 7545,
+      "steamAppId": 367520,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/d18c832e8c956b4ef8b92862e6bf470d.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/d18c832e8c956b4ef8b92862e6bf470d.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/367520/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/222c44c26a02c54e3a9fd0d895b12df4.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/222c44c26a02c54e3a9fd0d895b12df4.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/6d4e59d5963286dfe2e696258bb10d1c.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/602d1305678a8d5fdb372271e980da6a.ico",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "Y2amTl5lBYM",
+        "name": "Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/367520/89922/b71b6a50e9aa2334fddca8fa2197cb26a3640832/1750517691/hls_264_master.m3u8?t=1497589417",
+        "name": "Release Trailer"
+      },
+      "igdbRating": 92,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 26,
+        "normally": 41,
+        "completely": 63
+      },
+      "status": "finished",
+      "favorite": true,
+      "ratings": {
+        "gameplay": 8.5,
+        "story": 7.5,
+        "visuals": 8.5,
+        "audio": 9.5,
+        "lifespan": 8.5,
+        "fun": 8.5
+      },
+      "review": "",
+      "playtimeMinutes": 2520,
+      "playtimeSource": "manual",
+      "lastPlayedAt": null,
+      "achievements": null,
+      "startedAt": "2021-03-01",
+      "finishedAt": "2021-04-20"
+    },
+    {
+      "id": "outer-wilds-pc",
+      "name": "Outer Wilds",
+      "platform": "PC",
+      "addedAt": "2026-10-21T08:00:00.000Z",
+      "releaseDate": "2020-06-18",
+      "summary": "Un système solaire pris dans une boucle de 22 minutes. Tu explores, tu meurs, tu recommences, et tu en sais un peu plus à chaque fois.",
+      "genres": [
+        "Aventure",
+        "Exploration",
+        "Indé"
+      ],
+      "developers": [
+        "Mobius Digital"
+      ],
+      "igdbId": 11737,
+      "igdbUrl": "https://www.igdb.com/games/outer-wilds",
+      "sgdbId": 23535,
+      "steamAppId": 753640,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/eb14cccbec050d8e6b6d21116d5a3dd9.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/eb14cccbec050d8e6b6d21116d5a3dd9.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/753640/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/1166db2e6b57e62146edee2f05a5c885.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/1166db2e6b57e62146edee2f05a5c885.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/6937a522264a52ef9e2ac283812fd4db.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/0e080857e96278e6dba76ac029faf291.png",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "2EnIpUkQ__M",
+        "name": "Release Date Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/753640/273682/2f2fdd9086d95ee6dde3cd4dc7d70975d6c6bc81/1750579139/hls_264_master.m3u8?t=1585255228",
+        "name": "Outer Wilds | Accolades Trailer"
+      },
+      "igdbRating": 87,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 16,
+        "normally": 22,
+        "completely": 29
+      },
+      "status": "backlog",
+      "favorite": false,
+      "ratings": {},
+      "review": "",
+      "playtimeMinutes": null,
+      "playtimeSource": null,
+      "lastPlayedAt": null,
+      "achievements": null,
+      "startedAt": null,
+      "finishedAt": null
+    },
+    {
+      "id": "cyberpunk-2077-ps5",
+      "name": "Cyberpunk 2077",
+      "platform": "PlayStation 5",
+      "addedAt": "2026-10-21T01:00:00.000Z",
+      "releaseDate": "2020-09-16",
+      "summary": "Night City, mégalopole obsédée par le pouvoir et les implants. Tu incarnes V, mercenaire lancé sur la piste d'une puce qui promet l'immortalité.",
+      "genres": [
+        "RPG",
+        "Action",
+        "Monde ouvert"
+      ],
+      "developers": [
+        "CD Projekt Red"
+      ],
+      "igdbId": 1877,
+      "igdbUrl": "https://www.igdb.com/games/cyberpunk-2077",
+      "sgdbId": 5209422,
+      "steamAppId": 1091500,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/f39b781760a403dedaa05587e8889c1a.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/f39b781760a403dedaa05587e8889c1a.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/1091500/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/73338368669a521b1fff24d636c6bf7e.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/73338368669a521b1fff24d636c6bf7e.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/2b2e7393b05b5b52af65bf2ed7f4ad4f.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/b3e3e393c77e35a4a3f3cbd1e429b5dc.ico",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "UnA7tepsc7s",
+        "name": "Launch Trailer - V"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/1091500/332452/9a3e8e298bd351ae40ac3eca1bca90d57b4a42ca/1750616291/hls_264_master.m3u8?t=1697117322",
+        "name": "025_CP_Launch_Trailer_EN UK_PEGI 18 _16x9_1080__"
+      },
+      "igdbRating": 79,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 24,
+        "normally": 59,
+        "completely": 103
+      },
+      "status": "dropped",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 4.5,
+        "story": 5.5,
+        "visuals": 7.5,
+        "audio": 5.5,
+        "lifespan": 5.5,
+        "fun": 5.5
+      },
+      "review": "",
+      "playtimeMinutes": 720,
+      "playtimeSource": "manual",
+      "lastPlayedAt": null,
+      "achievements": null,
+      "startedAt": "2020-12-10",
+      "finishedAt": null
+    },
+    {
+      "id": "balatro-pc",
+      "name": "Balatro",
+      "platform": "PC",
+      "addedAt": "2026-10-20T18:00:00.000Z",
+      "releaseDate": "2023-07-14",
+      "summary": "Un rogue-like construit autour du poker : combine des jokers aux effets délirants pour faire exploser les scores.",
+      "genres": [
+        "Cartes & plateau",
+        "Rogue-like",
+        "Indé"
+      ],
+      "developers": [
+        "LocalThunk"
+      ],
+      "igdbId": 251833,
+      "igdbUrl": "https://www.igdb.com/games/balatro",
+      "sgdbId": 5403326,
+      "steamAppId": 2379780,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/d70b4d9fdf0af0a00814b91fa82b3d4c.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/d70b4d9fdf0af0a00814b91fa82b3d4c.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/2379780/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/9665b286a4a05bb2824586886b982bd6.jpg",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/9665b286a4a05bb2824586886b982bd6.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/fab4029f3293f283d3e94873e7ea7db2.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/62415c82dd6c47e714f473f9b0475e62.png",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "2n9pkiuSZLU",
+        "name": "Launch Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/2379780/581550014/e9a47276c1efe4165c2e25e35a06d417d78e1724/1758033766/hls_264_master.m3u8?t=1759138871",
+        "name": "Accolades Gameplay Video"
+      },
+      "igdbRating": 89,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 9,
+        "normally": 25,
+        "completely": 109
+      },
+      "status": "playing",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 8,
+        "story": 3,
+        "visuals": 7,
+        "audio": 8,
+        "lifespan": 8,
+        "fun": 10
+      },
+      "review": "",
+      "playtimeMinutes": 3300,
+      "playtimeSource": "steam",
+      "lastPlayedAt": "2026-10-19",
+      "achievements": {
+        "unlocked": 12,
+        "total": 34,
+        "source": "steam",
+        "percent": 35
+      },
+      "startedAt": "2024-03-01",
+      "finishedAt": null
+    },
+    {
+      "id": "celeste-switch",
+      "name": "Celeste",
+      "platform": "Nintendo Switch",
+      "addedAt": "2026-10-20T11:00:00.000Z",
+      "releaseDate": "2018-01-25",
+      "summary": "Madeline escalade le mont Celeste. Un jeu de plateforme précis et exigeant, qui parle aussi d'anxiété avec beaucoup de douceur.",
+      "genres": [
+        "Plateforme",
+        "Indé"
+      ],
+      "developers": [
+        "Maddy Makes Games"
+      ],
+      "igdbId": 26226,
+      "igdbUrl": "https://www.igdb.com/games/celeste",
+      "sgdbId": 13136,
+      "steamAppId": 504230,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/074aed57c243ae7020971ca7c9fe0f29.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/074aed57c243ae7020971ca7c9fe0f29.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/504230/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/c66e591693fd6e7b26fc5a60efb68817.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/c66e591693fd6e7b26fc5a60efb68817.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/2eace51d8f796d04991c831a07059758.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/f7e6c85504ce6e82442c770f7c8606f0.ico",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "FqBj2IGg6Uw",
+        "name": "Launch Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/504230/143846/608cb7d60c10278f3107baf57a528e483a7cbc7b/1750539057/hls_264_master.m3u8?t=1516898311",
+        "name": "Launch"
+      },
+      "igdbRating": 89,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 8,
+        "normally": 12,
+        "completely": 37
+      },
+      "status": "backlog",
+      "favorite": false,
+      "ratings": {},
+      "review": "",
+      "playtimeMinutes": null,
+      "playtimeSource": null,
+      "lastPlayedAt": null,
+      "achievements": null,
+      "startedAt": null,
+      "finishedAt": null
+    },
+    {
+      "id": "disco-elysium-pc",
+      "name": "Disco Elysium",
+      "platform": "PC",
+      "addedAt": "2026-10-20T04:00:00.000Z",
+      "releaseDate": "2019-10-15",
+      "summary": "Un inspecteur amnésique enquête sur un meurtre. Pas de combats : tout se joue dans les dialogues, avec les voix de ton propre esprit.",
+      "genres": [
+        "RPG",
+        "Enquête"
+      ],
+      "developers": [
+        "ZA/UM"
+      ],
+      "igdbId": 26472,
+      "igdbUrl": "https://www.igdb.com/games/disco-elysium",
+      "sgdbId": 18262,
+      "steamAppId": 632470,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/e17233dc1c4e3457d5a259c06c7eb502.jpg",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/e17233dc1c4e3457d5a259c06c7eb502.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/632470/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/7b16a52cf3727c22984590c4f4c36039.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/7b16a52cf3727c22984590c4f4c36039.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/e4c446f4b7669022a2bd89128a7dbc1f.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/22f3ffca23f77c2b56ebb4ff4aaef1bc.ico",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "SEJOJ4AUBic",
+        "name": "Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/632470/357391/40d4d0a212158209daf4efe0c8d98f90c1322e1b/1750564395/hls_264_master.m3u8?t=1617123094",
+        "name": "Disco Elysium - The Final Cut - Launch Trailer"
+      },
+      "igdbRating": 91,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 21,
+        "normally": 33,
+        "completely": 51
+      },
+      "status": "backlog",
+      "favorite": false,
+      "ratings": {},
+      "review": "",
+      "playtimeMinutes": null,
+      "playtimeSource": null,
+      "lastPlayedAt": null,
+      "achievements": null,
+      "startedAt": null,
+      "finishedAt": null
+    },
+    {
+      "id": "red-dead-redemption-ii-ps4",
+      "name": "Red Dead Redemption II",
+      "platform": "PlayStation 4",
+      "addedAt": "2026-10-19T21:00:00.000Z",
+      "releaseDate": "2018-10-26",
+      "summary": "1899, la fin du Far West. Arthur Morgan et la bande de Dutch van der Linde fuient la loi à travers une Amérique immense et vivante.",
+      "genres": [
+        "Action",
+        "Aventure",
+        "Monde ouvert"
+      ],
+      "developers": [
+        "Rockstar Games"
+      ],
+      "igdbId": 25076,
+      "igdbUrl": "https://www.igdb.com/games/red-dead-redemption-2",
+      "sgdbId": 5249031,
+      "steamAppId": 1174180,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/a5bff26f8f2adb1ec19661b4c4bc9f86.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/a5bff26f8f2adb1ec19661b4c4bc9f86.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/1174180/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/964e7520947a0d3ac39504daea604d83.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/964e7520947a0d3ac39504daea604d83.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/ff38348a5adb1889dd55c7ccba583c43.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/f6ad645a331d5e5e95938c1439ba385d.ico",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "HVRzx17WHVk",
+        "name": "Launch Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/1174180/254598/21d07c59fad9b1e8c55bbdc4f27ee62be2ebd7f6/1750634152/hls_264_master.m3u8?t=1574881520",
+        "name": "RDR2 Launch Trailer (DE)"
+      },
+      "igdbRating": 94,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 33,
+        "normally": 50,
+        "completely": 190
+      },
+      "status": "finished",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 9,
+        "story": 10,
+        "visuals": 10,
+        "audio": 9,
+        "lifespan": 8.5,
+        "fun": 9
+      },
+      "review": "",
+      "playtimeMinutes": 4200,
+      "playtimeSource": "manual",
+      "lastPlayedAt": null,
+      "achievements": {
+        "percent": 41,
+        "source": "manual"
+      },
+      "startedAt": "2018-11-01",
+      "finishedAt": "2019-01-05"
+    },
+    {
+      "id": "sekiro-shadows-die-twice-xbox-series",
+      "name": "Sekiro: Shadows Die Twice",
+      "platform": "Xbox Series X|S",
+      "addedAt": "2026-10-19T14:00:00.000Z",
+      "releaseDate": "2019-03-22",
+      "summary": "Dans le Japon de l'ère Sengoku, un shinobi manchot veut sauver son jeune seigneur. Des duels au sabre où la parade fait tout.",
+      "genres": [
+        "Action",
+        "Aventure"
+      ],
+      "developers": [
+        "FromSoftware"
+      ],
+      "igdbId": 76882,
+      "igdbUrl": "https://www.igdb.com/games/sekiro-shadows-die-twice",
+      "sgdbId": 26258,
+      "steamAppId": 814380,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/97771715c7dd7daf009feeb60c49915a.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/97771715c7dd7daf009feeb60c49915a.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/814380/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/2ee2b71a912ddc28699435eca8bd6486.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/2ee2b71a912ddc28699435eca8bd6486.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/fe45e3227f3805b1314414203c4e5206.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/e732b84af8e033529e17550b87b64c50.ico",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "uP8lFi_BibY",
+        "name": "Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/814380/212986/8ba6fe8bdcdc79872f903015b5d52e1121c1fdee/1750586380/hls_264_master.m3u8?t=1553549470",
+        "name": "Sekiro: Shadows Die Twice - Launch Trailer"
+      },
+      "igdbRating": 90,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 27,
+        "normally": 30,
+        "completely": 64
+      },
+      "status": "backlog",
+      "favorite": false,
+      "ratings": {},
+      "review": "",
+      "playtimeMinutes": null,
+      "playtimeSource": null,
+      "lastPlayedAt": null,
+      "achievements": null,
+      "startedAt": null,
+      "finishedAt": null
+    },
+    {
+      "id": "stardew-valley-switch",
+      "name": "Stardew Valley",
+      "platform": "Nintendo Switch",
+      "addedAt": "2026-10-19T07:00:00.000Z",
+      "releaseDate": "2016-02-26",
+      "summary": "Tu hérites de la ferme de ton grand-père : cultures, élevage, pêche, mines et vie de village, à ton rythme.",
+      "genres": [
+        "Simulation",
+        "RPG",
+        "Indé"
+      ],
+      "developers": [
+        "ConcernedApe"
+      ],
+      "igdbId": 17000,
+      "igdbUrl": "https://www.igdb.com/games/stardew-valley",
+      "sgdbId": 9569,
+      "steamAppId": 413150,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/cf30b40a1573a32248fcd0ba94e67652.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/cf30b40a1573a32248fcd0ba94e67652.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/413150/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/d44c78dcad9de0aed2f37902ea02cef2.png",
+        "heroThumb": null,
+        "logo": "https://cdn2.steamgriddb.com/logo/c9079272e7ee76e97719613b234763c2.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/a429ee6281b4bad77a94b44df89f4036.ico",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "ot7uXNQskhs",
+        "name": "Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/413150/336433/0058de516bf7c46986ba1e81172ffd3c2ca6cad7/1750527541/hls_264_master.m3u8?t=1754692862",
+        "name": "Stardew Valley Trailer 1080p"
+      },
+      "igdbRating": 88,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 52,
+        "normally": 95,
+        "completely": 171
+      },
+      "status": "playing",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 8,
+        "story": 6,
+        "visuals": 8,
+        "audio": 8,
+        "lifespan": 8,
+        "fun": 10
+      },
+      "review": "",
+      "playtimeMinutes": 5400,
+      "playtimeSource": "manual",
+      "lastPlayedAt": "2026-10-12",
+      "achievements": null,
+      "startedAt": "2025-12-24",
+      "finishedAt": null
+    },
+    {
+      "id": "the-legend-of-zelda-tears-of-the-kingdom-switch",
+      "name": "The Legend of Zelda: Tears of the Kingdom",
+      "platform": "Nintendo Switch",
+      "addedAt": "2026-10-19T00:00:00.000Z",
+      "releaseDate": "2023-05-12",
+      "summary": "The Legend of Zelda: Tears of the Kingdom est un jeu vidéo d'action-aventure développé par Nintendo EPD et édité par Nintendo. Vingtième jeu de la franchise The Legend of Zelda, il paraît d'abord sur Nintendo Switch le 12 mai 2023 puis le 5 juin 2025 sur Nintendo Switch 2.",
+      "genres": [
+        "Réflexion",
+        "Aventure"
+      ],
+      "developers": [
+        "Nintendo EPD Production Group No. 3"
+      ],
+      "igdbId": 119388,
+      "igdbUrl": "https://www.igdb.com/games/the-legend-of-zelda-tears-of-the-kingdom",
+      "sgdbId": 5303117,
+      "steamAppId": null,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/ae758fbcbd5bd841516c53b3c08ebc6f.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/ae758fbcbd5bd841516c53b3c08ebc6f.jpg",
+        "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co5vmg.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/7048d1540fa99464f489f1d11db688b1.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/7048d1540fa99464f489f1d11db688b1.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/19e524e7aa887f6311e8b6ae061bf5d7.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/aeb6c3640dead557f8f59634660ff0da.png",
+        "screenshots": [
+          "https://images.igdb.com/igdb/image/upload/t_1080p/scaoj8.jpg",
+          "https://images.igdb.com/igdb/image/upload/t_1080p/scaoj9.jpg",
+          "https://images.igdb.com/igdb/image/upload/t_1080p/scaoj7.jpg",
+          "https://images.igdb.com/igdb/image/upload/t_1080p/scaoj6.jpg",
+          "https://images.igdb.com/igdb/image/upload/t_1080p/sc6lnr.jpg"
+        ]
+      },
+      "summarySource": "steam",
+      "summaryUrl": "https://fr.wikipedia.org/wiki/The_Legend_of_Zelda%3A_Tears_of_the_Kingdom",
+      "trailer": {
+        "youtubeId": "3fr1Z07AV00",
+        "name": "Trailer"
+      },
+      "igdbRating": 94,
+      "timeToBeat": {
+        "hastily": 57,
+        "normally": 103,
+        "completely": 209
+      },
+      "status": "playing",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 9,
+        "story": 8,
+        "visuals": 9,
+        "audio": 9,
+        "lifespan": 9,
+        "fun": 9
+      },
+      "review": "",
+      "playtimeMinutes": 1800,
+      "playtimeSource": "manual",
+      "lastPlayedAt": "2026-10-20",
+      "achievements": null,
+      "startedAt": "2026-08-15",
+      "finishedAt": null
+    },
+    {
+      "id": "fifa-18-ps4",
+      "name": "FIFA 18",
+      "platform": "PlayStation 4",
+      "addedAt": "2026-10-18T17:00:00.000Z",
+      "releaseDate": "2017-09-29",
+      "summary": "FIFA 18 est un jeu vidéo de football développé par EA Canada et édité par EA Sports, sorti le 29 septembre 2017 sur PlayStation 3, PlayStation 4, Xbox 360, Xbox One, PC et Nintendo Switch. L'international portugais Cristiano Ronaldo figure sur la jaquette du jeu. L'ancien footballeur brésilien Ronaldo apparaît sur l'édition Icône du jeu. Cristiano Ronaldo est le joueur le mieux noté du jeu avec 94 de général devant Lionel Messi qui a 93 et Manuel Neuer, Luis Suárez et Neymar qui ont 92 . Les versions sur PS3 et Xbox 360, à l'instar des versions précédentes, diffèrent de leurs homologues sur PS4 et Xbox One et ne comprennent pas le mode The Journey.",
+      "summarySource": "steam",
+      "summaryUrl": "https://fr.wikipedia.org/wiki/FIFA_18",
+      "genres": [
+        "Sport"
+      ],
+      "developers": [
+        "EA Romania",
+        "EA Vancouver"
+      ],
+      "igdbId": 27081,
+      "igdbUrl": "https://www.igdb.com/games/fifa-18",
+      "sgdbId": 33780,
+      "steamAppId": null,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/49cf29ace37f49be10bfc6d26498d406.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/49cf29ace37f49be10bfc6d26498d406.jpg",
+        "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1uxd.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/96fa4d32d0cf6d317c065e61fc29b6ad.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/96fa4d32d0cf6d317c065e61fc29b6ad.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/0128f24f1f135d979fa84ce9dcd37f9f.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/bb62ffecf68202ef17726ed2b1f3fb4f.png",
+        "screenshots": [
+          "https://images.igdb.com/igdb/image/upload/t_1080p/nwpi8g3dbxazjftents8.jpg",
+          "https://images.igdb.com/igdb/image/upload/t_1080p/wceortcxft58cwvobtik.jpg",
+          "https://images.igdb.com/igdb/image/upload/t_1080p/znfeta90wlw14djxckpx.jpg",
+          "https://images.igdb.com/igdb/image/upload/t_1080p/xfaevz5ale6po2ke5xsz.jpg",
+          "https://images.igdb.com/igdb/image/upload/t_1080p/li43va0vnqjbsyaqjkhc.jpg",
+          "https://images.igdb.com/igdb/image/upload/t_1080p/cbt9ooc8irnm4jx49nfg.jpg"
+        ]
+      },
+      "trailer": {
+        "youtubeId": "3Ty4064UZ_c",
+        "name": "Trailer"
+      },
+      "igdbRating": 76,
+      "timeToBeat": null,
+      "status": "dropped",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 2,
+        "story": 2,
+        "visuals": 4,
+        "audio": 2,
+        "lifespan": 2,
+        "fun": 1
+      },
+      "review": "",
+      "playtimeMinutes": 90,
+      "playtimeSource": "manual",
+      "lastPlayedAt": null,
+      "achievements": null,
+      "startedAt": "2017-10-02",
+      "finishedAt": null
+    },
+    {
+      "id": "portal-2-pc",
+      "name": "Portal 2",
+      "platform": "PC",
+      "addedAt": "2026-10-18T10:00:00.000Z",
+      "releaseDate": "2011-04-18",
+      "summary": "Armé du pistolet à portails, tu traverses les salles de test d'Aperture Science sous l'œil sarcastique de GLaDOS. Avec un mode coop culte.",
+      "genres": [
+        "Réflexion",
+        "Plateforme"
+      ],
+      "developers": [
+        "Valve"
+      ],
+      "igdbId": 72,
+      "igdbUrl": "https://www.igdb.com/games/portal-2",
+      "sgdbId": 17830,
+      "steamAppId": 620,
+      "images": {
+        "grid": "https://cdn2.steamgriddb.com/grid/7668636048c4fbe8df8ffb388679e933.png",
+        "gridThumb": "https://cdn2.steamgriddb.com/thumb/7668636048c4fbe8df8ffb388679e933.jpg",
+        "cover": "https://cdn.akamai.steamstatic.com/steam/apps/620/library_600x900.jpg",
+        "hero": "https://cdn2.steamgriddb.com/hero/94c7bb58efc3b337800875b5d382a072.png",
+        "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/94c7bb58efc3b337800875b5d382a072.jpg",
+        "logo": "https://cdn2.steamgriddb.com/logo/4d974dad853e25462f34e31e39a0e626.png",
+        "icon": "https://cdn2.steamgriddb.com/icon/8d37be25170778cefa6d23801922dc97.ico",
+        "screenshots": []
+      },
+      "trailer": {
+        "youtubeId": "mC_u9ZwlIUc",
+        "name": "Trailer"
+      },
+      "steamTrailer": {
+        "hls": "https://video.akamai.steamstatic.com/store_trailers/620/5015/c3d24a03d62be83014d25e01999174f2d010e430/1750108756/hls_264_master.m3u8?t=1682715776",
+        "name": "Portal 2 - Launch TV Ad"
+      },
+      "igdbRating": 92,
+      "summarySource": "steam",
+      "timeToBeat": {
+        "hastily": 8,
+        "normally": 9,
+        "completely": 21
+      },
+      "status": "completed",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 9,
+        "story": 9,
+        "visuals": 8,
+        "audio": 9,
+        "lifespan": 9,
+        "fun": 10
+      },
+      "review": "",
+      "playtimeMinutes": 840,
+      "playtimeSource": "steam",
+      "lastPlayedAt": null,
+      "achievements": {
+        "unlocked": 51,
+        "total": 51,
+        "source": "steam",
+        "percent": 100
+      },
+      "startedAt": "2011-05-01",
+      "finishedAt": "2011-05-12"
+    },
+    {
+      "id": "super-mario-bros-3-nes",
+      "name": "Super Mario Bros. 3",
+      "platform": "NES",
+      "addedAt": "2026-10-20T12:00:00.000Z",
+      "releaseDate": "1988-10-23",
+      "summary": null,
+      "summarySource": null,
+      "genres": [
+        "Plateforme"
+      ],
+      "developers": [
+        "Nintendo"
+      ],
+      "igdbRating": 92,
+      "igdbId": 1068,
+      "igdbUrl": null,
+      "sgdbId": null,
+      "steamAppId": null,
+      "timeToBeat": {
+        "hastily": 4,
+        "normally": 7,
+        "completely": 12
+      },
+      "trailer": null,
+      "steamTrailer": null,
+      "images": {
+        "grid": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co7ozx.jpg",
+        "gridThumb": "https://images.igdb.com/igdb/image/upload/t_cover_big/co7ozx.jpg",
+        "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co7ozx.jpg",
+        "hero": null,
+        "heroThumb": null,
+        "logo": null,
+        "screenshots": []
+      },
+      "status": "finished",
+      "favorite": true,
+      "ratings": {
+        "gameplay": 9,
+        "story": 6,
+        "visuals": 9,
+        "audio": 9,
+        "lifespan": 9,
+        "fun": 9
+      },
+      "review": "",
+      "playtimeMinutes": 480,
+      "playtimeSource": "manual",
+      "achievements": null,
+      "startedAt": null,
+      "finishedAt": null
+    },
+    {
+      "id": "street-fighter-ii-arcade",
+      "name": "Street Fighter II",
+      "platform": "Arcade",
+      "addedAt": "2026-10-20T01:00:00.000Z",
+      "releaseDate": "1991-02-01",
+      "summary": null,
+      "summarySource": null,
+      "genres": [
+        "Combat",
+        "Arcade"
+      ],
+      "developers": [
+        "Capcom"
+      ],
+      "igdbRating": 85,
+      "igdbId": 3186,
+      "igdbUrl": null,
+      "sgdbId": null,
+      "steamAppId": null,
+      "timeToBeat": null,
+      "trailer": null,
+      "steamTrailer": null,
+      "images": {
+        "grid": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co55et.jpg",
+        "gridThumb": "https://images.igdb.com/igdb/image/upload/t_cover_big/co55et.jpg",
+        "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co55et.jpg",
+        "hero": null,
+        "heroThumb": null,
+        "logo": null,
+        "screenshots": []
+      },
+      "status": "playing",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 7.5,
+        "story": 3.5,
+        "visuals": 7.5,
+        "audio": 7.5,
+        "lifespan": 7.5,
+        "fun": 9
+      },
+      "review": "",
+      "playtimeMinutes": 300,
+      "playtimeSource": "manual",
+      "achievements": null,
+      "startedAt": null,
+      "finishedAt": null
+    },
+    {
+      "id": "sonic-the-hedgehog-mega-drive",
+      "name": "Sonic the Hedgehog",
+      "platform": "Mega Drive",
+      "addedAt": "2026-10-19T14:00:00.000Z",
+      "releaseDate": "1991-06-23",
+      "summary": null,
+      "summarySource": null,
+      "genres": [
+        "Plateforme"
+      ],
+      "developers": [
+        "Sonic Team"
+      ],
+      "igdbRating": 80,
+      "igdbId": 3192,
+      "igdbUrl": null,
+      "sgdbId": null,
+      "steamAppId": null,
+      "timeToBeat": {
+        "hastily": 1.5,
+        "normally": 2.5,
+        "completely": 5
+      },
+      "trailer": null,
+      "steamTrailer": null,
+      "images": {
+        "grid": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/coanlj.jpg",
+        "gridThumb": "https://images.igdb.com/igdb/image/upload/t_cover_big/coanlj.jpg",
+        "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/coanlj.jpg",
+        "hero": null,
+        "heroThumb": null,
+        "logo": null,
+        "screenshots": []
+      },
+      "status": "finished",
+      "favorite": false,
+      "ratings": {
+        "gameplay": 7,
+        "story": 4,
+        "visuals": 7,
+        "audio": 9,
+        "lifespan": 7,
+        "fun": 7
+      },
+      "review": "",
+      "playtimeMinutes": 180,
+      "playtimeSource": "manual",
+      "achievements": null,
+      "startedAt": null,
+      "finishedAt": null
+    },
+    {
+      "id": "metal-slug-neo-geo",
+      "name": "Metal Slug",
+      "platform": "Neo Geo",
+      "addedAt": "2026-10-19T03:00:00.000Z",
+      "releaseDate": "1996-04-19",
+      "summary": null,
+      "summarySource": null,
+      "genres": [
+        "Tir",
+        "Plateforme",
+        "Arcade"
+      ],
+      "developers": [
+        "Nazca"
+      ],
+      "igdbRating": 83,
+      "igdbId": 1404,
+      "igdbUrl": null,
+      "sgdbId": null,
+      "steamAppId": null,
+      "timeToBeat": {
+        "hastily": 1,
+        "normally": 1.5,
+        "completely": 3
+      },
+      "trailer": null,
+      "steamTrailer": null,
+      "images": {
+        "grid": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co20gf.jpg",
+        "gridThumb": "https://images.igdb.com/igdb/image/upload/t_cover_big/co20gf.jpg",
+        "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co20gf.jpg",
+        "hero": null,
+        "heroThumb": null,
+        "logo": null,
+        "screenshots": []
+      },
+      "status": "backlog",
+      "favorite": false,
+      "ratings": {},
+      "review": "",
+      "playtimeMinutes": null,
+      "playtimeSource": null,
+      "achievements": null,
+      "startedAt": null,
+      "finishedAt": null
+    },
+    {
+      "id": "final-fantasy-vii-ps1",
+      "name": "Final Fantasy VII",
+      "platform": "PlayStation",
+      "addedAt": "2026-10-18T16:00:00.000Z",
+      "releaseDate": "1997-01-31",
+      "summary": null,
+      "summarySource": null,
+      "genres": [
+        "RPG",
+        "Aventure"
+      ],
+      "developers": [
+        "Square"
+      ],
+      "igdbRating": 89,
+      "igdbId": 427,
+      "igdbUrl": null,
+      "sgdbId": null,
+      "steamAppId": null,
+      "timeToBeat": {
+        "hastily": 32,
+        "normally": 40,
+        "completely": 80
+      },
+      "trailer": null,
+      "steamTrailer": null,
+      "images": {
+        "grid": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co2kx2.jpg",
+        "gridThumb": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2kx2.jpg",
+        "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co2kx2.jpg",
+        "hero": null,
+        "heroThumb": null,
+        "logo": null,
+        "screenshots": []
+      },
+      "status": "finished",
+      "favorite": true,
+      "ratings": {
+        "gameplay": 9.5,
+        "story": 10,
+        "visuals": 7.5,
+        "audio": 9.5,
+        "lifespan": 9.5,
+        "fun": 9.5
+      },
+      "review": "",
+      "playtimeMinutes": 2880,
+      "playtimeSource": "manual",
+      "achievements": null,
+      "startedAt": null,
+      "finishedAt": "2003-08-20"
+    },
+    {
+      "id": "super-metroid-snes",
+      "name": "Super Metroid",
+      "platform": "Super Nintendo",
+      "addedAt": "2026-10-18T05:00:00.000Z",
+      "releaseDate": "1994-03-19",
+      "summary": null,
+      "summarySource": null,
+      "genres": [
+        "Metroidvania",
+        "Plateforme",
+        "Aventure"
+      ],
+      "developers": [
+        "Nintendo R&D1"
+      ],
+      "igdbRating": 91,
+      "igdbId": 1103,
+      "igdbUrl": null,
+      "sgdbId": null,
+      "steamAppId": null,
+      "timeToBeat": {
+        "hastily": 7,
+        "normally": 9,
+        "completely": 13
+      },
+      "trailer": null,
+      "steamTrailer": null,
+      "images": {
+        "grid": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co5osy.jpg",
+        "gridThumb": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5osy.jpg",
+        "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co5osy.jpg",
+        "hero": null,
+        "heroThumb": null,
+        "logo": null,
+        "screenshots": []
+      },
+      "status": "backlog",
+      "favorite": false,
+      "ratings": {},
+      "review": "",
+      "playtimeMinutes": null,
+      "playtimeSource": null,
+      "achievements": null,
+      "startedAt": null,
+      "finishedAt": null
+    }
+  ],
+  "wishlist": [
+    {
+      "igdbId": 405460,
+      "name": "The Legend of Zelda: Ocarina of Time",
+      "year": 2026,
+      "releaseDate": "2026-11-05",
+      "cover": "https://cdn2.steamgriddb.com/thumb/ed89e6477ff6a465891a5f17f77948ae.jpg",
+      "platforms": [
+        "Nintendo Switch 2"
+      ],
+      "genres": [
+        "Aventure"
+      ],
+      "addedAt": "2026-10-15T10:00:00.000Z"
+    },
+    {
+      "igdbId": 250618,
+      "name": "Phantom Blade Zero",
+      "year": 2026,
+      "releaseDate": "2026-10-29",
+      "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/cococe.jpg",
+      "platforms": [
+        "PC",
+        "PlayStation 5"
+      ],
+      "genres": [
+        "RPG",
+        "Beat'em all"
+      ],
+      "addedAt": "2026-10-15T10:00:00.000Z"
+    },
+    {
+      "igdbId": 244677,
+      "name": "Atmosfar",
+      "year": 2026,
+      "releaseDate": "2026-01-01",
+      "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/cod5l5.jpg",
+      "platforms": [
+        "PC"
+      ],
+      "genres": [
+        "Aventure",
+        "Indé"
+      ],
+      "addedAt": "2026-10-15T10:00:00.000Z"
+    }
+  ],
+  "playlist": [
+    "disco-elysium-pc",
+    "sekiro-shadows-die-twice-xbox-series",
+    "outer-wilds-pc",
+    "super-metroid-snes"
+  ],
+  "settings": {
+    "name": "Joueur 1",
+    "consoleTrailers": {},
+    "steamConnected": false,
+    "steamSyncedAt": null
+  }
+}

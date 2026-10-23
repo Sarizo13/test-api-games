@@ -1,11 +1,11 @@
 {
-  "name": "ludotheque",
+  "name": "asobi",
   "private": true,
   "type": "module",
-  "description": "Ma collection de jeux vidéo, avec IGDB et SteamGridDB, hébergée sur GitHub Pages.",
+  "description": "Asobi : ma collection de jeux vidéo en cartes à collectionner, avec IGDB, SteamGridDB et Steam.",
   "scripts": {
-    "add": "node scripts/add-game.mjs",
-    "serve": "npx --yes serve ."
+    "serve": "npx --yes serve .",
+    "deploy:worker": "cd worker && npx wrangler deploy"
   },
   "engines": {
     "node": ">=20"

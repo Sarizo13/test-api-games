@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="64" viewBox="0 0 320 64" role="img" aria-labelledby="ct-horizontal-title">
+  <title id="ct-horizontal-title">Asobi</title>
+  <defs>
+    <linearGradient id="ct-horizontal-accent" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="ct-horizontal-holo" x1="18" y1="20" x2="46" y2="38" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8b5cf6"/>
+      <stop offset=".5" stop-color="#f472b6"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <path d="M18 6H46Q50 6 50 10V14H56V52Q56 58 50 58H14Q8 58 8 52V14H14V10Q14 6 18 6Z" fill="url(#ct-horizontal-accent)"/>
+  <rect x="15" y="18" width="34" height="25" rx="3" fill="#06070b"/>
+  <path d="M18 38V30L32 21H44L21 38Z" fill="url(#ct-horizontal-holo)"/>
+  <path d="M40 25L42 30L47 32L42 34L40 39L38 34L33 32L38 30Z" fill="#22d3ee"/>
+  <path d="M22 49H42V58H22Z" fill="#06070b"/>
+  <path d="M28 51V56M36 51V56" stroke="#22d3ee" stroke-width="2"/>
+  <text x="76" y="43" fill="#f4f4fa" font-family="Unbounded, sans-serif" font-size="28" font-weight="600" letter-spacing="-.7">Asobi</text>
+</svg>

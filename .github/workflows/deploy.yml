@@ -4,8 +4,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Appelé par « Ajouter un jeu » : un push fait avec le jeton des Actions ne relance pas les workflows
-  workflow_call:
 
 permissions:
   contents: read
@@ -24,18 +22,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          # Branche à jour, avec le jeu qui vient d'être ajouté
-          ref: ${{ github.event.repository.default_branch }}
 
       # GitHub Pages laisse les navigateurs garder les fichiers 10 min en cache : chaque déploiement
-      # donne une adresse unique au CSS et au JS pour qu'ils soient rechargés tout de suite.
+      # donne une adresse unique au CSS et à chaque module JS pour qu'ils soient rechargés tout de suite.
+      # Tous les imports reçoivent la même version : un module n'est donc jamais chargé deux fois.
       - name: Forcer le rechargement des fichiers
         run: |
           V=$(git rev-parse --short HEAD)
-          sed -i "s#assets/style.css\"#assets/style.css?v=$V\"#; s#assets/app.js\"#assets/app.js?v=$V\"#" index.html
-          sed -i "s#from './platforms.js';#from './platforms.js?v=$V';#" assets/app.js
-          grep -c "?v=$V" index.html assets/app.js
+          sed -i "s#assets/css/app.css\"#assets/css/app.css?v=$V\"#; s#assets/js/main.js\"#assets/js/main.js?v=$V\"#" index.html
+          find assets/js -name '*.js' -exec sed -i -E "s#(from '\.\.?/[^'?]+\.js)'#\1?v=$V'#g" {} +
+          grep -c "?v=$V" index.html
+          ! grep -rnE "from '\.\.?/[^'?]+\.js'" assets/js
 
       - uses: actions/configure-pages@v5
 

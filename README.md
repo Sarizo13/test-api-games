@@ -1,139 +1,94 @@
-# 🎮 Ludothèque
+# <img src="assets/img/logo.svg" width="32" height="32" alt=""> Asobi
 
-Ma collection de jeux vidéo, rangée par plateforme, avec les infos d'[IGDB](https://www.igdb.com) et les visuels de [SteamGridDB](https://www.steamgriddb.com).
-Le tout est hébergé gratuitement sur GitHub : le site sur **GitHub Pages**, et le « backend » dans une **GitHub Action**.
+Ma collection de jeux vidéo, rangée console par console, où chaque jeu devient une carte à collectionner.
+Infos d'[IGDB](https://www.igdb.com), visuels de [SteamGridDB](https://www.steamgriddb.com), temps de jeu et succès de [Steam](https://store.steampowered.com).
+
+Site : **https://sarizo13.github.io/test-api-games/** · Mode test (données fictives, rien n'est enregistré) : [`?test`](https://sarizo13.github.io/test-api-games/?test)
+
+## Ce qu'on y trouve
+
+- **Accueil** : statistiques (jeux, heures, note moyenne, « pile de la honte »), suggestion du jour parmi les jeux jamais joués, parties en cours, actualité IGDB (sorties récentes, à venir, « ce jour-là » il y a 5, 10, 20 ans…), graphiques et badges.
+- **Consoles** : un dossier par console, rangé par famille (PlayStation, Nintendo, Xbox, Sega, rétro & arcade, PC). Une console n'apparaît que si elle contient au moins un jeu. La page d'une console joue sa bande-annonce en fond.
+- **Fiche d'un jeu** : statut (jamais joué, en cours, terminé, 100 %, abandonné), coup de cœur, notes perso sur 6 aspects avec radar, temps de jeu, trophées, dates, avis, captures, bande-annonce et jeux similaires.
+- **Cartes façon TCG** : la puissance d'une carte (0–100) mélange ta note, ton temps de jeu (comparé à la durée moyenne pour finir le jeu) et tes trophées, avec des bonus (terminé, 100 %, coup de cœur). Elle décide de la rareté et de l'effet holographique : commune, peu commune, rare, épique, légendaire, mythique. Un jeu jamais lancé reste **sous blister**, qu'on arrache en le commençant.
+- **À jouer / Envies** : ta file d'attente (glisser pour réordonner, durée totale estimée) et les jeux que tu n'as pas encore (compte à rebours jusqu'à la sortie).
+- **Découvrir** : la roulette parmi tes jeux jamais joués (filtres par durée et console), « Pour toi » (d'après ton profil) et « Découvertes » (pépites hors de tes genres habituels).
+- **Profil** (à partir de 10 jeux) : ton archétype de joueur, tes traits, tes genres, consoles et époques préférés, ta meilleure main de 5 cartes, les badges, la connexion Steam et la sauvegarde.
 
 ## Comment ça marche
 
 ```
-Site (GitHub Pages)
-  │  tu tapes un nom ──► mini-serveur (Cloudflare Worker) ──► propositions IGDB
-  │  tu choisis + « Ajouter »  ──► mini-serveur ──► lance la GitHub Action
-  ▼
-GitHub Action « Ajouter un jeu »
-  │  infos IGDB · visuels SteamGridDB · résumé en français (Steam, Wikipédia)
-  ▼
-data/games.json commité + redéploiement ──► le jeu apparaît sur le site (~1 min)
+Site statique (GitHub Pages)  ──►  mini-serveur (Cloudflare Worker)  ──►  IGDB · SteamGridDB · Steam · Wikipédia
+                                         │
+                                         ▼
+                                  la collection (Cloudflare KV)
 ```
 
-Les clés d'API ne sont **jamais** dans le code : elles vivent dans les *secrets* du dépôt et du Worker.
-L'ajout est protégé par un mot de passe (retenu sur ton appareil après la première fois).
-Sans le mini-serveur, le site retombe sur l'ancien mode : une issue GitHub pré-remplie, sans propositions.
-
-### Résumés en français
-
-IGDB ne donne ses résumés qu'en anglais. Le script cherche donc, dans l'ordre :
-1. la description française de **Steam** ;
-2. l'introduction de l'article **Wikipédia** en français (retrouvé via Wikidata) ;
-3. une traduction **DeepL** du résumé IGDB, si le secret `DEEPL_API_KEY` existe (compte gratuit sur deepl.com, optionnel) ;
-4. à défaut, le résumé anglais d'IGDB.
-
-La source est indiquée sous le résumé sur la fiche du jeu. Pour retraduire les jeux déjà présents : `node scripts/refresh-summaries.mjs`.
-
-### Bandes-annonces
-
-Le fond du carrousel et de la fiche zoome pendant environ 3,5 s, puis l'image s'ouvre comme un diaphragme, des bords vers le centre, sur la bande-annonce (sans le son ; un bouton permet de l'activer). Pendant la vidéo, le carrousel attend. Pas de vidéo sur petit écran, en mode économie de données ou si les animations sont réduites.
-
-- **Jeux sur Steam** : la bande-annonce de la boutique Steam est lue directement par le site (balise `<video>` + [hls.js](https://github.com/video-dev/hls.js) pour Firefox et Chrome). Aucune interface par-dessus.
-- **Autres jeux** : bande-annonce YouTube trouvée par IGDB. Certains navigateurs (Firefox notamment) peuvent afficher une fraction de seconde le bouton lecture/pause de YouTube à l'apparition.
-
-Pour ajouter les bandes-annonces aux jeux déjà présents : `node scripts/refresh-steam.mjs` (Steam, sans clé) et *Actions → Mettre à jour depuis IGDB → Run workflow* (YouTube).
-
-Mode diagnostic : ajouter `?debug` à l'adresse du site affiche les événements des bandes-annonces en direct.
+- Lire la collection est public ; la modifier demande le mot de passe (`ADMIN_PASSWORD`), retenu sur l'appareil après la première connexion.
+- Les clés d'API ne sont **jamais** dans le code : ce sont des *secrets* du Worker.
+- Une GitHub Action copie la collection chaque nuit dans `data/backup.json` : l'historique Git garde toutes les versions.
 
 ## Mise en route
 
-### 1. Les secrets
+### 1. Accès IGDB (gratuit)
 
-*Settings → Secrets and variables → Actions → New repository secret* :
+1. Un compte [Twitch](https://www.twitch.tv) avec la **double authentification activée**.
+2. [dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps) → **Register Your Application** (*OAuth Redirect URLs* : `http://localhost`, *Category* : `Website Integration`, *Client Type* : `Confidential`).
+3. **Manage** → copier le **Client ID**, puis **New Secret** → copier le **Client Secret**.
 
-| Nom | Valeur |
-|---|---|
-| `SGDB_API_KEY` | Clé SteamGridDB (*Preferences → API* sur steamgriddb.com) |
-| `IGDB_CLIENT_ID` | Client ID de ton application Twitch |
-| `IGDB_CLIENT_SECRET` | Client Secret de ton application Twitch |
+### 2. Le mini-serveur
 
-Sans les secrets IGDB, l'ajout marche quand même : seulement le nom, la date de sortie et les visuels (pas de résumé, genres ni studio).
+```bash
+cd worker
+npx wrangler login
+npx wrangler deploy
+```
 
-### 2. Obtenir l'accès IGDB (gratuit)
+Puis *Cloudflare → Workers & Pages → ludotheque → Settings → Variables and Secrets*, type *Secret* :
 
-1. Avoir un compte [Twitch](https://www.twitch.tv) avec la **double authentification activée** (obligatoire pour créer une application).
-2. Aller sur [dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps) → **Register Your Application**.
-   - *Name* : ce que tu veux (unique sur Twitch), ex. `ludotheque-sarizo`
-   - *OAuth Redirect URLs* : `http://localhost`
-   - *Category* : `Website Integration`
-   - *Client Type* : `Confidential`
-3. Ouvrir l'application (**Manage**) : copier le **Client ID**, puis cliquer sur **New Secret** et copier le **Client Secret**.
-4. Les coller dans les secrets `IGDB_CLIENT_ID` et `IGDB_CLIENT_SECRET`.
+| Nom | Valeur | |
+|---|---|---|
+| `IGDB_CLIENT_ID` | Client ID Twitch | obligatoire |
+| `IGDB_CLIENT_SECRET` | Client Secret Twitch | obligatoire |
+| `ADMIN_PASSWORD` | le mot de passe à taper sur le site pour modifier | obligatoire |
+| `SGDB_API_KEY` | clé SteamGridDB (*Preferences → API*) : jaquettes, bandeaux et logos plus beaux | conseillé |
+| `STEAM_API_KEY` | clé Steam ([steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey)) : temps de jeu, succès, import | facultatif |
+| `DEEPL_API_KEY` | clé DeepL gratuite : traduit les résumés introuvables en français | facultatif |
+
+Pour Steam, ton profil doit être public, *détails des jeux* compris (*Steam → Profil → Modifier → Paramètres de confidentialité*). Steam ne concerne que les jeux rangés dans **PC**.
 
 ### 3. GitHub Pages
 
-*Settings → Pages → Build and deployment → Source* : **GitHub Actions**.
-Le site se déploie à chaque push sur `main` et après chaque ajout de jeu.
+*Settings → Pages → Source* : **GitHub Actions**. Le site se déploie à chaque push sur `main`.
 
-> Sur un compte GitHub gratuit, Pages n'est disponible que pour les dépôts **publics**.
+## Résumés en français
 
-### 4. Le mini-serveur (propositions + ajout sans passer par GitHub)
+IGDB ne donne ses résumés qu'en anglais. À l'ajout d'un jeu, le mini-serveur cherche dans l'ordre : la description française de **Steam**, l'introduction de l'article **Wikipédia** français (via Wikidata), une traduction **DeepL** si la clé existe, et à défaut le résumé anglais. La source est indiquée sous le résumé.
 
-C'est un Cloudflare Worker gratuit, dans le dossier `worker/`.
+## Bandes-annonces
 
-1. **Jeton GitHub** : [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
-   - *Repository access* : *Only select repositories* → `test-api-games`
-   - *Permissions → Repository permissions → Actions* : **Read and write**
-2. **Déploiement** (compte Cloudflare gratuit) :
+Le bandeau zoome pendant ~3,5 s, puis l'image s'ouvre comme un diaphragme sur la bande-annonce (muette, un bouton active le son). Jeux Steam : la vidéo de la boutique, lue directement ([hls.js](https://github.com/video-dev/hls.js)). Autres jeux et consoles : YouTube. Le crayon sur la page d'une console permet de changer sa bande-annonce. Pas de vidéo sur petit écran, en économie de données ou si les animations sont réduites. `?debug` dans l'adresse affiche les événements des vidéos.
 
-   ```bash
-   cd worker
-   npx wrangler login
-   npx wrangler deploy
-   ```
-
-3. **Secrets du Worker** (*Cloudflare → Workers & Pages → ludotheque → Settings → Variables and Secrets*, type *Secret*) :
-
-   | Nom | Valeur |
-   |---|---|
-   | `IGDB_CLIENT_ID` | comme pour GitHub |
-   | `IGDB_CLIENT_SECRET` | comme pour GitHub |
-   | `GITHUB_TOKEN` | le jeton de l'étape 1 |
-   | `ADMIN_PASSWORD` | le mot de passe que tu taperas sur le site pour ajouter un jeu |
-
-4. Mettre l'adresse du Worker (`https://ludotheque.<ton-compte>.workers.dev`) dans `CONFIG.api` en haut de `assets/app.js`.
-
-## Ajouter un jeu
-
-- **Depuis le site** : bouton *Ajouter un jeu* (ou tape un nom dans la recherche → *Ajouter « … »*), choisis le jeu dans les propositions, la plateforme, puis *Ajouter*. Le jeu apparaît environ une minute plus tard (la carte « Ajout en cours… » se met à jour toute seule).
-- **Depuis GitHub** : *Actions → Ajouter un jeu → Run workflow*, ou une issue avec le formulaire *Ajouter un jeu*.
-- **En local** :
-
-  ```bash
-  SGDB_API_KEY=… IGDB_CLIENT_ID=… IGDB_CLIENT_SECRET=… node scripts/add-game.mjs "Hollow Knight" --platform switch
-  ```
-
-  Options : `--igdb <id>` pour forcer le jeu quand la recherche se trompe, `--dry-run` pour tester sans écrire, `--force` pour remplacer un doublon.
-
-Pour **retirer** ou corriger un jeu, modifie directement `data/games.json` (bouton crayon sur GitHub).
-
-## Lancer le site en local
+## En local
 
 ```bash
-python -m http.server 8000
+npx --yes serve .
 ```
 
-puis ouvrir http://localhost:8000.
+puis ouvrir l'adresse affichée avec `?test` à la fin pour travailler sur `data/test-games.json`. Le mini-serveur accepte aussi `http://localhost:8765` (variable `ALLOWED_ORIGINS` de `worker/wrangler.toml`).
 
 ## Fichiers
 
 | Fichier | Rôle |
 |---|---|
-| `index.html`, `assets/` | Le site (HTML, CSS et JavaScript sans dépendance) |
-| `assets/platforms.js` | Liste des plateformes : nom, couleur, alias. Partagée par le site et le script |
-| `data/games.json` | La collection |
-| `scripts/add-game.mjs` | Cherche un jeu sur IGDB + SteamGridDB et l'ajoute à la collection |
-| `scripts/lib/summary-fr.mjs` | Trouve un résumé en français (Steam, Wikipédia, DeepL) |
-| `scripts/refresh-summaries.mjs` | Retraduit les résumés des jeux déjà présents |
-| `worker/` | Le mini-serveur Cloudflare : propositions et ajout direct |
-| `.github/workflows/add-game.yml` | L'Action qui fait l'ajout depuis une issue |
-| `.github/workflows/deploy.yml` | Le déploiement sur GitHub Pages |
-| `.github/ISSUE_TEMPLATE/add-game.yml` | Le formulaire d'ajout |
-
-La collection de départ est une démo : vide `data/games.json` (`[]`) pour repartir de zéro.
+| `index.html`, `assets/css/app.css` | La page et son style |
+| `assets/js/main.js` | Navigation, barre latérale, recherche |
+| `assets/js/views/` | Une page par fichier : accueil, consoles, fiche, listes, découvrir, profil |
+| `assets/js/card.js` | Les cartes : puissance, rareté, effet holographique |
+| `assets/js/taste.js`, `badges.js` | Le profil de joueur et les badges |
+| `assets/js/state.js` | Les données et les appels au mini-serveur |
+| `assets/platforms.js` | Les consoles (nom, famille, couleur, année, bande-annonce), partagées avec le mini-serveur |
+| `worker/` | Le mini-serveur Cloudflare (collection, recherche, actualité, suggestions, Steam) |
+| `scripts/lib/` | Résumés en français, genres, bandes-annonces : utilisés par le mini-serveur |
+| `data/test-games.json` | Les données du mode test |
+| `.github/workflows/` | Déploiement du site et sauvegarde quotidienne |

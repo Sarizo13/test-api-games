@@ -1,8 +1,5 @@
-// Accès à IGDB et comparaison de titres, partagés par les scripts d'ajout et de mise à jour.
+// Comparaison de titres et choix des bandes-annonces IGDB, utilisés par le mini-serveur (worker/).
 
-const IGDB_API = 'https://api.igdb.com/v4';
-
-export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const simplify = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
 // Pour comparer des titres : « Baldur's Gate III » == « baldur s gate 3 »
@@ -24,56 +21,6 @@ export function scoreTitle(candidate, target, index, total) {
 export const best = (list, score) => list
   .map((item, i) => ({ item, score: score(item, i) }))
   .sort((a, b) => b.score - a.score)[0]?.item ?? null;
-
-export async function request(label, url, options = {}) {
-  for (let attempt = 0; ; attempt++) {
-    const res = await fetch(url, options);
-    if (res.status === 429 && attempt < 4) {
-      await sleep(1000 * (attempt + 1));
-      continue;
-    }
-    if (res.status === 404) return null;
-    if (!res.ok) {
-      const text = (await res.text()).slice(0, 300);
-      throw new Error(`${label} a répondu ${res.status} ${res.statusText} : ${text}`);
-    }
-    return res.json();
-  }
-}
-
-/** Client IGDB authentifié, ou null sans IGDB_CLIENT_ID / IGDB_CLIENT_SECRET. */
-export async function igdbClient() {
-  const { IGDB_CLIENT_ID: id, IGDB_CLIENT_SECRET: secret } = process.env;
-  if (!id || !secret) return null;
-  const params = new URLSearchParams({ client_id: id, client_secret: secret, grant_type: 'client_credentials' });
-  const auth = await request('Twitch (connexion IGDB)', `https://id.twitch.tv/oauth2/token?${params}`, { method: 'POST' });
-  if (!auth?.access_token) throw new Error('Twitch n\'a pas renvoyé de jeton : vérifie IGDB_CLIENT_ID et IGDB_CLIENT_SECRET.');
-  const headers = { 'Client-ID': id, Authorization: `Bearer ${auth.access_token}`, 'Content-Type': 'text/plain' };
-  return (endpoint, query) => request('IGDB', `${IGDB_API}/${endpoint}`, { method: 'POST', headers, body: query });
-}
-
-function scoreCandidate(game, index, total, name, platform) {
-  let score = scoreTitle(game.name, name, index, total);
-  if (platform?.igdb && game.platforms?.some((p) => platform.igdb.test(p.name))) score += 15;
-  if (game.cover) score += 3;
-  if (game.total_rating) score += 2;
-  return score;
-}
-
-/**
- * Trouve un jeu sur IGDB, par son ID ou par son nom (en tenant compte de la plateforme).
- * `fields` doit contenir platforms.name, cover.image_id et total_rating pour bien classer les résultats.
- */
-export async function findGame(igdb, { name, platform, igdbId }, fields) {
-  if (igdbId) {
-    const [game] = (await igdb('games', `fields ${fields}; where id = ${igdbId};`)) ?? [];
-    if (!game) throw new Error(`Aucun jeu IGDB avec l'ID ${igdbId}.`);
-    return game;
-  }
-  const term = name.replace(/["\\]/g, ' ');
-  const results = (await igdb('games', `search "${term}"; fields ${fields}; where version_parent = null; limit 15;`)) ?? [];
-  return best(results, (g, i) => scoreCandidate(g, i, results.length, name, platform));
-}
 
 /** Choisit la bande-annonce la plus représentative parmi les vidéos YouTube d'IGDB. */
 export function pickTrailer(videos = []) {

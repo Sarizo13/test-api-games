@@ -2,133 +2,55 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ludothèque</title>
-  <meta name="description" content="Ma collection de jeux vidéo, triée par plateforme.">
-  <meta name="theme-color" content="#07080d">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%237c5cff'/><path d='M9 13h4v-3h3v3h4v3h-4v3h-3v-3H9z M22 12a1.6 1.6 0 1 1 0 3.2A1.6 1.6 0 0 1 22 12zm2 4a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2z' fill='white'/></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Asobi</title>
+  <meta name="description" content="Asobi : ma collection de jeux vidéo, rangée par console, en cartes à collectionner.">
+  <meta name="theme-color" content="#06070b">
+  <link rel="icon" href="assets/img/logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/img/logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
-  <div class="ambient" aria-hidden="true">
-    <div class="ambient-layer"></div>
-    <div class="ambient-layer"></div>
+  <div class="backdrop" aria-hidden="true">
+    <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+    <div class="ambient"></div><div class="ambient"></div>
   </div>
 
-  <header class="topbar">
-    <a class="brand" href="./">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M6 10h3V7h2v3h3v2h-3v3H9v-3H6zM16.5 9a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zm2 3a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5z"/></svg>
-      </span>
-      <span>Ludothèque</span>
+  <aside class="sidebar" aria-label="Navigation">
+    <a class="logo" href="#/" aria-label="Asobi, accueil">
+      <img class="logo-mark" src="assets/img/logo.svg" alt="" width="36" height="36">
+      <span>Asobi</span>
     </a>
-    <div class="search">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 0 1 5.2 10.4l4.4 4.4-1.4 1.4-4.4-4.4A6.5 6.5 0 1 1 10.5 4zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z"/></svg>
-      <input id="search" type="search" placeholder="Rechercher un jeu…" autocomplete="off" aria-label="Rechercher un jeu"
-        role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="search-suggest">
-      <kbd>/</kbd>
-      <ul class="suggest" id="search-suggest" role="listbox" aria-label="Propositions" hidden></ul>
-    </div>
-    <button class="btn btn-primary" id="open-add" type="button">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
-      <span>Ajouter un jeu</span>
-    </button>
-  </header>
-
-  <section class="hero" id="hero" aria-label="Jeux à la une">
-    <div class="hero-slides" id="hero-slides"></div>
-    <div class="hero-nav" id="hero-nav"></div>
-  </section>
-
-  <section class="stats" id="stats" aria-label="Statistiques"></section>
-
-  <div class="controls">
-    <nav class="tabs" id="tabs" aria-label="Plateformes">
-      <span class="tab-indicator" id="tab-indicator" aria-hidden="true"></span>
-    </nav>
-    <label class="sort">
-      <span>Trier</span>
-      <select id="sort">
-        <option value="added">Ajout récent</option>
-        <option value="name">Nom (A → Z)</option>
-        <option value="release">Date de sortie</option>
-        <option value="rating">Note</option>
-      </select>
-    </label>
-  </div>
-
-  <main class="library" id="library" aria-live="polite"></main>
-
-  <footer class="footer">
-    Infos : <a href="https://www.igdb.com" target="_blank" rel="noopener">IGDB</a> ·
-    Visuels : <a href="https://www.steamgriddb.com" target="_blank" rel="noopener">SteamGridDB</a>
-  </footer>
-
-  <!-- Fiche d'un jeu -->
-  <div class="modal detail" id="detail" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
-    <div class="modal-backdrop" data-close></div>
-    <article class="modal-panel detail-panel" id="detail-panel"></article>
-  </div>
-
-  <!-- Ajout d'un jeu -->
-  <div class="modal add" id="add" role="dialog" aria-modal="true" aria-labelledby="add-title" hidden>
-    <div class="modal-backdrop" data-close></div>
-    <form class="modal-panel add-panel" id="add-form" autocomplete="off">
-      <button class="icon-btn modal-close" type="button" data-close aria-label="Fermer">
-        <svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4z"/></svg>
+    <nav id="nav"></nav>
+    <div class="sidebar-foot">
+      <button class="btn btn-primary btn-block" type="button" data-action="add">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>Ajouter un jeu
       </button>
-      <h2 id="add-title">Ajouter un jeu</h2>
-      <p class="add-lead">Tape le nom du jeu et choisis-le dans la liste.</p>
+      <a class="nav-link" href="#/profil" id="account-link"></a>
+    </div>
+  </aside>
 
-      <div class="field">
-        <label for="add-name">Jeu</label>
-        <div class="combo">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 0 1 5.2 10.4l4.4 4.4-1.4 1.4-4.4-4.4A6.5 6.5 0 1 1 10.5 4zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z"/></svg>
-          <input id="add-name" name="name" required placeholder="ex. Hollow Knight" maxlength="120"
-            role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="add-suggest">
-          <span class="spinner combo-spinner" id="add-spinner" hidden></span>
-        </div>
-        <ul class="suggest" id="add-suggest" role="listbox" aria-label="Jeux trouvés" hidden></ul>
+  <div class="app">
+    <header class="topbar">
+      <div class="crumbs" id="crumbs"></div>
+      <div class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 0 1 5.2 10.4l4.4 4.4-1.4 1.4-4.4-4.4A6.5 6.5 0 1 1 10.5 4zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z"/></svg>
+        <input class="input" id="search" type="search" placeholder="Rechercher dans ta collection…" autocomplete="off" aria-label="Rechercher"
+          role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="search-suggest">
+        <kbd>/</kbd>
+        <ul class="suggest" id="search-suggest" role="listbox" aria-label="Propositions" hidden></ul>
       </div>
-
-      <div class="picked" id="add-picked" hidden></div>
-
-      <fieldset class="field">
-        <legend>Plateforme</legend>
-        <div class="chips" id="add-platforms"></div>
-      </fieldset>
-
-      <label class="field" id="add-password-field" hidden>
-        <span>Mot de passe <small>(retenu sur cet appareil)</small></span>
-        <input id="add-password" type="password" autocomplete="current-password">
-      </label>
-
-      <details class="advanced">
-        <summary>Options avancées</summary>
-        <label class="field">
-          <span>ID IGDB <small>(si le mauvais jeu est trouvé)</small></span>
-          <input id="add-igdb" name="igdb" inputmode="numeric" pattern="[0-9]*" placeholder="ex. 14593">
-        </label>
-      </details>
-
-      <p class="add-warning" id="add-warning" hidden></p>
-      <p class="add-help" id="add-help"></p>
-
-      <div class="add-actions">
-        <button class="btn btn-ghost" type="button" data-close>Annuler</button>
-        <button class="btn btn-primary" type="submit" id="add-submit">
-          <span>Ajouter</span>
-          <svg id="add-submit-github" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 5h6v6h-2V8.4l-7.3 7.3-1.4-1.4L15.6 7H13zM5 7h5v2H7v8h8v-3h2v5H5z"/></svg>
-        </button>
-      </div>
-    </form>
+    </header>
+    <main class="view" id="view" aria-live="polite"></main>
   </div>
 
+  <nav class="tabbar" id="tabbar" aria-label="Navigation"></nav>
+  <div id="modals"></div>
   <div class="toasts" id="toasts" aria-live="polite"></div>
 
-  <script src="assets/app.js" type="module"></script>
+  <script src="assets/js/main.js" type="module"></script>
 </body>
 </html>

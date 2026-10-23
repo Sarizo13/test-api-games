@@ -83,8 +83,7 @@ async function fromWikipedia(game) {
   return null;
 }
 
-async function fromDeepl(english) {
-  const key = process.env.DEEPL_API_KEY;
+async function fromDeepl(english, key) {
   if (!key || !english) return null;
   const host = key.endsWith(':fx') ? 'api-free.deepl.com' : 'api.deepl.com';
   const data = await getJson(`https://${host}/v2/translate`, {
@@ -98,12 +97,13 @@ async function fromDeepl(english) {
 
 /**
  * @param {{ name: string, steamAppId?: number|null, igdbSlug?: string|null, enwikiTitle?: string|null, english?: string|null }} game
+ * @param {{ deeplKey?: string }} [options] clé DeepL (optionnelle) ; à défaut, DEEPL_API_KEY de l'environnement Node
  * @returns {Promise<{ summary: string|null, summarySource: string|null, summaryUrl: string|null }>}
  */
-export async function frenchSummary(game) {
+export async function frenchSummary(game, { deeplKey = globalThis.process?.env?.DEEPL_API_KEY } = {}) {
   return (await fromSteam(game.steamAppId))
     ?? (await fromWikipedia(game))
-    ?? (await fromDeepl(game.english))
+    ?? (await fromDeepl(game.english, deeplKey))
     ?? { summary: game.english ?? null, summarySource: game.english ? 'igdb' : null, summaryUrl: null };
 }
 
