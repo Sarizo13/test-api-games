@@ -1,4 +1,6 @@
 name: Ajouter un jeu
+# Le mini-serveur retrouve l'exécution d'un ajout grâce à ce titre (voir /status dans worker/)
+run-name: "Ajout : ${{ inputs.name || github.event.issue.title }}"
 
 on:
   issues:

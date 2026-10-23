@@ -9,7 +9,7 @@ const CONFIG = {
   api: 'https://ludotheque.theopacheco5.workers.dev',
   heroCount: 5,
   pendingTtl: 20 * 60 * 1000, // un ajout en attente disparaît au bout de 20 min
-  pollEvery: 30 * 1000,
+  pollEvery: 15 * 1000,
 };
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -189,10 +189,11 @@ function clearCardNames() {
   for (const inner of $$('.card-inner', els.library)) inner.style.viewTransitionName = '';
 }
 
-function toast(icon, title, text = '', ms = 5000) {
+function toast(icon, title, text = '', ms = 5000, link = null) {
   const el = document.createElement('div');
   el.className = 'toast';
-  el.innerHTML = `<span class="toast-icon">${icon}</span><div><strong>${esc(title)}</strong>${esc(text)}</div>`;
+  const more = link && safeUrl(link.href) ? ` <a href="${esc(link.href)}" target="_blank" rel="noopener">${esc(link.label)}</a>` : '';
+  el.innerHTML = `<span class="toast-icon">${icon}</span><div><strong>${esc(title)}</strong>${esc(text)}${more}</div>`;
   els.toasts.append(el);
   setTimeout(() => {
     el.classList.add('is-leaving');
@@ -294,12 +295,29 @@ function schedulePoll() {
         transition(() => { renderAll(); nameVisibleCards(); })?.finished.finally(clearCardNames);
         for (const g of fresh) toast('🎮', `${g.name} est arrivé !`, ` Rangé dans ${platformMeta(g.platform).short}.`);
       } else {
+        const before = state.pending.length;
         loadPending();
-        if (!state.pending.length) renderLibrary();
+        await checkFailedRuns();
+        if (state.pending.length !== before) renderLibrary();
       }
     } catch { /* on réessaiera au prochain tour */ }
     schedulePoll();
   }, CONFIG.pollEvery);
+}
+
+/** Demande au mini-serveur si l'Action d'un ajout en cours a échoué. */
+async function checkFailedRuns() {
+  if (!CONFIG.api) return;
+  for (const p of state.pending.filter((x) => x.via === 'api')) {
+    try {
+      const res = await fetch(`${CONFIG.api}/status?name=${encodeURIComponent(p.name)}&since=${p.at}`);
+      const run = await res.json();
+      if (!run.found || run.status !== 'completed' || run.conclusion === 'success') continue;
+      state.pending = state.pending.filter((x) => x !== p);
+      store.set('pending', state.pending);
+      toast('❌', `L'ajout de ${p.name} a échoué`, ' ', 12000, { href: run.url, label: 'Voir le détail sur GitHub' });
+    } catch { /* serveur injoignable : on réessaiera */ }
+  }
 }
 
 /* ==========================================================================
@@ -1139,8 +1157,8 @@ function warn(text) {
   els.addWarning.hidden = false;
 }
 
-function markPending(name, platform, cover) {
-  state.pending = [{ name, platform, cover: cover || null, at: Date.now() }, ...state.pending];
+function markPending(name, platform, cover, via = 'github') {
+  state.pending = [{ name, platform, cover: cover || null, at: Date.now(), via }, ...state.pending];
   store.set('pending', state.pending);
   closeModal(els.add);
   renderLibrary();
@@ -1208,7 +1226,7 @@ els.addForm.addEventListener('submit', async (e) => {
       els.addSubmit.disabled = false;
       updateAddHelp();
     }
-    markPending(name, platform, addPick?.cover);
+    markPending(name, platform, addPick?.cover, 'api');
     toast('🚀', `${name} arrive !`, ' Il apparaît dans ta collection d\'ici une minute.', 6000);
     return;
   }

@@ -3,6 +3,7 @@
 //   GET  /search?q=zelda   → suggestions de jeux depuis IGDB (public, mis en cache 24 h)
 //   POST /login            → vérifie le mot de passe
 //   POST /add              → lance l'Action GitHub « Ajouter un jeu » (protégé par mot de passe)
+//   GET  /status?name=…    → état de cette Action (le site affiche un échec au lieu d'attendre)
 //
 // Secrets (npx wrangler secret put …) : IGDB_CLIENT_ID, IGDB_CLIENT_SECRET, GITHUB_TOKEN, ADMIN_PASSWORD
 // Variables (wrangler.toml) : GITHUB_REPO, ALLOWED_ORIGINS
@@ -152,14 +153,9 @@ async function handleAdd(request, env, cors) {
   if (!platform) return json({ error: 'Plateforme inconnue.' }, 400, cors);
   if (igdbId && !/^\d+$/.test(igdbId)) return json({ error: 'ID IGDB invalide.' }, 400, cors);
 
-  const res = await fetch(`https://api.github.com/repos/${env.GITHUB_REPO}/actions/workflows/add-game.yml/dispatches`, {
+  const res = await fetch(`${workflowUrl(env)}/dispatches`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-      'User-Agent': 'ludotheque-worker',
-    },
+    headers: githubHeaders(env),
     body: JSON.stringify({ ref: 'main', inputs: { name, platform: platform.id, igdb_id: igdbId } }),
   });
   if (!res.ok) {
@@ -167,6 +163,32 @@ async function handleAdd(request, env, cors) {
     return json({ error: `GitHub a refusé la demande (${res.status}). ${detail}` }, 502, cors);
   }
   return json({ ok: true, name, platform: platform.id }, 202, cors);
+}
+
+const workflowUrl = (env) => `https://api.github.com/repos/${env.GITHUB_REPO}/actions/workflows/add-game.yml`;
+
+const githubHeaders = (env) => ({
+  Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+  Accept: 'application/vnd.github+json',
+  'X-GitHub-Api-Version': '2022-11-28',
+  'User-Agent': 'ludotheque-worker',
+});
+
+/** État de l'Action lancée pour un jeu, pour que le site affiche un échec au lieu d'attendre. */
+async function handleStatus(request, env, cors) {
+  const params = new URL(request.url).searchParams;
+  const name = (params.get('name') ?? '').trim();
+  const since = Number(params.get('since')) || 0;
+  if (!name) return json({ error: 'Il manque le nom du jeu.' }, 400, cors);
+
+  const res = await fetch(`${workflowUrl(env)}/runs?per_page=20`, { headers: githubHeaders(env) });
+  if (!res.ok) return json({ error: `GitHub a répondu ${res.status}` }, 502, cors);
+  const { workflow_runs: runs = [] } = await res.json();
+  // Le titre vient de « run-name » dans .github/workflows/add-game.yml
+  const run = runs.find((r) => r.display_title === `Ajout : ${name}` && Date.parse(r.created_at) >= since - 60_000);
+  return json(run
+    ? { found: true, status: run.status, conclusion: run.conclusion, url: run.html_url }
+    : { found: false }, 200, cors);
 }
 
 export default {
@@ -181,6 +203,7 @@ export default {
         return (await checkPassword(request, env)) ? json({ ok: true }, 200, cors) : json({ error: 'Mot de passe incorrect.' }, 401, cors);
       }
       if (pathname === '/add' && request.method === 'POST') return await handleAdd(request, env, cors);
+      if (pathname === '/status' && request.method === 'GET') return await handleStatus(request, env, cors);
       if (pathname === '/') return json({ ok: true, service: 'ludotheque' }, 200, cors);
       return json({ error: 'Introuvable' }, 404, cors);
     } catch (err) {

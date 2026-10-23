@@ -1397,6 +1397,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .toast.is-leaving { animation: toast-out .35s ease-in both; }
 .toast strong { display: block; margin-bottom: 2px; }
+.toast a { color: var(--accent-2); }
 .toast-icon { font-size: 20px; line-height: 1; }
 
 @keyframes toast-in { from { opacity: 0; transform: translateY(20px) scale(.9); } }
