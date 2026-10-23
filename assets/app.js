@@ -18,6 +18,27 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const canHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
 const canTransition = 'startViewTransition' in document && !reduceMotion;
 
+// Mode diagnostic : ajouter ?debug à l'adresse affiche en direct les événements des bandes-annonces
+const DEBUG = new URLSearchParams(location.search).has('debug');
+const debugLines = [];
+
+function dbg(message) {
+  if (!DEBUG) return;
+  debugLines.push(`${(performance.now() / 1000).toFixed(2)}s  ${message}`);
+  if (debugLines.length > 16) debugLines.shift();
+}
+
+if (DEBUG) {
+  const box = document.createElement('pre');
+  box.className = 'debug-box';
+  document.body.append(box);
+  const tick = () => {
+    box.textContent = `horloge ${(performance.now() / 1000).toFixed(2)}s\n${debugLines.join('\n')}`;
+    requestAnimationFrame(tick);
+  };
+  tick();
+}
+
 const els = {
   hero: $('#hero'),
   heroSlides: $('#hero-slides'),
@@ -412,6 +433,7 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
   // Le bouton son reste affiché pendant un chargement : seule la vidéo s'efface
   const conceal = () => {
     clearInterval(revealTimer);
+    if (bg.classList.contains('is-faded')) dbg(`${youtubeId} image remise`);
     layer.classList.remove('is-on');
     bg.classList.remove('is-faded');
   };
@@ -425,6 +447,7 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
       if (!zoomDone || player.getCurrentTime() - from < TRAILER_REVEAL_AFTER) return;
       if (performance.now() - since < TRAILER_REVEAL_WAIT) return;
       clearInterval(revealTimer);
+      dbg(`${youtubeId} IMAGE EFFACÉE (vidéo à ${player.getCurrentTime().toFixed(1)}s)`);
       layer.classList.add('is-on');
       bg.classList.add('is-faded');
       sound.classList.add('is-visible');
@@ -433,6 +456,7 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
   const finish = () => {
     if (ended || stopped) return;
     ended = true;
+    dbg(`${youtubeId} fin / abandon`);
     clearInterval(watch);
     clearTimeout(startTimer);
     conceal();
@@ -452,6 +476,8 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
     bg.before(layer);
     soundParent?.append(sound);
     startTimer = setTimeout(() => { if (!started) finish(); }, TRAILER_START_TIMEOUT);
+    dbg(`${youtubeId} création du lecteur`);
+    const STATES = { '-1': 'non démarrée', 0: 'finie', 1: 'LECTURE', 2: 'PAUSE', 3: 'chargement', 5: 'prête' };
     player = new YT.Player(layer.firstElementChild, {
       videoId: youtubeId,
       host: 'https://www.youtube-nocookie.com',
@@ -459,10 +485,16 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
       events: {
         // La lecture démarre d'elle-même (autoplay) ; on ne relance à la main que si elle tarde
         onReady: (e) => {
+          dbg(`${youtubeId} prêt`);
           e.target.mute();
-          setTimeout(() => { if (!started && !stopped) e.target.playVideo(); }, 2500);
+          setTimeout(() => {
+            if (started || stopped) return;
+            dbg(`${youtubeId} relance manuelle (playVideo)`);
+            e.target.playVideo();
+          }, 2500);
         },
         onStateChange: (e) => {
+          dbg(`${youtubeId} état : ${STATES[e.data] ?? e.data} (vidéo à ${e.target.getCurrentTime().toFixed(1)}s)`);
           if (stopped || ended) return;
           if (e.data !== YT.PlayerState.PLAYING) {
             if (started) conceal(); // chargement ou pause : l'icône de YouTube va s'afficher
@@ -478,7 +510,7 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
             if (player.getDuration() > 0 && left < 1.5) finish();
           }, 400);
         },
-        onError: () => finish(), // vidéo supprimée ou intégration interdite
+        onError: (e) => { dbg(`${youtubeId} erreur ${e.data}`); finish(); }, // vidéo supprimée ou intégration interdite
       },
     });
   }, 400);
