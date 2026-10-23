@@ -900,5 +900,49 @@
       "hls": "https://video.akamai.steamstatic.com/store_trailers/1798230/1408330862/455edf901a0699f4d3fc90f465bab1fa76e08dd7/1791331560/hls_264_master.m3u8?t=1792072634",
       "name": "ATMOSFAR Early Access Release Date Trailer (Enter Tycos)"
     }
+  },
+  {
+    "id": "the-legend-of-zelda-breath-of-the-wild-switch",
+    "name": "The Legend of Zelda: Breath of the Wild",
+    "platform": "Nintendo Switch",
+    "addedAt": "2026-10-23T13:53:07.546Z",
+    "releaseDate": "2017-03-03",
+    "summary": "The Legend of Zelda: Breath of the Wild est un jeu vidéo d'action-aventure en monde ouvert développé par Nintendo assisté par Monolith Soft, et publié par Nintendo le 3 mars 2017 sur Nintendo Switch lors du lancement de la console, ainsi que sur Wii U dont il est le dernier jeu produit par Nintendo. C'est le dix-neuvième jeu de la franchise The Legend of Zelda.",
+    "summarySource": "wikipedia",
+    "summaryUrl": "https://fr.wikipedia.org/wiki/The_Legend_of_Zelda%3A_Breath_of_the_Wild",
+    "genres": [
+      "Réflexion",
+      "Aventure"
+    ],
+    "developers": [
+      "Nintendo EPD Production Group No. 3"
+    ],
+    "rating": 95,
+    "igdbId": 7346,
+    "igdbUrl": "https://www.igdb.com/games/the-legend-of-zelda-breath-of-the-wild",
+    "sgdbId": 35744,
+    "steamAppId": null,
+    "trailer": {
+      "youtubeId": "zw47_q9wbBE",
+      "name": "Trailer"
+    },
+    "steamTrailer": null,
+    "images": {
+      "grid": "https://cdn2.steamgriddb.com/grid/121b81f7d167ca2c24fdab4f044048f8.png",
+      "gridThumb": "https://cdn2.steamgriddb.com/thumb/121b81f7d167ca2c24fdab4f044048f8.jpg",
+      "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co3p2d.jpg",
+      "hero": "https://cdn2.steamgriddb.com/hero/71d1c0c06e1ab5049644acb5cc69a090.png",
+      "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/71d1c0c06e1ab5049644acb5cc69a090.jpg",
+      "logo": "https://cdn2.steamgriddb.com/logo/24df88ee05eb50db7d1d083a37f49b0b.png",
+      "icon": "https://cdn2.steamgriddb.com/icon/af2566f8377b5ae9c13f3dac132297f4.png",
+      "screenshots": [
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sckj69.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sckj6a.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sckj6d.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sckj6f.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sckj6h.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sckj6b.jpg"
+      ]
+    }
   }
 ]
