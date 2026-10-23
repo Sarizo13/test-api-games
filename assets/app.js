@@ -343,10 +343,117 @@ function setAmbient(url) {
 }
 
 /* ==========================================================================
+   Bandes-annonces YouTube en fond
+   ========================================================================== */
+
+const TRAILER_DELAY = 3600; // le temps du zoom sur l'image avant de lancer la vidéo
+// Pas de vidéo sur petit écran, en mode économie de données ou si l'utilisateur limite les animations
+const trailersAllowed = !reduceMotion && !navigator.connection?.saveData && matchMedia('(min-width: 700px)').matches;
+
+const SOUND_ICONS = {
+  off: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm12.6.4L18 10.8l1.4-1.4 1.4 1.4-1.4 1.4 1.4 1.4-1.4 1.4-1.4-1.4-1.4 1.4-1.4-1.4 1.4-1.4-1.4-1.4z"/></svg>',
+  on: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm11.5-1.6a6 6 0 0 1 0 9.2l-1.3-1.5a4 4 0 0 0 0-6.2zm2.6-3a10 10 0 0 1 0 15.2l-1.3-1.5a8 8 0 0 0 0-12.2z"/></svg>',
+};
+
+let ytApi = null;
+
+function loadYouTubeApi() {
+  ytApi ??= new Promise((resolve, reject) => {
+    if (window.YT?.Player) { resolve(window.YT); return; }
+    const previous = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { previous?.(); resolve(window.YT); };
+    const script = document.createElement('script');
+    script.src = 'https://www.youtube.com/iframe_api';
+    script.onerror = () => { ytApi = null; reject(new Error('YouTube indisponible')); };
+    document.head.append(script);
+  });
+  return ytApi;
+}
+
+/**
+ * Lance la bande-annonce par-dessus une image de fond, une fois le zoom terminé.
+ * La vidéo n'apparaît (en fondu) qu'une fois qu'elle joue vraiment, et disparaît juste avant la fin.
+ */
+function backgroundTrailer(bg, youtubeId, { soundParent, onStart, onEnd } = {}) {
+  let player = null;
+  let stopped = false;
+  let watch = 0;
+
+  const layer = document.createElement('div');
+  layer.className = 'trailer';
+  layer.append(document.createElement('div'));
+  const sound = document.createElement('button');
+  sound.type = 'button';
+  sound.className = 'trailer-sound';
+  sound.setAttribute('aria-label', 'Activer le son de la bande-annonce');
+  sound.innerHTML = SOUND_ICONS.off;
+  sound.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!player) return;
+    const muted = player.isMuted();
+    if (muted) { player.unMute(); player.setVolume(70); } else { player.mute(); }
+    sound.innerHTML = muted ? SOUND_ICONS.on : SOUND_ICONS.off;
+    sound.setAttribute('aria-label', muted ? 'Couper le son de la bande-annonce' : 'Activer le son de la bande-annonce');
+  });
+
+  const hide = () => {
+    clearInterval(watch);
+    layer.classList.remove('is-on');
+    sound.classList.remove('is-visible');
+  };
+  const finish = () => {
+    if (!layer.classList.contains('is-on')) return;
+    hide();
+    onEnd?.();
+  };
+
+  const timer = setTimeout(async () => {
+    let YT;
+    try { YT = await loadYouTubeApi(); } catch { return; } // YouTube bloqué : on garde l'image
+    if (stopped) return;
+    bg.after(layer);
+    soundParent?.append(sound);
+    player = new YT.Player(layer.firstElementChild, {
+      videoId: youtubeId,
+      host: 'https://www.youtube-nocookie.com',
+      playerVars: { autoplay: 1, mute: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0, origin: location.origin },
+      events: {
+        onReady: (e) => { e.target.mute(); e.target.playVideo(); },
+        onStateChange: (e) => {
+          if (e.data !== YT.PlayerState.PLAYING || stopped || layer.classList.contains('is-on')) return;
+          layer.classList.add('is-on');
+          sound.classList.add('is-visible');
+          onStart?.();
+          // On s'efface juste avant la fin, pour ne jamais montrer l'écran de fin de YouTube
+          watch = setInterval(() => {
+            const left = player.getDuration() - player.getCurrentTime();
+            if (player.getDuration() > 0 && left < 1.5) finish();
+          }, 400);
+        },
+        onError: () => finish(), // vidéo supprimée ou intégration interdite
+      },
+    });
+  }, TRAILER_DELAY);
+
+  return {
+    stop() {
+      stopped = true;
+      clearTimeout(timer);
+      hide();
+      sound.remove();
+      setTimeout(() => { try { player?.destroy(); } catch { /* déjà détruit */ } layer.remove(); }, 1300);
+    },
+    pause() { try { player?.pauseVideo(); } catch { /* pas encore prêt */ } },
+    resume() { try { if (layer.classList.contains('is-on')) player?.playVideo(); } catch { /* pas encore prêt */ } },
+  };
+}
+
+/* ==========================================================================
    Hero
    ========================================================================== */
 
 let heroIndex = 0;
+let heroTrailer = null;
 
 function heroImage(g) {
   return g.images.hero || g.images.screenshots[0] || '';
@@ -371,7 +478,14 @@ function bgAttrs(preview, full) {
   return `style="background-image:${cssUrl(preview)}"${full && full !== preview ? ` data-full="${esc(safeUrl(full))}"` : ''}`;
 }
 
+function stopHeroTrailer() {
+  heroTrailer?.stop();
+  heroTrailer = null;
+  els.hero.classList.remove('is-trailer');
+}
+
 function renderHero() {
+  stopHeroTrailer();
   const featured = [...state.games].filter(heroImage).sort(sorters.added).slice(0, CONFIG.heroCount);
   els.hero.classList.toggle('is-empty', !featured.length);
   if (!featured.length) { els.heroSlides.replaceChildren(); els.heroNav.replaceChildren(); return; }
@@ -383,7 +497,7 @@ function renderHero() {
       ? `<img class="hero-logo" src="${esc(safeUrl(g.images.logo))}" alt="${esc(g.name)}" data-title="${esc(g.name)}">`
       : `<h2 class="hero-title">${esc(g.name)}</h2>`;
     return `
-      <div class="hero-slide" data-id="${g.id}">
+      <div class="hero-slide${g.trailer && trailersAllowed ? ' has-trailer' : ''}" data-id="${g.id}">
         <div class="hero-bg" ${bgAttrs(heroPreview(g), heroImage(g))}></div>
         <div class="hero-content">
           ${title}
@@ -395,7 +509,8 @@ function renderHero() {
   }).join('');
 
   els.heroNav.innerHTML = featured.length > 1
-    ? featured.map((g, i) => `<button class="hero-dot" type="button" data-slide="${i}" aria-label="${esc(g.name)}"></button>`).join('')
+    // Un jeu avec bande-annonce laisse plus de temps à la vidéo pour se charger avant de passer au suivant
+    ? featured.map((g, i) => `<button class="hero-dot" type="button" data-slide="${i}" aria-label="${esc(g.name)}"${g.trailer && trailersAllowed ? ' style="--hero-delay:10s"' : ''}></button>`).join('')
     : '';
 
   heroIndex = Math.min(heroIndex, featured.length - 1);
@@ -415,6 +530,17 @@ function showSlide(i) {
   });
   const game = state.games.find((g) => g.id === slides[heroIndex].dataset.id);
   if (game) setAmbient(game.images.grid || heroImage(game));
+
+  // Zoom sur l'image, puis bande-annonce. Pendant la vidéo, le carrousel attend (la barre se fige).
+  stopHeroTrailer();
+  if (game?.trailer && trailersAllowed) {
+    heroTrailer = backgroundTrailer($('.hero-bg', slides[heroIndex]), game.trailer.youtubeId, {
+      soundParent: els.hero,
+      onStart: () => els.hero.classList.add('is-trailer'),
+      onEnd: () => els.hero.classList.remove('is-trailer'),
+    });
+    if (!els.detail.hidden) heroTrailer.pause();
+  }
 }
 
 // La barre de progression du point actif sert de minuteur : quand elle est pleine, on passe au jeu suivant.
@@ -866,7 +992,7 @@ function renderDetail(g) {
     <button class="icon-btn modal-close" type="button" data-close aria-label="Fermer">
       <svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4z"/></svg>
     </button>
-    <div class="detail-hero">
+    <div class="detail-hero${g.trailer && trailersAllowed ? ' has-trailer' : ''}">
       <div class="detail-hero-bg${heroImage(g) ? '' : ' is-blurred'}" ${bgAttrs(heroBgPreview, heroBg)}></div>
       ${g.images.logo ? `<img class="detail-logo" src="${esc(safeUrl(g.images.logo))}" alt="">` : ''}
     </div>
@@ -901,6 +1027,12 @@ function renderDetail(g) {
     </nav>`;
 
   upgradeBg($('.detail-hero-bg', els.detailPanel));
+  stopDetailTrailer();
+  if (g.trailer && trailersAllowed) {
+    detailTrailer = backgroundTrailer($('.detail-hero-bg', els.detailPanel), g.trailer.youtubeId, {
+      soundParent: $('.detail-hero', els.detailPanel),
+    });
+  }
   const ring = $('.rating .value', els.detailPanel);
   if (ring) requestAnimationFrame(() => requestAnimationFrame(() => {
     ring.style.strokeDashoffset = 163.36 * (1 - Math.min(100, g.rating) / 100);
@@ -908,10 +1040,18 @@ function renderDetail(g) {
   els.detailPanel.scrollTop = 0;
 }
 
+let detailTrailer = null;
+
+function stopDetailTrailer() {
+  detailTrailer?.stop();
+  detailTrailer = null;
+}
+
 function openDetail(id) {
   const g = state.games.find((x) => x.id === id);
   if (!g) return;
   const wasOpen = !els.detail.hidden;
+  heroTrailer?.pause(); // une seule vidéo à la fois
   state.detailId = id;
   history.replaceState(null, '', `#jeu/${id}`);
   setAmbient(g.images.grid || heroImage(g));
@@ -944,6 +1084,8 @@ function openDetail(id) {
 
 function closeDetail() {
   if (els.detail.hidden) return;
+  stopDetailTrailer();
+  heroTrailer?.resume();
   const id = state.detailId;
   state.detailId = null;
   history.replaceState(null, '', location.pathname + location.search);

@@ -397,6 +397,74 @@ button, input, select { font: inherit; color: inherit; }
 
 @keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
+/* ---------- Bande-annonce en fond ---------- */
+
+/* Zoom sur l'image pendant que la vidéo se prépare */
+.hero-slide.has-trailer.is-active .hero-bg,
+.detail-hero.has-trailer .detail-hero-bg {
+  animation: zoom-in 3.6s cubic-bezier(.45, 0, .25, 1) forwards;
+}
+
+@keyframes zoom-in {
+  from { transform: scale(1.02); }
+  to   { transform: scale(1.12); }
+}
+
+.trailer {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  container-type: size;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+.detail-hero .trailer { z-index: auto; }
+.trailer.is-on { opacity: 1; }
+
+/* La vidéo 16:9 couvre tout le cadre ; le léger agrandissement masque l'interface de YouTube */
+.trailer iframe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100cqw, 177.78cqh);
+  height: max(56.25cqw, 100cqh);
+  border: 0;
+  transform: translate(-50%, -50%) scale(1.18);
+}
+
+.trailer-sound {
+  position: absolute;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: rgba(10, 11, 18, .6);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(.7);
+  pointer-events: none;
+  transition: opacity .4s ease, transform .5s var(--ease-spring), background .2s;
+}
+
+.trailer-sound svg { width: 20px; }
+.trailer-sound:hover { background: rgba(255, 255, 255, .15); }
+.trailer-sound.is-visible { opacity: 1; transform: none; pointer-events: auto; }
+
+.hero .trailer-sound { top: clamp(16px, 3vw, 28px); right: clamp(16px, 3vw, 28px); }
+.detail-hero .trailer-sound { right: 18px; bottom: 18px; z-index: 2; }
+
+/* Pendant la vidéo, le carrousel attend */
+.hero.is-trailer .hero-dot.is-active::after { animation-play-state: paused; }
+
 /* ---------- Platform badge ---------- */
 
 .badge {

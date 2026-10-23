@@ -17,10 +17,10 @@ import { appendFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { PLATFORMS, findPlatform } from '../assets/platforms.js';
 import { frenchSummary, enwikiTitleFrom } from './lib/summary-fr.mjs';
+import { simplify, matchKey, scoreTitle, best, request, igdbClient, findGame, pickTrailer } from './lib/igdb.mjs';
 
 const DATA_FILE = new URL('../data/games.json', import.meta.url);
 const SGDB_API = 'https://www.steamgriddb.com/api/v2';
-const IGDB_API = 'https://api.igdb.com/v4';
 const IGDB_IMG = (size, id) => `https://images.igdb.com/igdb/image/upload/t_${size}/${id}.jpg`;
 
 const GENRES_FR = {
@@ -49,29 +49,7 @@ const GENRES_FR = {
   'Visual Novel': 'Visual novel',
 };
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const simplify = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 const slugify = (s) => simplify(s).replace(/ /g, '-');
-
-// Pour comparer des titres : « Baldur's Gate III » == « baldur s gate 3 »
-const ROMAN = { ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10 };
-const matchKey = (s) => simplify(s).replace(/\b(ii|iii|iv|v|vi|vii|viii|ix|x)\b/g, (r) => ROMAN[r]);
-// Ce qui n'est pas le jeu lui-même : outils, mods, bandes-son…
-const NOT_A_GAME = /\b(toolkit|mod manager|mod|soundtrack|ost|demo|dlc|editor|sdk|dedicated server|benchmark|artbook)\b/i;
-
-function scoreTitle(candidate, target, index, total) {
-  const n = matchKey(candidate);
-  const t = matchKey(target);
-  let score = total - index; // les API classent déjà par pertinence
-  if (n === t) score += 50;
-  else if (n.startsWith(t) || t.startsWith(n)) score += 12;
-  if (NOT_A_GAME.test(candidate) && !NOT_A_GAME.test(target)) score -= 40;
-  return score;
-}
-
-const best = (list, score) => list
-  .map((item, i) => ({ item, score: score(item, i) }))
-  .sort((a, b) => b.score - a.score)[0]?.item ?? null;
 
 /* ---------- Lecture de la demande ---------- */
 
@@ -136,61 +114,14 @@ function readRequest() {
   return { name, platform: p, igdbId: igdb ? Number(igdb) : null, ...opts };
 }
 
-/* ---------- HTTP ---------- */
-
-async function request(label, url, options = {}) {
-  for (let attempt = 0; ; attempt++) {
-    const res = await fetch(url, options);
-    if (res.status === 429 && attempt < 4) {
-      await sleep(1000 * (attempt + 1));
-      continue;
-    }
-    if (res.status === 404) return null;
-    if (!res.ok) {
-      const text = (await res.text()).slice(0, 300);
-      throw new Error(`${label} a répondu ${res.status} ${res.statusText} : ${text}`);
-    }
-    return res.json();
-  }
-}
-
 /* ---------- IGDB ---------- */
 
 const IGDB_FIELDS = [
   'name', 'slug', 'url', 'summary', 'first_release_date', 'total_rating', 'genres.name',
   'involved_companies.developer', 'involved_companies.company.name',
   'cover.image_id', 'artworks.image_id', 'screenshots.image_id',
-  'platforms.name', 'websites.url', 'external_games.url',
+  'platforms.name', 'websites.url', 'external_games.url', 'videos.name', 'videos.video_id',
 ].join(',');
-
-async function igdbClient() {
-  const { IGDB_CLIENT_ID: id, IGDB_CLIENT_SECRET: secret } = process.env;
-  if (!id || !secret) return null;
-  const params = new URLSearchParams({ client_id: id, client_secret: secret, grant_type: 'client_credentials' });
-  const auth = await request('Twitch (connexion IGDB)', `https://id.twitch.tv/oauth2/token?${params}`, { method: 'POST' });
-  if (!auth?.access_token) throw new Error('Twitch n\'a pas renvoyé de jeton : vérifie IGDB_CLIENT_ID et IGDB_CLIENT_SECRET.');
-  const headers = { 'Client-ID': id, Authorization: `Bearer ${auth.access_token}`, 'Content-Type': 'text/plain' };
-  return (endpoint, query) => request('IGDB', `${IGDB_API}/${endpoint}`, { method: 'POST', headers, body: query });
-}
-
-function scoreCandidate(game, index, total, name, platform) {
-  let score = scoreTitle(game.name, name, index, total);
-  if (platform.igdb && game.platforms?.some((p) => platform.igdb.test(p.name))) score += 15;
-  if (game.cover) score += 3;
-  if (game.total_rating) score += 2;
-  return score;
-}
-
-async function findOnIgdb(igdb, { name, platform, igdbId }) {
-  if (igdbId) {
-    const [game] = (await igdb('games', `fields ${IGDB_FIELDS}; where id = ${igdbId};`)) ?? [];
-    if (!game) throw new Error(`Aucun jeu IGDB avec l'ID ${igdbId}.`);
-    return game;
-  }
-  const term = name.replace(/["\\]/g, ' ');
-  const results = (await igdb('games', `search "${term}"; fields ${IGDB_FIELDS}; where version_parent = null; limit 15;`)) ?? [];
-  return best(results, (g, i) => scoreCandidate(g, i, results.length, name, platform));
-}
 
 function steamAppIdFrom(game) {
   const urls = [...(game.websites ?? []), ...(game.external_games ?? [])].map((x) => x.url).filter(Boolean);
@@ -283,7 +214,7 @@ async function main() {
 
   console.log(`🔎 Recherche de « ${req.name} » (${req.platform.id})…`);
 
-  const info = igdb ? await findOnIgdb(igdb, req) : null;
+  const info = igdb ? await findGame(igdb, req, IGDB_FIELDS) : null;
   if (igdb && !info) throw new Error(`IGDB ne trouve aucun jeu pour « ${req.name} ». Essaie un autre nom ou précise l'ID IGDB.`);
   if (info) console.log(`   IGDB : ${info.name} (#${info.id})`);
 
@@ -324,6 +255,7 @@ async function main() {
     igdbUrl: info?.url ?? null,
     sgdbId: sgdbGame?.id ?? null,
     steamAppId,
+    trailer: pickTrailer(info?.videos),
     images: {
       grid: art.grid ?? null,
       gridThumb: art.gridThumb ?? null,

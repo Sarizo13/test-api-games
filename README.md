@@ -30,6 +30,12 @@ IGDB ne donne ses résumés qu'en anglais. Le script cherche donc, dans l'ordre 
 
 La source est indiquée sous le résumé sur la fiche du jeu. Pour retraduire les jeux déjà présents : `node scripts/refresh-summaries.mjs`.
 
+### Bandes-annonces
+
+Quand IGDB connaît une bande-annonce YouTube, le fond du carrousel et de la fiche zoome pendant environ 3,5 s, puis la vidéo démarre en fondu (sans le son ; un bouton permet de l'activer). Pendant la vidéo, le carrousel attend. Pas de vidéo sur petit écran, en mode économie de données ou si les animations sont réduites.
+
+Pour ajouter les bandes-annonces aux jeux déjà présents : *Actions → Mettre à jour depuis IGDB → Run workflow*.
+
 ## Mise en route
 
 ### 1. Les secrets
