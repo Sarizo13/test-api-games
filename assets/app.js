@@ -346,7 +346,7 @@ function setAmbient(url) {
    Bandes-annonces YouTube en fond
    ========================================================================== */
 
-const TRAILER_DELAY = 3600; // le temps du zoom sur l'image avant de lancer la vidéo
+const TRAILER_DELAY = 3600; // durée du zoom sur l'image : la vidéo n'apparaît pas avant
 // Pas de vidéo sur petit écran, en mode économie de données ou si l'utilisateur limite les animations
 const trailersAllowed = !reduceMotion && !navigator.connection?.saveData && matchMedia('(min-width: 700px)').matches;
 
@@ -375,15 +375,21 @@ function loadYouTubeApi() {
  * La vidéo n'apparaît (en fondu) qu'une fois qu'elle joue vraiment, et disparaît juste avant la fin.
  * onEnd est appelé une seule fois : fin de la vidéo, ou abandon (YouTube bloqué, vidéo refusée, trop lente).
  */
-const TRAILER_START_TIMEOUT = 9000;
+const TRAILER_START_TIMEOUT = 12000;
+// YouTube affiche une icône lecture/pause pendant ~1,5 s chaque fois que la lecture (re)part :
+// au démarrage, mais aussi après un chargement en cours de route. La vidéo s'efface donc dès
+// qu'elle charge, et ne se (re)montre qu'après 2 s de lecture continue.
+const TRAILER_REVEAL_AFTER = 2;
 
-function backgroundTrailer(bg, youtubeId, { soundParent, onStart, onEnd } = {}) {
+function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DELAY, onEnd } = {}) {
   let player = null;
   let stopped = false;
   let ended = false;
+  let started = false;
   let watch = 0;
   let startTimer = 0;
-  let held = false; // mis en pause avant même d'avoir démarré (fiche ouverte par-dessus)
+  let revealTimer = 0;
+  let zoomDone = false;
 
   const layer = document.createElement('div');
   layer.className = 'trailer';
@@ -402,39 +408,62 @@ function backgroundTrailer(bg, youtubeId, { soundParent, onStart, onEnd } = {}) 
     sound.setAttribute('aria-label', muted ? 'Couper le son de la bande-annonce' : 'Activer le son de la bande-annonce');
   });
 
-  const hide = () => {
-    clearInterval(watch);
-    clearTimeout(startTimer);
+  // Le bouton son reste affiché pendant un chargement : seule la vidéo s'efface
+  const conceal = () => {
+    clearInterval(revealTimer);
     layer.classList.remove('is-on');
-    sound.classList.remove('is-visible');
+  };
+  // Se montre quand le zoom est fini ET que la vidéo joue depuis assez longtemps
+  const reveal = () => {
+    clearInterval(revealTimer);
+    const from = player.getCurrentTime();
+    revealTimer = setInterval(() => {
+      if (stopped || ended) { clearInterval(revealTimer); return; }
+      if (!zoomDone || player.getCurrentTime() - from < TRAILER_REVEAL_AFTER) return;
+      clearInterval(revealTimer);
+      layer.classList.add('is-on');
+      sound.classList.add('is-visible');
+    }, 100);
   };
   const finish = () => {
     if (ended || stopped) return;
     ended = true;
-    hide();
+    clearInterval(watch);
+    clearTimeout(startTimer);
+    conceal();
+    sound.classList.remove('is-visible');
     onEnd?.();
   };
 
+  const zoomTimer = setTimeout(() => { zoomDone = true; }, zoomDelay);
+  // Petit délai avant de charger YouTube, pour ne rien lancer si on fait défiler le carrousel rapidement
   const timer = setTimeout(async () => {
     let YT;
     try { YT = await loadYouTubeApi(); } catch { finish(); return; } // YouTube bloqué : on garde l'image
     if (stopped) return;
     bg.after(layer);
     soundParent?.append(sound);
-    startTimer = setTimeout(() => { if (!layer.classList.contains('is-on')) finish(); }, TRAILER_START_TIMEOUT);
+    startTimer = setTimeout(() => { if (!started) finish(); }, TRAILER_START_TIMEOUT);
     player = new YT.Player(layer.firstElementChild, {
       videoId: youtubeId,
       host: 'https://www.youtube-nocookie.com',
       playerVars: { autoplay: 1, mute: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0, origin: location.origin },
       events: {
-        onReady: (e) => { e.target.mute(); e.target.playVideo(); },
+        // La lecture démarre d'elle-même (autoplay) ; on ne relance à la main que si elle tarde
+        onReady: (e) => {
+          e.target.mute();
+          setTimeout(() => { if (!started && !stopped) e.target.playVideo(); }, 2500);
+        },
         onStateChange: (e) => {
-          if (e.data !== YT.PlayerState.PLAYING || stopped || ended || layer.classList.contains('is-on')) return;
+          if (stopped || ended) return;
+          if (e.data !== YT.PlayerState.PLAYING) {
+            if (started) conceal(); // chargement ou pause : l'icône de YouTube va s'afficher
+            return;
+          }
+          reveal();
+          if (started) return;
+          started = true;
           clearTimeout(startTimer);
-          if (held) e.target.pauseVideo();
-          layer.classList.add('is-on');
-          sound.classList.add('is-visible');
-          onStart?.();
           // On s'efface juste avant la fin, pour ne jamais montrer l'écran de fin de YouTube
           watch = setInterval(() => {
             const left = player.getDuration() - player.getCurrentTime();
@@ -444,24 +473,20 @@ function backgroundTrailer(bg, youtubeId, { soundParent, onStart, onEnd } = {}) 
         onError: () => finish(), // vidéo supprimée ou intégration interdite
       },
     });
-  }, TRAILER_DELAY);
+  }, 400);
 
   return {
     stop() {
       stopped = true;
       clearTimeout(timer);
-      hide();
+      clearTimeout(zoomTimer);
+      clearTimeout(startTimer);
+      clearInterval(watch);
+      conceal();
       sound.remove();
       setTimeout(() => { try { player?.destroy(); } catch { /* déjà détruit */ } layer.remove(); }, 1300);
     },
-    pause() {
-      held = true;
-      try { player?.pauseVideo(); } catch { /* pas encore prêt */ }
-    },
-    resume() {
-      held = false;
-      try { if (layer.classList.contains('is-on')) player?.playVideo(); } catch { /* pas encore prêt */ }
-    },
+    get ended() { return ended; },
   };
 }
 
@@ -471,6 +496,7 @@ function backgroundTrailer(bg, youtubeId, { soundParent, onStart, onEnd } = {}) 
 
 let heroIndex = 0;
 let heroTrailer = null;
+let heroSuspended = false; // vidéo du carrousel arrêtée le temps qu'une fiche est ouverte
 
 function heroImage(g) {
   return g.images.hero || g.images.screenshots[0] || '';
@@ -498,7 +524,38 @@ function bgAttrs(preview, full) {
 function stopHeroTrailer() {
   heroTrailer?.stop();
   heroTrailer = null;
+  heroSuspended = false;
   els.hero.classList.remove('is-trailer');
+}
+
+/** Lance la bande-annonce du jeu affiché ; le carrousel attend (barre figée) qu'elle démarre puis se termine. */
+function startHeroTrailer(slide, game, { zoom = true } = {}) {
+  heroTrailer?.stop();
+  els.hero.classList.add('is-trailer');
+  if (!els.detail.hidden) { heroSuspended = true; return; } // une seule vidéo à la fois : on attend la fermeture de la fiche
+  heroTrailer = backgroundTrailer($('.hero-bg', slide), game.trailer.youtubeId, {
+    soundParent: els.hero,
+    zoomDelay: zoom ? TRAILER_DELAY : 0,
+    onEnd: () => els.hero.classList.remove('is-trailer'),
+  });
+}
+
+/* Mettre YouTube en pause fait réapparaître son icône lecture/pause : on arrête plutôt la vidéo
+   à l'ouverture d'une fiche, et on la relance (sans refaire le zoom) à la fermeture. */
+function suspendHeroTrailer() {
+  if (!heroTrailer || heroTrailer.ended) return;
+  heroTrailer.stop();
+  heroTrailer = null;
+  heroSuspended = true;
+}
+
+function resumeHeroTrailer() {
+  if (!heroSuspended) return;
+  heroSuspended = false;
+  const slide = $('.hero-slide.is-active', els.heroSlides);
+  const game = state.games.find((g) => g.id === slide?.dataset.id);
+  if (game?.trailer) startHeroTrailer(slide, game, { zoom: false });
+  else els.hero.classList.remove('is-trailer');
 }
 
 function renderHero() {
@@ -547,16 +604,9 @@ function showSlide(i) {
   const game = state.games.find((g) => g.id === slides[heroIndex].dataset.id);
   if (game) setAmbient(game.images.grid || heroImage(game));
 
-  // Zoom sur l'image, puis bande-annonce. Le carrousel attend (barre figée) que la vidéo démarre puis se termine.
+  // Zoom sur l'image, puis bande-annonce
   stopHeroTrailer();
-  if (game?.trailer && trailersAllowed) {
-    els.hero.classList.add('is-trailer');
-    heroTrailer = backgroundTrailer($('.hero-bg', slides[heroIndex]), game.trailer.youtubeId, {
-      soundParent: els.hero,
-      onEnd: () => els.hero.classList.remove('is-trailer'),
-    });
-    if (!els.detail.hidden) heroTrailer.pause();
-  }
+  if (game?.trailer && trailersAllowed) startHeroTrailer(slides[heroIndex], game);
 }
 
 // La barre de progression du point actif sert de minuteur : quand elle est pleine, on passe au jeu suivant.
@@ -938,6 +988,7 @@ function closeModal(modal, { instant = false } = {}) {
     modal.hidden = true;
     modal.classList.remove('is-closing', 'vt');
     if (!$$('.modal').some((m) => !m.hidden)) document.body.classList.remove('modal-open');
+    if (modal === els.detail) resumeHeroTrailer();
     lastFocus?.focus?.({ preventScroll: true });
   };
   if (instant || reduceMotion) { done(); return; }
@@ -1067,7 +1118,7 @@ function openDetail(id) {
   const g = state.games.find((x) => x.id === id);
   if (!g) return;
   const wasOpen = !els.detail.hidden;
-  heroTrailer?.pause(); // une seule vidéo à la fois
+  suspendHeroTrailer(); // une seule vidéo à la fois
   state.detailId = id;
   history.replaceState(null, '', `#jeu/${id}`);
   setAmbient(g.images.grid || heroImage(g));
@@ -1101,7 +1152,6 @@ function openDetail(id) {
 function closeDetail() {
   if (els.detail.hidden) return;
   stopDetailTrailer();
-  heroTrailer?.resume();
   const id = state.detailId;
   state.detailId = null;
   history.replaceState(null, '', location.pathname + location.search);

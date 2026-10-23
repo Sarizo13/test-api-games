@@ -418,11 +418,11 @@ button, input, select { font: inherit; color: inherit; }
   container-type: size;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity .3s ease; /* disparition rapide (avant l'icône de YouTube) */
 }
 
 .detail-hero .trailer { z-index: auto; }
-.trailer.is-on { opacity: 1; }
+.trailer.is-on { opacity: 1; transition: opacity 1.2s ease; } /* apparition en douceur */
 
 /* La vidéo 16:9 couvre tout le cadre ; le léger agrandissement masque l'interface de YouTube */
 .trailer iframe {
