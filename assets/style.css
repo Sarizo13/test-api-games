@@ -410,19 +410,24 @@ button, input, select { font: inherit; color: inherit; }
   to   { transform: scale(1.12); }
 }
 
+/* La vidéo joue sous l'image, toujours opaque (une iframe transparente est gelée par le navigateur).
+   C'est l'image du dessus qui s'efface pour la révéler, et qui revient vite si la vidéo charge. */
 .trailer {
   position: absolute;
   inset: 0;
-  z-index: -2;
+  z-index: -3;
   overflow: hidden;
   container-type: size;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity .3s ease; /* disparition rapide (avant l'icône de YouTube) */
 }
 
 .detail-hero .trailer { z-index: auto; }
-.trailer.is-on { opacity: 1; transition: opacity 1.2s ease; } /* apparition en douceur */
+
+.hero-bg,
+.detail-hero-bg { transition: opacity .3s ease; }
+
+.hero-bg.is-faded,
+.detail-hero-bg.is-faded { opacity: 0; transition: opacity 1.2s ease; }
 
 /* La vidéo 16:9 couvre tout le cadre ; le léger agrandissement masque l'interface de YouTube */
 .trailer iframe {

@@ -371,15 +371,14 @@ function loadYouTubeApi() {
 }
 
 /**
- * Lance la bande-annonce par-dessus une image de fond, une fois le zoom terminé.
- * La vidéo n'apparaît (en fondu) qu'une fois qu'elle joue vraiment, et disparaît juste avant la fin.
+ * Lance la bande-annonce sous une image de fond, et efface l'image une fois le zoom terminé.
+ * La vidéo n'est révélée qu'une fois qu'elle joue vraiment, et l'image revient juste avant la fin.
  * onEnd est appelé une seule fois : fin de la vidéo, ou abandon (YouTube bloqué, vidéo refusée, trop lente).
  */
 const TRAILER_START_TIMEOUT = 12000;
 // YouTube affiche son bouton lecture/pause chaque fois que la lecture (re)part, puis le cache
-// automatiquement au bout de ~3 s. La vidéo s'efface donc dès qu'elle charge, et ne se (re)montre
-// qu'après 2 s de vidéo ET 3,5 s réelles de lecture continue (sur une connexion rapide,
-// les 2 s de vidéo peuvent passer avant que YouTube ait caché son bouton).
+// au bout de quelques secondes. L'image recouvre donc la vidéo dès qu'elle charge, et ne s'efface
+// qu'après 2 s de vidéo ET 3,5 s réelles de lecture continue.
 const TRAILER_REVEAL_AFTER = 2;
 const TRAILER_REVEAL_WAIT = 3500;
 
@@ -414,6 +413,7 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
   const conceal = () => {
     clearInterval(revealTimer);
     layer.classList.remove('is-on');
+    bg.classList.remove('is-faded');
   };
   // Se montre quand le zoom est fini ET que la vidéo joue depuis assez longtemps
   const reveal = () => {
@@ -426,6 +426,7 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
       if (performance.now() - since < TRAILER_REVEAL_WAIT) return;
       clearInterval(revealTimer);
       layer.classList.add('is-on');
+      bg.classList.add('is-faded');
       sound.classList.add('is-visible');
     }, 100);
   };
@@ -445,7 +446,10 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
     let YT;
     try { YT = await loadYouTubeApi(); } catch { finish(); return; } // YouTube bloqué : on garde l'image
     if (stopped) return;
-    bg.after(layer);
+    // La vidéo joue SOUS l'image, entièrement opaque : une iframe transparente est considérée comme
+    // cachée et le navigateur gèle son affichage (le bouton de YouTube ne s'efface alors qu'à l'apparition).
+    // C'est l'image du dessus qui s'efface pour la révéler.
+    bg.before(layer);
     soundParent?.append(sound);
     startTimer = setTimeout(() => { if (!started) finish(); }, TRAILER_START_TIMEOUT);
     player = new YT.Player(layer.firstElementChild, {
