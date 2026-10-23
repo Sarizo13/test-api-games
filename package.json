@@ -1,0 +1,13 @@
+{
+  "name": "ludotheque",
+  "private": true,
+  "type": "module",
+  "description": "Ma collection de jeux vidéo, avec IGDB et SteamGridDB, hébergée sur GitHub Pages.",
+  "scripts": {
+    "add": "node scripts/add-game.mjs",
+    "serve": "npx --yes serve ."
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

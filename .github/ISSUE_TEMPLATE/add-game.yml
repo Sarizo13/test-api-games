@@ -1,0 +1,28 @@
+name: Ajouter un jeu
+description: Ajoute un jeu à la ludothèque (infos IGDB + visuels SteamGridDB).
+title: "[Ajout] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Valide ce formulaire : une GitHub Action cherche le jeu, l'ajoute à `data/games.json` puis ferme l'issue.
+  - type: input
+    id: name
+    attributes:
+      label: Nom du jeu
+      placeholder: Hollow Knight
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Plateforme
+      description: "PC, PlayStation 5, PlayStation 4, Nintendo Switch 2, Nintendo Switch, Xbox Series X|S, Xbox One, Mobile, Rétro ou Autre (les raccourcis ps5, switch… marchent aussi)."
+      placeholder: Nintendo Switch
+    validations:
+      required: true
+  - type: input
+    id: igdb
+    attributes:
+      label: ID IGDB (optionnel)
+      description: Si le mauvais jeu est trouvé, indique ici son ID IGDB.

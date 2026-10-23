@@ -1,0 +1,106 @@
+name: Ajouter un jeu
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      name:
+        description: Nom du jeu
+        required: true
+        type: string
+      platform:
+        description: Plateforme
+        required: true
+        type: choice
+        options:
+          - PC
+          - PlayStation 5
+          - PlayStation 4
+          - Nintendo Switch 2
+          - Nintendo Switch
+          - Xbox Series X|S
+          - Xbox One
+          - Mobile
+          - Rétro
+          - Autre
+      igdb_id:
+        description: ID IGDB (optionnel, si le mauvais jeu est trouvé)
+        required: false
+        type: string
+
+# Un seul ajout à la fois, pour ne pas se marcher dessus dans games.json
+concurrency:
+  group: add-game
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pages: write
+  id-token: write
+
+jobs:
+  add:
+    # Seules les issues ouvertes par le propriétaire du dépôt déclenchent un ajout
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (startsWith(github.event.issue.title, '[Ajout]') && github.event.issue.user.login == github.repository_owner)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Chercher le jeu sur IGDB et SteamGridDB
+        id: add
+        env:
+          IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+          IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
+          SGDB_API_KEY: ${{ secrets.SGDB_API_KEY }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          GAME_NAME: ${{ inputs.name }}
+          GAME_PLATFORM: ${{ inputs.platform }}
+          IGDB_ID: ${{ inputs.igdb_id }}
+        run: node scripts/add-game.mjs
+
+      - name: Enregistrer dans le dépôt
+        env:
+          GAME: ${{ steps.add.outputs.name }}
+          PLATFORM: ${{ steps.add.outputs.platform }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/games.json
+          git commit -m "Ajout : $GAME ($PLATFORM)"
+          git pull --rebase
+          git push
+
+      - name: Fermer l'issue
+        if: github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          GAME: ${{ steps.add.outputs.name }}
+          PLATFORM: ${{ steps.add.outputs.platform }}
+        run: |
+          gh issue close "$ISSUE" --repo "$GITHUB_REPOSITORY" \
+            --comment "✅ **$GAME** a été ajouté sur **$PLATFORM**. Il sera visible sur le site d'ici une minute."
+
+      - name: Signaler l'échec
+        if: failure() && github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          ERROR: ${{ steps.add.outputs.error }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" \
+            --body "❌ L'ajout a échoué : ${ERROR:-erreur inattendue}"$'\n\n'"Détails : $RUN_URL"
+
+  deploy:
+    needs: add
+    uses: ./.github/workflows/deploy.yml
