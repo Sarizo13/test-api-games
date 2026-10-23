@@ -426,6 +426,14 @@ button, input, select { font: inherit; color: inherit; }
 .hero-bg,
 .detail-hero-bg { transition: opacity .3s ease; }
 
+/* L'image qui recouvre la vidéo n'est jamais tout à fait opaque : sinon le navigateur cesse de dessiner
+   la vidéo cachée dessous, et au moment où l'image s'efface on revoit une fraction de seconde
+   la dernière image dessinée, celle du démarrage avec le bouton lecture/pause de YouTube (vu sur Mac). */
+.has-trailer .hero-bg,
+.has-trailer .detail-hero-bg { opacity: .995; }
+
+.has-trailer .hero-bg.is-faded,
+.has-trailer .detail-hero-bg.is-faded,
 .hero-bg.is-faded,
 .detail-hero-bg.is-faded { opacity: 0; transition: opacity 1.2s ease; }
 
