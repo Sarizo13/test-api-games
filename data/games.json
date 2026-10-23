@@ -14,9 +14,9 @@
     "developers": [
       "Supergiant Games"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 91,
+    "igdbId": 228525,
+    "igdbUrl": "https://www.igdb.com/games/hades-ii",
     "sgdbId": 5376530,
     "steamAppId": 1145350,
     "images": {
@@ -28,6 +28,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/73aaacf9803fed2a04f802f3f85225e5.png",
       "icon": "https://cdn2.steamgriddb.com/icon/3d3e9b54c139bb780189f8c1b4f3a1e8.png",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "U8lJRcUeEMs",
+      "name": "Release Date Trailer"
     }
   },
   {
@@ -45,9 +49,9 @@
     "developers": [
       "FromSoftware"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 95,
+    "igdbId": 119133,
+    "igdbUrl": "https://www.igdb.com/games/elden-ring",
     "sgdbId": 5277816,
     "steamAppId": 1245620,
     "images": {
@@ -59,6 +63,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/69f5d5c1249e17f4ac1d5b716db47105.png",
       "icon": "https://cdn2.steamgriddb.com/icon/82874a428711560cda5afa7aab6627bc.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "qqiC88f9ogU",
+      "name": "Launch Trailer"
     }
   },
   {
@@ -75,9 +83,9 @@
     "developers": [
       "Larian Studios"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 95,
+    "igdbId": 119171,
+    "igdbUrl": "https://www.igdb.com/games/baldurs-gate-iii",
     "sgdbId": 5138060,
     "steamAppId": 1086940,
     "images": {
@@ -89,6 +97,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/71d9945703c17fafe19f7dd1c706d448.png",
       "icon": "https://cdn2.steamgriddb.com/icon/ab968680ad9fa9909541f1225dcf0711.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "XuCfkgaaa08",
+      "name": "Launch Trailer"
     }
   },
   {
@@ -106,9 +118,9 @@
     "developers": [
       "Team Cherry"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 92,
+    "igdbId": 14593,
+    "igdbUrl": "https://www.igdb.com/games/hollow-knight",
     "sgdbId": 7545,
     "steamAppId": 367520,
     "images": {
@@ -120,6 +132,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/6d4e59d5963286dfe2e696258bb10d1c.png",
       "icon": "https://cdn2.steamgriddb.com/icon/602d1305678a8d5fdb372271e980da6a.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "Y2amTl5lBYM",
+      "name": "Trailer"
     }
   },
   {
@@ -137,9 +153,9 @@
     "developers": [
       "Mobius Digital"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 87,
+    "igdbId": 11737,
+    "igdbUrl": "https://www.igdb.com/games/outer-wilds",
     "sgdbId": 23535,
     "steamAppId": 753640,
     "images": {
@@ -151,6 +167,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/6937a522264a52ef9e2ac283812fd4db.png",
       "icon": "https://cdn2.steamgriddb.com/icon/0e080857e96278e6dba76ac029faf291.png",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "2EnIpUkQ__M",
+      "name": "Release Date Trailer"
     }
   },
   {
@@ -168,9 +188,9 @@
     "developers": [
       "CD Projekt Red"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 79,
+    "igdbId": 1877,
+    "igdbUrl": "https://www.igdb.com/games/cyberpunk-2077",
     "sgdbId": 5209422,
     "steamAppId": 1091500,
     "images": {
@@ -182,6 +202,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/2b2e7393b05b5b52af65bf2ed7f4ad4f.png",
       "icon": "https://cdn2.steamgriddb.com/icon/b3e3e393c77e35a4a3f3cbd1e429b5dc.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "UnA7tepsc7s",
+      "name": "Launch Trailer - V"
     }
   },
   {
@@ -199,9 +223,9 @@
     "developers": [
       "LocalThunk"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 89,
+    "igdbId": 251833,
+    "igdbUrl": "https://www.igdb.com/games/balatro",
     "sgdbId": 5403326,
     "steamAppId": 2379780,
     "images": {
@@ -213,6 +237,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/fab4029f3293f283d3e94873e7ea7db2.png",
       "icon": "https://cdn2.steamgriddb.com/icon/62415c82dd6c47e714f473f9b0475e62.png",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "2n9pkiuSZLU",
+      "name": "Launch Trailer"
     }
   },
   {
@@ -229,9 +257,9 @@
     "developers": [
       "Maddy Makes Games"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 89,
+    "igdbId": 26226,
+    "igdbUrl": "https://www.igdb.com/games/celeste",
     "sgdbId": 13136,
     "steamAppId": 504230,
     "images": {
@@ -243,6 +271,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/2eace51d8f796d04991c831a07059758.png",
       "icon": "https://cdn2.steamgriddb.com/icon/f7e6c85504ce6e82442c770f7c8606f0.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "FqBj2IGg6Uw",
+      "name": "Launch Trailer"
     }
   },
   {
@@ -259,9 +291,9 @@
     "developers": [
       "ZA/UM"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 91,
+    "igdbId": 26472,
+    "igdbUrl": "https://www.igdb.com/games/disco-elysium",
     "sgdbId": 18262,
     "steamAppId": 632470,
     "images": {
@@ -273,6 +305,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/e4c446f4b7669022a2bd89128a7dbc1f.png",
       "icon": "https://cdn2.steamgriddb.com/icon/22f3ffca23f77c2b56ebb4ff4aaef1bc.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "SEJOJ4AUBic",
+      "name": "Trailer"
     }
   },
   {
@@ -290,9 +326,9 @@
     "developers": [
       "Rockstar Games"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 94,
+    "igdbId": 25076,
+    "igdbUrl": "https://www.igdb.com/games/red-dead-redemption-2",
     "sgdbId": 5249031,
     "steamAppId": 1174180,
     "images": {
@@ -304,6 +340,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/ff38348a5adb1889dd55c7ccba583c43.png",
       "icon": "https://cdn2.steamgriddb.com/icon/f6ad645a331d5e5e95938c1439ba385d.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "HVRzx17WHVk",
+      "name": "Launch Trailer"
     }
   },
   {
@@ -320,9 +360,9 @@
     "developers": [
       "FromSoftware"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 90,
+    "igdbId": 76882,
+    "igdbUrl": "https://www.igdb.com/games/sekiro-shadows-die-twice",
     "sgdbId": 26258,
     "steamAppId": 814380,
     "images": {
@@ -334,6 +374,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/fe45e3227f3805b1314414203c4e5206.png",
       "icon": "https://cdn2.steamgriddb.com/icon/e732b84af8e033529e17550b87b64c50.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "uP8lFi_BibY",
+      "name": "Trailer"
     }
   },
   {
@@ -351,9 +395,9 @@
     "developers": [
       "Supergiant Games"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 91,
+    "igdbId": 113112,
+    "igdbUrl": "https://www.igdb.com/games/hades--1",
     "sgdbId": 4997889,
     "steamAppId": 1145360,
     "images": {
@@ -365,6 +409,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/923cac285a4b2e03d3d618857c250eee.png",
       "icon": "https://cdn2.steamgriddb.com/icon/851300ee84c2b80ed40f51ed26d866fc.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "Bz8l935Bv0Y",
+      "name": "Launch Trailer"
     }
   },
   {
@@ -381,9 +429,9 @@
     "developers": [
       "Valve"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 92,
+    "igdbId": 72,
+    "igdbUrl": "https://www.igdb.com/games/portal-2",
     "sgdbId": 17830,
     "steamAppId": 620,
     "images": {
@@ -395,6 +443,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/4d974dad853e25462f34e31e39a0e626.png",
       "icon": "https://cdn2.steamgriddb.com/icon/8d37be25170778cefa6d23801922dc97.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "mC_u9ZwlIUc",
+      "name": "Trailer"
     }
   },
   {
@@ -412,9 +464,9 @@
     "developers": [
       "ConcernedApe"
     ],
-    "rating": null,
-    "igdbId": null,
-    "igdbUrl": null,
+    "rating": 88,
+    "igdbId": 17000,
+    "igdbUrl": "https://www.igdb.com/games/stardew-valley",
     "sgdbId": 9569,
     "steamAppId": 413150,
     "images": {
@@ -426,6 +478,10 @@
       "logo": "https://cdn2.steamgriddb.com/logo/c9079272e7ee76e97719613b234763c2.png",
       "icon": "https://cdn2.steamgriddb.com/icon/a429ee6281b4bad77a94b44df89f4036.ico",
       "screenshots": []
+    },
+    "trailer": {
+      "youtubeId": "ot7uXNQskhs",
+      "name": "Trailer"
     }
   },
   {
@@ -464,7 +520,11 @@
       ]
     },
     "summarySource": "wikipedia",
-    "summaryUrl": "https://fr.wikipedia.org/wiki/The_Legend_of_Zelda%3A_Tears_of_the_Kingdom"
+    "summaryUrl": "https://fr.wikipedia.org/wiki/The_Legend_of_Zelda%3A_Tears_of_the_Kingdom",
+    "trailer": {
+      "youtubeId": "3fr1Z07AV00",
+      "name": "Trailer"
+    }
   },
   {
     "id": "minecraft-pc",
@@ -504,7 +564,11 @@
       ]
     },
     "summarySource": "wikipedia",
-    "summaryUrl": "https://fr.wikipedia.org/wiki/Minecraft"
+    "summaryUrl": "https://fr.wikipedia.org/wiki/Minecraft",
+    "trailer": {
+      "youtubeId": "5nWMr2njHiA",
+      "name": "Trailer"
+    }
   },
   {
     "id": "rocket-league-pc",
@@ -544,6 +608,10 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/w23nbjchdt6ulfxws9nt.jpg",
         "https://images.igdb.com/igdb/image/upload/t_1080p/ygepetru87ka9nzqowr6.jpg"
       ]
+    },
+    "trailer": {
+      "youtubeId": "r4iT0yZEwk8",
+      "name": "Trailer"
     }
   },
   {
@@ -583,6 +651,10 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/scqxuq.jpg",
         "https://images.igdb.com/igdb/image/upload/t_1080p/scawfp.jpg"
       ]
+    },
+    "trailer": {
+      "youtubeId": "sc4_dXjkCl8",
+      "name": "Launch Trailer"
     }
   },
   {
@@ -622,6 +694,10 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/li43va0vnqjbsyaqjkhc.jpg",
         "https://images.igdb.com/igdb/image/upload/t_1080p/cbt9ooc8irnm4jx49nfg.jpg"
       ]
+    },
+    "trailer": {
+      "youtubeId": "3Ty4064UZ_c",
+      "name": "Trailer"
     }
   },
   {
@@ -660,6 +736,10 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/sc153ex.jpg",
         "https://images.igdb.com/igdb/image/upload/t_1080p/sc153et.jpg"
       ]
+    },
+    "trailer": {
+      "youtubeId": "wuFfiTEr2yc",
+      "name": "Trailer"
     }
   },
   {
@@ -700,6 +780,10 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/scmngs.jpg",
         "https://images.igdb.com/igdb/image/upload/t_1080p/sc13652.jpg"
       ]
+    },
+    "trailer": {
+      "youtubeId": "ayGk_auu5tk",
+      "name": "Release Date Trailer"
     }
   },
   {
@@ -739,6 +823,10 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/scm1kq.jpg",
         "https://images.igdb.com/igdb/image/upload/t_1080p/scm1kr.jpg"
       ]
+    },
+    "trailer": {
+      "youtubeId": "24ZY6Ck_c8I",
+      "name": "Trailer"
     }
   }
 ]
