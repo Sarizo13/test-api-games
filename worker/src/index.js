@@ -80,9 +80,10 @@ async function searchGames(env, term) {
     let score = (scored.get(g.id)?.score ?? 0) + bonus - i;
     if (!scored.has(g.id)) {
       if (n === target) score += 100;
-      else if (n.startsWith(target)) score += 40;
-      else if (n.includes(target)) score += 15;
-      score += Math.log10((g.total_rating_count ?? 0) + 1) * 12; // les jeux connus d'abord
+      else if (n.startsWith(target)) score += 30;
+      else if (` ${n}`.includes(` ${target}`)) score += 25; // un mot commence par la recherche : « silks » → Silksong
+      else if (n.includes(target)) score += 10;
+      score += Math.log10((g.total_rating_count ?? 0) + 1) * 15; // les jeux connus d'abord
     }
     scored.set(g.id, { g, score });
   });

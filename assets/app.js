@@ -146,7 +146,7 @@ function listbox(input, list, onPick) {
     else if (e.key === 'Escape') { e.stopPropagation(); box.close(); }
   });
   input.addEventListener('blur', () => box.close());
-  list.addEventListener('pointerdown', (e) => e.preventDefault()); // le champ garde le focus
+  list.addEventListener('mousedown', (e) => e.preventDefault()); // le champ garde le focus (sinon la liste se ferme avant le clic)
   list.addEventListener('click', (e) => {
     const li = e.target.closest('[role="option"]');
     if (li) onPick(li);
