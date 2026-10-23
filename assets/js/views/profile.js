@@ -33,15 +33,15 @@ export function renderProfile(view) {
         <div class="progress"><span data-p="${(profile.count / PROFILE_MIN) * 100}%"></span></div>
         <button class="btn btn-primary" type="button" data-action="add" style="justify-self:start">${ICONS.plus}Ajouter un jeu</button>
       </div>` : `
-      <section class="panel section archetype" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:22px;align-items:center;padding:clamp(18px,3vw,30px)">
-        <span style="font-size:clamp(54px,8vw,84px);line-height:1;filter:drop-shadow(0 10px 30px rgba(139,92,246,.5))">${profile.archetype.emoji}</span>
-        <div>
+      <section class="panel section archetype">
+        <span class="archetype-emoji">${profile.archetype.emoji}</span>
+        <div class="archetype-text">
           <p class="kicker">Ton archétype</p>
-          <h2 style="margin:0 0 8px;font:800 clamp(24px,3.4vw,36px)/1.1 var(--font-display)">${esc(profile.archetype.name)}</h2>
-          <p class="muted" style="margin:0 0 14px;max-width:560px">${esc(profile.archetype.text)}</p>
+          <h2>${esc(profile.archetype.name)}</h2>
+          <p class="muted">${esc(profile.archetype.text)}</p>
           <div class="chips">${profile.traits.map((t) => `<span class="chip" title="${esc(t.text)}">${t.emoji} ${esc(t.label)}</span>`).join('') || '<span class="muted" style="font-size:13px">Joue, note et termine des jeux pour révéler tes traits.</span>'}</div>
         </div>
-        <div class="stat" style="--c:#8b5cf6;min-width:130px;text-align:center"><span class="stat-value">${profile.score}</span><span class="stat-label">score de joueur</span></div>
+        <div class="stat archetype-score" style="--c:#8b5cf6"><span class="stat-value">${profile.score}</span><span class="stat-label">score de joueur</span></div>
       </section>
 
       <section class="charts section">

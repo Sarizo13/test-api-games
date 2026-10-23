@@ -4,6 +4,7 @@ import { FAMILIES, PLATFORMS, platformMeta } from '../../platforms.js';
 import { state, gameById, updateGame, removeGame, togglePlaylist, fetchDiscover, knownIgdbIds, onChange, TEST } from '../state.js';
 import { cardHtml, cardStats, attachHolo, STATUS, RATINGS, TIERS } from '../card.js';
 import { radar, animateCharts } from '../charts.js';
+import { ratingBar, paintRating, bindRatings } from '../rating.js';
 import { createTrailer, hasTrailer, trailersAllowed } from '../trailer.js';
 import { openLogin } from '../add.js';
 import { consoleHref } from './consoles.js';
@@ -71,9 +72,8 @@ export function renderGame(view, id) {
             <h3>Ma note</h3>
             <div class="rating-grid">
               <div class="sliders">${Object.entries(RATINGS).map(([k, label]) => `
-                <label class="slider-row"><span>${label}</span>
-                  <input class="range" type="range" min="0" max="10" step="0.5" data-rating="${k}">
-                  <output data-out="${k}">—</output></label>`).join('')}
+                <div class="slider-row"><span>${label}</span>${ratingBar(k, label)}<output data-out="${k}">—</output></div>`).join('')}
+                <p class="source-note" style="margin:0">Touche ou fais glisser sur les segments · au clavier : flèches, Suppr pour effacer</p>
                 <button class="btn btn-ghost btn-sm" type="button" id="clear-ratings" style="justify-self:start">Effacer mes notes</button>
               </div>
               <div id="radar"></div>
@@ -139,8 +139,14 @@ export function renderGame(view, id) {
         ${row('⏱', g.timeToBeat?.normally ? 'Temps de jeu (vs. durée moyenne)' : 'Temps de jeu', s.time, '#22d3ee')}
         ${row('🏆', 'Trophées', s.trophies, '#fbbf24')}
       </div>
-      <p class="source-note">${s.tier === 'sealed' ? 'Encore sous blister : lance le jeu pour révéler sa carte.' : 'Terminé +4 · 100 % +8 · coup de cœur +4'}</p>`;
+      <p class="source-note">${s.tier === 'sealed' ? 'Encore sous blister : lance le jeu pour révéler sa carte.' : 'Moyenne des trois (ce qui manque compte 0) · terminé +4 · 100 % +8 · coup de cœur +4'}</p>`;
     animateCharts($('#power', view));
+  };
+
+  // Barres de notes et radar, pour les notes enregistrées ou un aperçu pendant le geste
+  const showRatings = (ratings) => {
+    for (const k of Object.keys(RATINGS)) paintRating($(`[data-rating="${k}"]`, view), $(`[data-out="${k}"]`, view), ratings[k] ?? null);
+    $('#radar', view).innerHTML = radar(Object.entries(RATINGS).map(([k, label]) => ({ label: label.split(' ')[0], value: ratings[k] ?? null })));
   };
 
   const refreshControls = () => {
@@ -148,15 +154,7 @@ export function renderGame(view, id) {
     $('#fav', view).classList.toggle('is-on', Boolean(g.favorite));
     const queued = state.playlist.includes(g.id);
     $('#playlist', view).innerHTML = queued ? `${ICONS.check}Dans ma liste` : `${ICONS.list}À jouer ensuite`;
-    for (const k of Object.keys(RATINGS)) {
-      const v = g.ratings?.[k];
-      const input = $(`[data-rating="${k}"]`, view);
-      if (document.activeElement !== input) input.value = v ?? 5;
-      input.classList.toggle('is-empty', v == null);
-      input.style.setProperty('--v', `${((v ?? 0) / 10) * 100}%`);
-      $(`[data-out="${k}"]`, view).textContent = v == null ? '—' : String(v).replace('.', ',');
-    }
-    $('#radar', view).innerHTML = radar(Object.entries(RATINGS).map(([k, label]) => ({ label: label.split(' ')[0], value: g.ratings?.[k] ?? null })));
+    showRatings(g.ratings ?? {});
     const hoursInput = $('#hours', view);
     if (document.activeElement !== hoursInput) hoursInput.value = g.playtimeMinutes != null ? Math.round((g.playtimeMinutes / 60) * 10) / 10 : '';
     const tro = $('#trophies', view);
@@ -254,22 +252,15 @@ export function renderGame(view, id) {
     }
   });
 
-  // Curseurs de notes : aperçu immédiat, enregistrement quand on lâche
-  view.addEventListener('input', (e) => {
-    const k = e.target.dataset.rating;
-    if (!k) return;
-    if (!state.canEdit) { guard(); return; }
-    const v = Number(e.target.value);
-    e.target.classList.remove('is-empty');
-    e.target.style.setProperty('--v', `${v * 10}%`);
-    $(`[data-out="${k}"]`, view).textContent = String(v).replace('.', ',');
-    const preview = { ...g, ratings: { ...g.ratings, [k]: v } };
-    $('#radar', view).innerHTML = radar(Object.entries(RATINGS).map(([key, label]) => ({ label: label.split(' ')[0], value: preview.ratings[key] ?? null })));
+  // Notes : aperçu immédiat pendant le geste, enregistrement quand on lâche
+  bindRatings(view, {
+    canEdit: guard,
+    preview: (k, v) => showRatings({ ...g.ratings, [k]: v }),
+    commit: (k, v) => { if ((g.ratings?.[k] ?? null) !== v) save({ ratings: { [k]: v } }); else showRatings(g.ratings ?? {}); },
+    cancel: () => showRatings(g.ratings ?? {}),
   });
   view.addEventListener('change', (e) => {
     if (!state.canEdit && e.target.matches('input, select')) { guard(); return; }
-    const k = e.target.dataset.rating;
-    if (k) { save({ ratings: { [k]: Number(e.target.value) } }); return; }
     if (e.target.id === 'hours') save({ playtimeMinutes: e.target.value === '' ? null : Math.round(Number(e.target.value) * 60) });
     if (e.target.id === 'trophies') save({ achievements: e.target.value === '' ? null : { percent: Number(e.target.value) } });
     if (e.target.id === 'started') save({ startedAt: e.target.value || null });

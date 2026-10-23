@@ -15,7 +15,7 @@ export function renderLists(view, tab = 'a-jouer') {
         <div><p class="kicker">Mes listes</p><h1>${tab === 'envies' ? 'Mes envies' : 'À jouer ensuite'}</h1>
         <p>${tab === 'envies'
           ? 'Les jeux que tu n\'as pas encore : sorties attendues, coups de cœur repérés, idées pour plus tard.'
-          : 'Ta file d\'attente, dans l\'ordre. Glisse les jeux pour les réordonner ; un jeu terminé quitte la liste tout seul.'}</p></div>
+          : 'Ta file d\'attente, dans l\'ordre. Réordonne-la avec les flèches (ou en glissant les jeux sur ordinateur) ; un jeu terminé quitte la liste tout seul.'}</p></div>
         ${tab === 'envies' ? `<button class="btn btn-primary" type="button" data-wish-add>${ICONS.plus}Ajouter une envie</button>` : ''}
       </div>
       <nav class="tabs-head" aria-label="Listes">

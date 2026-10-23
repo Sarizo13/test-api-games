@@ -43,6 +43,7 @@ export function ratingAverage(g) {
  *  - temps : ton temps de jeu comparé à la durée moyenne pour finir le jeu (finir = 75, deux fois la durée = 100),
  *    ou sur une échelle logarithmique si la durée est inconnue (100 h ≈ 100)
  *  - trophées : pourcentage de succès
+ * Ce qui manque compte pour 0 : une carte forte demande une note, du temps de jeu ET des trophées.
  * Bonus : terminé +4, 100 % +8, coup de cœur +4. Un jeu jamais joué reste « sous blister ».
  */
 export function cardStats(g) {
@@ -56,9 +57,7 @@ export function cardStats(g) {
     time = ratio == null ? clamp((Math.log10(hours + 1) / 2) * 100) : ratio <= 1 ? ratio * 75 : clamp(75 + (ratio - 1) * 25);
   }
   const trophies = g.achievements?.percent ?? (g.status === 'completed' ? 100 : null);
-  const parts = [rating, time, trophies].filter((v) => v != null);
-
-  let power = parts.length ? avg(parts) : g.status === 'backlog' ? 0 : 15;
+  let power = ((rating ?? 0) + (time ?? 0) + (trophies ?? 0)) / 3;
   if (g.status === 'completed') power += 8;
   else if (g.status === 'finished') power += 4;
   if (g.favorite) power += 4;

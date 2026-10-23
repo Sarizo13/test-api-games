@@ -6,6 +6,7 @@ import { state, saveSettings, TEST } from '../state.js';
 import { cardHtml, cardStats, attachHolo, ratingAverage, STATUS, TIERS } from '../card.js';
 import { youtubeTrailer, trailersAllowed } from '../trailer.js';
 import { requireEdit, openAdd } from '../add.js';
+import { makerLogo, consoleLogo, consolePhoto } from '../brands.js';
 import { sectionHead, emptyState, thumb } from './common.js';
 import { $, esc, cssUrl, norm, fmtHours, avg, sum, local, setAmbient, toast, ICONS } from '../util.js';
 
@@ -30,6 +31,7 @@ export function renderConsoles(view) {
         <span class="folder-tab"></span>
         <span class="folder-papers">${covers.map((g) => thumb(g)).join('')}</span>
         <span class="folder-body">
+          <span class="folder-brand" aria-hidden="true">${makerLogo(p)}</span>
           <span><span class="folder-name">${esc(p.id)}</span>${p.year ? `<span class="folder-year">${p.year}</span>` : ''}</span>
           <span class="folder-meta">
             <span>${played}/${games.length} lancés<br>${fmtHours(sum(games.map((g) => g.playtimeMinutes ?? 0)))}</span>
@@ -81,7 +83,9 @@ export function renderConsole(view, platformSlug) {
   if (!SORTS[sort]) sort = 'added';
 
   const trailerId = state.settings.consoleTrailers?.[p.id] ?? p.trailer;
-  const bgGame = [...games].filter((g) => g.images?.hero).sort((a, b) => cardStats(b).power - cardStats(a).power)[0];
+  // La photo de la console ; à défaut (arcade, mobile…), l'image du meilleur jeu
+  const photo = consolePhoto(p);
+  const bgGame = photo ? null : [...games].filter((g) => g.images?.hero).sort((a, b) => cardStats(b).power - cardStats(a).power)[0];
   const played = games.filter((g) => g.status !== 'backlog');
   const ratings = games.map(ratingAverage).filter((r) => r != null);
   const done = games.filter((g) => ['finished', 'completed'].includes(g.status));
@@ -91,12 +95,16 @@ export function renderConsole(view, platformSlug) {
     <section class="console-hero${trailerId && trailersAllowed ? ' has-trailer' : ''}" style="--c:${p.color}">
       <div class="hero-bg" style="${bgGame
         ? `background-image:${cssUrl(bgGame.images.heroThumb || bgGame.images.hero)}`
-        // Sans image, un fond opaque : la vidéo doit rester cachée pendant le zoom
-        : `background:radial-gradient(120% 120% at 100% 0%, ${p.color}88, transparent 60%), linear-gradient(160deg, #151826, #08090f)`}"></div>
+        // Sinon un fond opaque : la vidéo doit rester cachée pendant le zoom
+        : 'background:radial-gradient(70% 90% at 75% 45%, color-mix(in srgb, var(--c) 55%, transparent), transparent 70%), linear-gradient(160deg, color-mix(in srgb, var(--c) 28%, #151826), #08090f)'}">
+        ${photo ? `<img class="hero-photo" src="${esc(photo.src)}" alt="${esc(p.id)}" decoding="async">` : ''}
+      </div>
       <div class="hero-tools">
         <button class="icon-btn" type="button" data-trailer title="Changer la bande-annonce de la console" aria-label="Changer la bande-annonce">${ICONS.edit}</button>
       </div>
+      ${photo ? `<a class="hero-credit" href="${esc(photo.page)}" target="_blank" rel="noopener">Photo : Wikimedia Commons</a>` : ''}
       <div>
+        <span class="console-mark">${consoleLogo(p)}</span>
         <p class="kicker">${esc(FAMILIES.find((f) => f.id === p.family)?.name ?? '')}${p.year ? ` · ${p.year}` : ''}</p>
         <h1>${esc(p.id)}</h1>
         <p>${games.length} jeu${games.length > 1 ? 'x' : ''} · ${played.length} lancé${played.length > 1 ? 's' : ''} · ${fmtHours(sum(games.map((g) => g.playtimeMinutes ?? 0)))} de jeu</p>
@@ -132,7 +140,7 @@ export function renderConsole(view, platformSlug) {
   };
   renderGrid();
   attachHolo(view);
-  if (bgGame) setAmbient(bgGame.images.gridThumb || bgGame.images.cover);
+  if (best) setAmbient(best.images?.gridThumb || best.images?.cover);
 
   view.addEventListener('click', (e) => {
     const f = e.target.closest('[data-filter]');
