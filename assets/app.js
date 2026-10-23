@@ -376,6 +376,33 @@ const SOUND_ICONS = {
   on: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm11.5-1.6a6 6 0 0 1 0 9.2l-1.3-1.5a4 4 0 0 0 0-6.2zm2.6-3a10 10 0 0 1 0 15.2l-1.3-1.5a8 8 0 0 0 0-12.2z"/></svg>',
 };
 
+/** Bouton son d'une bande-annonce. `toggle` coupe ou remet le son et renvoie true si le son est désormais coupé. */
+function soundButton(toggle) {
+  const sound = document.createElement('button');
+  sound.type = 'button';
+  sound.className = 'trailer-sound';
+  const render = (muted) => {
+    sound.innerHTML = muted ? SOUND_ICONS.off : SOUND_ICONS.on;
+    sound.setAttribute('aria-label', muted ? 'Activer le son de la bande-annonce' : 'Couper le son de la bande-annonce');
+  };
+  render(true);
+  sound.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const muted = toggle();
+    if (muted != null) render(muted);
+  });
+  return sound;
+}
+
+const hasTrailer = (g) => Boolean(g?.steamTrailer?.hls || g?.trailer?.youtubeId);
+
+/** Bande-annonce Steam (vidéo lue par le site) si possible, sinon YouTube. */
+function createTrailer(bg, game, options) {
+  return game.steamTrailer?.hls
+    ? nativeTrailer(bg, game.steamTrailer.hls, options)
+    : backgroundTrailer(bg, game.trailer.youtubeId, options);
+}
+
 let ytApi = null;
 
 function loadYouTubeApi() {
@@ -416,18 +443,11 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
   const layer = document.createElement('div');
   layer.className = 'trailer';
   layer.append(document.createElement('div'));
-  const sound = document.createElement('button');
-  sound.type = 'button';
-  sound.className = 'trailer-sound';
-  sound.setAttribute('aria-label', 'Activer le son de la bande-annonce');
-  sound.innerHTML = SOUND_ICONS.off;
-  sound.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (!player) return;
+  const sound = soundButton(() => {
+    if (!player) return null;
     const muted = player.isMuted();
     if (muted) { player.unMute(); player.setVolume(70); } else { player.mute(); }
-    sound.innerHTML = muted ? SOUND_ICONS.on : SOUND_ICONS.off;
-    sound.setAttribute('aria-label', muted ? 'Couper le son de la bande-annonce' : 'Activer le son de la bande-annonce');
+    return !muted;
   });
 
   // Le bouton son reste affiché pendant un chargement : seule la vidéo s'efface
@@ -530,6 +550,117 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
   };
 }
 
+/* ---------- Bandes-annonces Steam : une vraie balise <video>, sans interface par-dessus ---------- */
+
+const HLS_SRC = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js';
+let hlsLib = null;
+
+// Firefox et Chrome ne lisent pas le format HLS de Steam tout seuls : hls.js s'en charge (Safari le lit nativement)
+function loadHls() {
+  hlsLib ??= new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = HLS_SRC;
+    script.onload = () => resolve(window.Hls);
+    script.onerror = () => { hlsLib = null; reject(new Error('hls.js indisponible')); };
+    document.head.append(script);
+  });
+  return hlsLib;
+}
+
+/**
+ * Même principe que la version YouTube : la vidéo joue sous l'image pendant le zoom, puis l'image s'efface.
+ * Ici aucune interface (ni bouton lecture/pause) ne peut apparaître, la vidéo est entièrement gérée par le site.
+ */
+function nativeTrailer(bg, src, { soundParent, zoomDelay = TRAILER_DELAY, onEnd } = {}) {
+  let stopped = false;
+  let ended = false;
+  let hls = null;
+  let zoomDone = false;
+  const label = 'steam';
+
+  const video = document.createElement('video');
+  video.className = 'trailer trailer-video';
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.setAttribute('muted', '');
+  video.setAttribute('playsinline', '');
+
+  const sound = soundButton(() => {
+    video.muted = !video.muted;
+    if (!video.muted) video.volume = 0.7;
+    return video.muted;
+  });
+
+  const reveal = () => {
+    if (stopped || ended || !zoomDone || video.paused || video.currentTime < 0.3) return;
+    if (bg.classList.contains('is-faded')) return;
+    dbg(`${label} IMAGE EFFACÉE (vidéo à ${video.currentTime.toFixed(1)}s)`);
+    bg.classList.add('is-faded');
+    sound.classList.add('is-visible');
+  };
+  const finish = () => {
+    if (ended || stopped) return;
+    ended = true;
+    dbg(`${label} fin / abandon`);
+    clearTimeout(startTimer);
+    bg.classList.remove('is-faded');
+    sound.classList.remove('is-visible');
+    onEnd?.();
+  };
+
+  video.addEventListener('playing', () => { dbg(`${label} lecture`); reveal(); });
+  video.addEventListener('timeupdate', () => {
+    reveal();
+    // L'image revient juste avant la fin
+    if (video.duration > 0 && video.duration - video.currentTime < 1) finish();
+  });
+  video.addEventListener('error', () => finish());
+
+  const zoomTimer = setTimeout(() => { zoomDone = true; reveal(); }, zoomDelay);
+  const startTimer = setTimeout(() => { if (!bg.classList.contains('is-faded')) finish(); }, TRAILER_START_TIMEOUT + zoomDelay);
+
+  // Petit délai avant de charger la vidéo, pour ne rien lancer si on fait défiler le carrousel rapidement
+  const timer = setTimeout(async () => {
+    if (stopped) return;
+    bg.before(video);
+    soundParent?.append(sound);
+    dbg(`${label} chargement`);
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = src;
+    } else {
+      let Hls;
+      try { Hls = await loadHls(); } catch { finish(); return; }
+      if (stopped) return;
+      if (!Hls?.isSupported()) { finish(); return; }
+      hls = new Hls({ capLevelToPlayerSize: true, maxBufferLength: 20 });
+      hls.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) { dbg(`${label} erreur ${data.details}`); finish(); } });
+      hls.loadSource(src);
+      hls.attachMedia(video);
+    }
+    video.play().catch(() => { /* lecture refusée par le navigateur : on garde l'image */ });
+  }, 400);
+
+  return {
+    stop() {
+      stopped = true;
+      clearTimeout(timer);
+      clearTimeout(zoomTimer);
+      clearTimeout(startTimer);
+      bg.classList.remove('is-faded');
+      sound.remove();
+      setTimeout(() => {
+        hls?.destroy();
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+        video.remove();
+      }, 1300);
+    },
+    get ended() { return ended; },
+  };
+}
+
 /* ==========================================================================
    Hero
    ========================================================================== */
@@ -573,7 +704,7 @@ function startHeroTrailer(slide, game, { zoom = true } = {}) {
   heroTrailer?.stop();
   els.hero.classList.add('is-trailer');
   if (!els.detail.hidden) { heroSuspended = true; return; } // une seule vidéo à la fois : on attend la fermeture de la fiche
-  heroTrailer = backgroundTrailer($('.hero-bg', slide), game.trailer.youtubeId, {
+  heroTrailer = createTrailer($('.hero-bg', slide), game, {
     soundParent: els.hero,
     zoomDelay: zoom ? TRAILER_DELAY : 0,
     onEnd: () => els.hero.classList.remove('is-trailer'),
@@ -594,7 +725,7 @@ function resumeHeroTrailer() {
   heroSuspended = false;
   const slide = $('.hero-slide.is-active', els.heroSlides);
   const game = state.games.find((g) => g.id === slide?.dataset.id);
-  if (game?.trailer) startHeroTrailer(slide, game, { zoom: false });
+  if (hasTrailer(game)) startHeroTrailer(slide, game, { zoom: false });
   else els.hero.classList.remove('is-trailer');
 }
 
@@ -611,7 +742,7 @@ function renderHero() {
       ? `<img class="hero-logo" src="${esc(safeUrl(g.images.logo))}" alt="${esc(g.name)}" data-title="${esc(g.name)}">`
       : `<h2 class="hero-title">${esc(g.name)}</h2>`;
     return `
-      <div class="hero-slide${g.trailer && trailersAllowed ? ' has-trailer' : ''}" data-id="${g.id}">
+      <div class="hero-slide${hasTrailer(g) && trailersAllowed ? ' has-trailer' : ''}" data-id="${g.id}">
         <div class="hero-bg" ${bgAttrs(heroPreview(g), heroImage(g))}></div>
         <div class="hero-content">
           ${title}
@@ -646,7 +777,7 @@ function showSlide(i) {
 
   // Zoom sur l'image, puis bande-annonce
   stopHeroTrailer();
-  if (game?.trailer && trailersAllowed) startHeroTrailer(slides[heroIndex], game);
+  if (hasTrailer(game) && trailersAllowed) startHeroTrailer(slides[heroIndex], game);
 }
 
 // La barre de progression du point actif sert de minuteur : quand elle est pleine, on passe au jeu suivant.
@@ -1099,7 +1230,7 @@ function renderDetail(g) {
     <button class="icon-btn modal-close" type="button" data-close aria-label="Fermer">
       <svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4z"/></svg>
     </button>
-    <div class="detail-hero${g.trailer && trailersAllowed ? ' has-trailer' : ''}">
+    <div class="detail-hero${hasTrailer(g) && trailersAllowed ? ' has-trailer' : ''}">
       <div class="detail-hero-bg${heroImage(g) ? '' : ' is-blurred'}" ${bgAttrs(heroBgPreview, heroBg)}></div>
       ${g.images.logo ? `<img class="detail-logo" src="${esc(safeUrl(g.images.logo))}" alt="">` : ''}
     </div>
@@ -1135,8 +1266,8 @@ function renderDetail(g) {
 
   upgradeBg($('.detail-hero-bg', els.detailPanel));
   stopDetailTrailer();
-  if (g.trailer && trailersAllowed) {
-    detailTrailer = backgroundTrailer($('.detail-hero-bg', els.detailPanel), g.trailer.youtubeId, {
+  if (hasTrailer(g) && trailersAllowed) {
+    detailTrailer = createTrailer($('.detail-hero-bg', els.detailPanel), g, {
       soundParent: $('.detail-hero', els.detailPanel),
     });
   }

@@ -423,6 +423,14 @@ button, input, select { font: inherit; color: inherit; }
 
 .detail-hero .trailer { z-index: auto; }
 
+/* Bande-annonce Steam : une simple balise vidéo qui couvre le cadre */
+.trailer-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
 .hero-bg,
 .detail-hero-bg { transition: opacity .3s ease; }
 

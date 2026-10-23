@@ -32,9 +32,14 @@ La source est indiquée sous le résumé sur la fiche du jeu. Pour retraduire le
 
 ### Bandes-annonces
 
-Quand IGDB connaît une bande-annonce YouTube, le fond du carrousel et de la fiche zoome pendant environ 3,5 s, puis la vidéo démarre en fondu (sans le son ; un bouton permet de l'activer). Pendant la vidéo, le carrousel attend. Pas de vidéo sur petit écran, en mode économie de données ou si les animations sont réduites.
+Le fond du carrousel et de la fiche zoome pendant environ 3,5 s, puis la bande-annonce apparaît en fondu (sans le son ; un bouton permet de l'activer). Pendant la vidéo, le carrousel attend. Pas de vidéo sur petit écran, en mode économie de données ou si les animations sont réduites.
 
-Pour ajouter les bandes-annonces aux jeux déjà présents : *Actions → Mettre à jour depuis IGDB → Run workflow*.
+- **Jeux sur Steam** : la bande-annonce de la boutique Steam est lue directement par le site (balise `<video>` + [hls.js](https://github.com/video-dev/hls.js) pour Firefox et Chrome). Aucune interface par-dessus.
+- **Autres jeux** : bande-annonce YouTube trouvée par IGDB. Certains navigateurs (Firefox notamment) peuvent afficher une fraction de seconde le bouton lecture/pause de YouTube à l'apparition.
+
+Pour ajouter les bandes-annonces aux jeux déjà présents : `node scripts/refresh-steam.mjs` (Steam, sans clé) et *Actions → Mettre à jour depuis IGDB → Run workflow* (YouTube).
+
+Mode diagnostic : ajouter `?debug` à l'adresse du site affiche les événements des bandes-annonces en direct.
 
 ## Mise en route
 

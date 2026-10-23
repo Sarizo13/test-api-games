@@ -77,14 +77,21 @@ export async function findGame(igdb, { name, platform, igdbId }, fields) {
 
 /** Choisit la bande-annonce la plus représentative parmi les vidéos YouTube d'IGDB. */
 export function pickTrailer(videos = []) {
-  const rank = (v) => {
-    const n = (v.name ?? '').toLowerCase();
-    if (/launch|release|lancement/.test(n)) return 0;
-    if (/announce|reveal|annonce/.test(n)) return 2;
-    if (/trailer|bande/.test(n) && !/gameplay|teaser|dlc|update|season|patch/.test(n)) return 1;
-    if (/trailer|teaser/.test(n)) return 3;
-    return 4;
-  };
-  const video = [...videos].filter((v) => /^[\w-]{11}$/.test(v.video_id ?? '')).sort((a, b) => rank(a) - rank(b))[0];
+  const video = [...videos].filter((v) => /^[\w-]{11}$/.test(v.video_id ?? ''))
+    .sort((a, b) => trailerRank(a.name) - trailerRank(b.name))[0];
   return video ? { youtubeId: video.video_id, name: video.name ?? null } : null;
+}
+
+/** Plus le rang est bas, plus la vidéo est représentative du jeu (bande-annonce de lancement d'abord). */
+export function trailerRank(name) {
+  const n = (name ?? '').toLowerCase();
+  // Versions régionales (« DE USK », « (EN-US) »…) : juste derrière la version internationale
+  const regional = /\b(de|usk|fr|jp|kr|ru|pegi|esrb|en-us|en-gb)\b|\(de\)/.test(n) ? 0.5 : 0;
+  // Ce qui parle d'autre chose que du jeu de base : mises à jour, saisons, extensions…
+  if (/update|season|dlc|expansion|patch|content pack|edgerunners|phantom liberty|shadow of the erdtree/.test(n)) return 5 + regional;
+  if (/launch|release|lancement/.test(n)) return 0 + regional;
+  if (/announce|reveal|annonce/.test(n)) return 2 + regional;
+  if (/trailer|bande/.test(n) && !/gameplay|teaser/.test(n)) return 1 + regional;
+  if (/trailer|teaser/.test(n)) return 3 + regional;
+  return 4 + regional;
 }

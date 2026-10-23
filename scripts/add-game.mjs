@@ -18,6 +18,7 @@ import { randomBytes } from 'node:crypto';
 import { PLATFORMS, findPlatform } from '../assets/platforms.js';
 import { frenchSummary, enwikiTitleFrom } from './lib/summary-fr.mjs';
 import { simplify, matchKey, scoreTitle, best, request, igdbClient, findGame, pickTrailer } from './lib/igdb.mjs';
+import { steamTrailer } from './lib/steam.mjs';
 
 const DATA_FILE = new URL('../data/games.json', import.meta.url);
 const SGDB_API = 'https://www.steamgriddb.com/api/v2';
@@ -255,7 +256,8 @@ async function main() {
     igdbUrl: info?.url ?? null,
     sgdbId: sgdbGame?.id ?? null,
     steamAppId,
-    trailer: pickTrailer(info?.videos),
+    trailer: pickTrailer(info?.videos), // YouTube, utilisé si Steam n'a pas de bande-annonce
+    steamTrailer: await steamTrailer(steamAppId),
     images: {
       grid: art.grid ?? null,
       gridThumb: art.gridThumb ?? null,

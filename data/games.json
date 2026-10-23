@@ -32,6 +32,10 @@
     "trailer": {
       "youtubeId": "U8lJRcUeEMs",
       "name": "Release Date Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/1145350/1067641820/dfba9c6a8b09f5bd9b323d6e699ac685065b93d3/1758924611/hls_264_master.m3u8?t=1758942439",
+      "name": "Hades II – v1.0 Launch Trailer"
     }
   },
   {
@@ -67,6 +71,10 @@
     "trailer": {
       "youtubeId": "qqiC88f9ogU",
       "name": "Launch Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/1245620/443029/eeb27ee27beb23ff82f1360dcecc78923314ef40/1750650443/hls_264_master.m3u8?t=1646770156",
+      "name": "ELDEN RING Launch Trailer - DE USK"
     }
   },
   {
@@ -101,6 +109,10 @@
     "trailer": {
       "youtubeId": "XuCfkgaaa08",
       "name": "Launch Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/1086940/593544/008e33be9c000c5fdb38e630f13b1d5917d4561d/1750615002/hls_264_master.m3u8?t=1695393579",
+      "name": "Baldur's Gate 3 - Launch Trailer"
     }
   },
   {
@@ -136,6 +148,10 @@
     "trailer": {
       "youtubeId": "Y2amTl5lBYM",
       "name": "Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/367520/89922/b71b6a50e9aa2334fddca8fa2197cb26a3640832/1750517691/hls_264_master.m3u8?t=1497589417",
+      "name": "Release Trailer"
     }
   },
   {
@@ -171,6 +187,10 @@
     "trailer": {
       "youtubeId": "2EnIpUkQ__M",
       "name": "Release Date Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/753640/273682/2f2fdd9086d95ee6dde3cd4dc7d70975d6c6bc81/1750579139/hls_264_master.m3u8?t=1585255228",
+      "name": "Outer Wilds | Accolades Trailer"
     }
   },
   {
@@ -206,6 +226,10 @@
     "trailer": {
       "youtubeId": "UnA7tepsc7s",
       "name": "Launch Trailer - V"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/1091500/332452/9a3e8e298bd351ae40ac3eca1bca90d57b4a42ca/1750616291/hls_264_master.m3u8?t=1697117322",
+      "name": "025_CP_Launch_Trailer_EN UK_PEGI 18 _16x9_1080__"
     }
   },
   {
@@ -241,6 +265,10 @@
     "trailer": {
       "youtubeId": "2n9pkiuSZLU",
       "name": "Launch Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/2379780/581550014/e9a47276c1efe4165c2e25e35a06d417d78e1724/1758033766/hls_264_master.m3u8?t=1759138871",
+      "name": "Accolades Gameplay Video"
     }
   },
   {
@@ -275,6 +303,10 @@
     "trailer": {
       "youtubeId": "FqBj2IGg6Uw",
       "name": "Launch Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/504230/143846/608cb7d60c10278f3107baf57a528e483a7cbc7b/1750539057/hls_264_master.m3u8?t=1516898311",
+      "name": "Launch"
     }
   },
   {
@@ -309,6 +341,10 @@
     "trailer": {
       "youtubeId": "SEJOJ4AUBic",
       "name": "Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/632470/357391/40d4d0a212158209daf4efe0c8d98f90c1322e1b/1750564395/hls_264_master.m3u8?t=1617123094",
+      "name": "Disco Elysium - The Final Cut - Launch Trailer"
     }
   },
   {
@@ -344,6 +380,10 @@
     "trailer": {
       "youtubeId": "HVRzx17WHVk",
       "name": "Launch Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/1174180/254598/21d07c59fad9b1e8c55bbdc4f27ee62be2ebd7f6/1750634152/hls_264_master.m3u8?t=1574881520",
+      "name": "RDR2 Launch Trailer (DE)"
     }
   },
   {
@@ -378,6 +418,10 @@
     "trailer": {
       "youtubeId": "uP8lFi_BibY",
       "name": "Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/814380/212986/8ba6fe8bdcdc79872f903015b5d52e1121c1fdee/1750586380/hls_264_master.m3u8?t=1553549470",
+      "name": "Sekiro: Shadows Die Twice - Launch Trailer"
     }
   },
   {
@@ -413,6 +457,10 @@
     "trailer": {
       "youtubeId": "Bz8l935Bv0Y",
       "name": "Launch Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/1145360/312686/b0312c49135823cc34946e98148abfb8da71f0fb/1750627549/hls_264_master.m3u8?t=1600353465",
+      "name": "Hades - v1.0 Launch Trailer"
     }
   },
   {
@@ -447,6 +495,10 @@
     "trailer": {
       "youtubeId": "mC_u9ZwlIUc",
       "name": "Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/620/5015/c3d24a03d62be83014d25e01999174f2d010e430/1750108756/hls_264_master.m3u8?t=1682715776",
+      "name": "Portal 2 - Launch TV Ad"
     }
   },
   {
@@ -482,6 +534,10 @@
     "trailer": {
       "youtubeId": "ot7uXNQskhs",
       "name": "Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/413150/336433/0058de516bf7c46986ba1e81172ffd3c2ca6cad7/1750527541/hls_264_master.m3u8?t=1754692862",
+      "name": "Stardew Valley Trailer 1080p"
     }
   },
   {
@@ -612,6 +668,10 @@
     "trailer": {
       "youtubeId": "r4iT0yZEwk8",
       "name": "Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/252950/1639996300/b675c8c00be8662f5f9fb2b2de4cd4bb51618f14/1789681434/hls_264_master.m3u8?t=1789756583",
+      "name": "Rocket League® - Season 24 | Gameplay Trailer"
     }
   },
   {
@@ -655,6 +715,10 @@
     "trailer": {
       "youtubeId": "sc4_dXjkCl8",
       "name": "Launch Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/2215430/698141/03040bb2f64897340d437089399b9815d399e2e2/1750809557/hls_264_master.m3u8?t=1716411558",
+      "name": "Launch Trailer (EN-US)"
     }
   },
   {
@@ -784,6 +848,10 @@
     "trailer": {
       "youtubeId": "ayGk_auu5tk",
       "name": "Release Date Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/4115450/664334575/770d51a385d199e86d14445dfe938539582b6603/1792600747/hls_264_master.m3u8?t=1792637474",
+      "name": "Phantom Blade Zero - Launch Trailer"
     }
   },
   {
@@ -827,6 +895,10 @@
     "trailer": {
       "youtubeId": "24ZY6Ck_c8I",
       "name": "Trailer"
+    },
+    "steamTrailer": {
+      "hls": "https://video.akamai.steamstatic.com/store_trailers/1798230/1408330862/455edf901a0699f4d3fc90f465bab1fa76e08dd7/1791331560/hls_264_master.m3u8?t=1792072634",
+      "name": "ATMOSFAR Early Access Release Date Trailer (Enter Tycos)"
     }
   }
 ]
