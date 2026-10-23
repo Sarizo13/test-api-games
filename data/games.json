@@ -545,5 +545,44 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/ygepetru87ka9nzqowr6.jpg"
       ]
     }
+  },
+  {
+    "id": "ghost-of-tsushima-director-s-cut-pc",
+    "name": "Ghost of Tsushima: Director's Cut",
+    "platform": "PC",
+    "addedAt": "2026-10-23T11:22:08.047Z",
+    "releaseDate": "2021-08-20",
+    "summary": "Une tempête approche. Découvrez l'édition complète de Ghost of Tsushima DIRECTOR'S CUT sur PC. Tracez votre propre voie dans ce jeu d'action-aventure en monde ouvert et découvrez tous ses secrets. Un titre Sucker Punch Productions, Nixxes Software et PlayStation Studios.",
+    "summarySource": "steam",
+    "summaryUrl": "https://store.steampowered.com/app/2215430",
+    "genres": [
+      "RPG",
+      "Aventure"
+    ],
+    "developers": [
+      "Sucker Punch Productions"
+    ],
+    "rating": 89,
+    "igdbId": 153700,
+    "igdbUrl": "https://www.igdb.com/games/ghost-of-tsushima-directors-cut",
+    "sgdbId": 5446016,
+    "steamAppId": 2215430,
+    "images": {
+      "grid": "https://cdn2.steamgriddb.com/grid/25fdaf56f9818e10497f7dc070186bed.png",
+      "gridThumb": "https://cdn2.steamgriddb.com/thumb/25fdaf56f9818e10497f7dc070186bed.jpg",
+      "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co3p5f.jpg",
+      "hero": "https://cdn2.steamgriddb.com/hero/4e51b70d7ae3e2a6194d23b399acb43d.png",
+      "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/4e51b70d7ae3e2a6194d23b399acb43d.jpg",
+      "logo": "https://cdn2.steamgriddb.com/logo/303c766a6aaaebd9b283e62c7b2d3e10.png",
+      "icon": "https://cdn2.steamgriddb.com/icon/14842d88d35923228fc2b4d02d744dd2.ico",
+      "screenshots": [
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scqxun.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scawfr.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scawfs.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scqxuo.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scqxuq.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scawfp.jpg"
+      ]
+    }
   }
 ]
