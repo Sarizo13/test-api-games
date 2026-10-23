@@ -661,5 +661,45 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/sc153et.jpg"
       ]
     }
+  },
+  {
+    "id": "phantom-blade-zero-pc",
+    "name": "Phantom Blade Zero",
+    "platform": "PC",
+    "addedAt": "2026-10-23T11:29:34.250Z",
+    "releaseDate": "2026-10-29",
+    "summary": "S-GAME présente Phantom Blade Zero, une fusion entre narration wuxia classique et action intense sous Unreal Engine 5. Incarnez Soul, un guerrier qui n'a plus que 66 jours à vivre. Repoussez des assassins, déjouez des complots et défendez vos valeurs jusqu'au bout.",
+    "summarySource": "steam",
+    "summaryUrl": "https://store.steampowered.com/app/4115450",
+    "genres": [
+      "RPG",
+      "Beat'em all",
+      "Aventure"
+    ],
+    "developers": [
+      "S-Game"
+    ],
+    "rating": null,
+    "igdbId": 250618,
+    "igdbUrl": "https://www.igdb.com/games/phantom-blade-zero",
+    "sgdbId": 5512062,
+    "steamAppId": 4115450,
+    "images": {
+      "grid": null,
+      "gridThumb": null,
+      "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/cococe.jpg",
+      "hero": "https://images.igdb.com/igdb/image/upload/t_1080p/ar6eyx.jpg",
+      "heroThumb": "https://images.igdb.com/igdb/image/upload/t_screenshot_med/ar6eyx.jpg",
+      "logo": "https://cdn2.steamgriddb.com/logo/1289b78d3e2a098cd60058a97ac49eb6.png",
+      "icon": null,
+      "screenshots": [
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scmngq.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scmngp.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scmngt.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scmngr.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scmngs.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sc13652.jpg"
+      ]
+    }
   }
 ]
