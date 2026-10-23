@@ -445,7 +445,8 @@ button, input, select { font: inherit; color: inherit; }
 .hero-bg.is-faded,
 .detail-hero-bg.is-faded { opacity: 0; transition: opacity 1.2s ease; }
 
-/* YouTube : au moment où la vidéo devient visible, certains navigateurs (Firefox) montrent une fraction
+/* Ouverture en diaphragme, pour toutes les bandes-annonces (Steam et YouTube).
+   Elle est née pour YouTube : au moment où la vidéo devient visible, certains navigateurs (Firefox) montrent une fraction
    de seconde le bouton lecture/pause de YouTube, toujours au centre. L'image ne s'efface donc pas d'un bloc :
    elle s'ouvre comme un diaphragme, des bords vers le centre, et le centre n'est dévoilé qu'en dernier. */
 .has-trailer .hero-bg.is-faded.is-iris,

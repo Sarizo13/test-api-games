@@ -596,7 +596,7 @@ function nativeTrailer(bg, src, { soundParent, zoomDelay = TRAILER_DELAY, onEnd 
     if (stopped || ended || !zoomDone || video.paused || video.currentTime < 0.3) return;
     if (bg.classList.contains('is-faded')) return;
     dbg(`${label} IMAGE EFFACÉE (vidéo à ${video.currentTime.toFixed(1)}s)`);
-    bg.classList.add('is-faded');
+    bg.classList.add('is-faded', 'is-iris'); // même ouverture en diaphragme que pour YouTube
     sound.classList.add('is-visible');
   };
   const finish = () => {
@@ -604,7 +604,7 @@ function nativeTrailer(bg, src, { soundParent, zoomDelay = TRAILER_DELAY, onEnd 
     ended = true;
     dbg(`${label} fin / abandon`);
     clearTimeout(startTimer);
-    bg.classList.remove('is-faded');
+    bg.classList.remove('is-faded', 'is-iris');
     sound.classList.remove('is-visible');
     onEnd?.();
   };
@@ -647,7 +647,7 @@ function nativeTrailer(bg, src, { soundParent, zoomDelay = TRAILER_DELAY, onEnd 
       clearTimeout(timer);
       clearTimeout(zoomTimer);
       clearTimeout(startTimer);
-      bg.classList.remove('is-faded');
+      bg.classList.remove('is-faded', 'is-iris');
       sound.remove();
       setTimeout(() => {
         hls?.destroy();
