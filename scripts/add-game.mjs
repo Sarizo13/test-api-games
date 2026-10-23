@@ -16,6 +16,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { appendFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { PLATFORMS, findPlatform } from '../assets/platforms.js';
+import { frenchSummary, enwikiTitleFrom } from './lib/summary-fr.mjs';
 
 const DATA_FILE = new URL('../data/games.json', import.meta.url);
 const SGDB_API = 'https://www.steamgriddb.com/api/v2';
@@ -156,7 +157,7 @@ async function request(label, url, options = {}) {
 /* ---------- IGDB ---------- */
 
 const IGDB_FIELDS = [
-  'name', 'url', 'summary', 'first_release_date', 'total_rating', 'genres.name',
+  'name', 'slug', 'url', 'summary', 'first_release_date', 'total_rating', 'genres.name',
   'involved_companies.developer', 'involved_companies.company.name',
   'cover.image_id', 'artworks.image_id', 'screenshots.image_id',
   'platforms.name', 'websites.url', 'external_games.url',
@@ -299,13 +300,23 @@ async function main() {
 
   const releaseUnix = info?.first_release_date ?? sgdbGame?.release_date;
   const displayName = info?.name ?? sgdbGame?.name ?? req.name;
+
+  const fr = await frenchSummary({
+    name: displayName,
+    steamAppId,
+    igdbSlug: info?.slug,
+    enwikiTitle: enwikiTitleFrom((info?.websites ?? []).map((w) => w.url)),
+    english: info?.summary,
+  });
+  console.log(`   Résumé : ${fr.summarySource ?? 'aucun'}`);
+
   const game = {
     id: slugify(`${displayName} ${req.platform.short}`),
     name: displayName,
     platform: req.platform.id,
     addedAt: new Date().toISOString(),
     releaseDate: releaseUnix ? new Date(releaseUnix * 1000).toISOString().slice(0, 10) : null,
-    summary: info?.summary ?? null,
+    ...fr,
     genres: (info?.genres ?? []).map((g) => GENRES_FR[g.name] ?? g.name),
     developers: (info?.involved_companies ?? []).filter((c) => c.developer).map((c) => c.company?.name).filter(Boolean),
     rating: info?.total_rating ? Math.round(info.total_rating) : null,

@@ -60,6 +60,7 @@ jobs:
           IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
           IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
           SGDB_API_KEY: ${{ secrets.SGDB_API_KEY }}
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }} # optionnel : traduit les résumés introuvables en français
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           GAME_NAME: ${{ inputs.name }}

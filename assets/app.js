@@ -4,6 +4,9 @@ const CONFIG = {
   // Dépôt GitHub qui reçoit les demandes d'ajout, au format "pseudo/nom-du-repo".
   // Laisse vide : il est détecté tout seul quand le site tourne sur <pseudo>.github.io.
   repo: 'Sarizo13/test-api-games',
+  // Adresse du mini-serveur (dossier worker/) : propositions de jeux et ajout direct depuis le site.
+  // Vide = ajout via une issue GitHub, sans propositions.
+  api: '',
   heroCount: 5,
   pendingTtl: 20 * 60 * 1000, // un ajout en attente disparaît au bout de 20 min
   pollEvery: 30 * 1000,
@@ -24,12 +27,18 @@ const els = {
   indicator: $('#tab-indicator'),
   sort: $('#sort'),
   search: $('#search'),
+  searchSuggest: $('#search-suggest'),
   library: $('#library'),
   detail: $('#detail'),
   detailPanel: $('#detail-panel'),
   add: $('#add'),
   addForm: $('#add-form'),
   addName: $('#add-name'),
+  addSuggest: $('#add-suggest'),
+  addSpinner: $('#add-spinner'),
+  addPicked: $('#add-picked'),
+  addPasswordField: $('#add-password-field'),
+  addPassword: $('#add-password'),
   addIgdb: $('#add-igdb'),
   addPlatforms: $('#add-platforms'),
   addHelp: $('#add-help'),
@@ -91,6 +100,77 @@ function transition(update) {
   t.finished.finally(() => document.documentElement.classList.remove('vt-running'));
   return t;
 }
+
+/** Met en valeur la partie du nom qui correspond à la recherche. */
+function highlight(name, query) {
+  const i = name.toLowerCase().indexOf(query.trim().toLowerCase());
+  if (!query.trim() || i < 0) return esc(name);
+  const end = i + query.trim().length;
+  return `${esc(name.slice(0, i))}<mark>${esc(name.slice(i, end))}</mark>${esc(name.slice(end))}`;
+}
+
+/** Liste de propositions sous un champ : flèches, Entrée, Échap et clic. */
+function listbox(input, list, onPick) {
+  let active = -1;
+  const options = () => $$('[role="option"]', list);
+  const setActive = (i) => {
+    const all = options();
+    if (!all.length) return;
+    active = (i + all.length) % all.length;
+    all.forEach((el, n) => el.classList.toggle('is-active', n === active));
+    all[active].scrollIntoView({ block: 'nearest' });
+    input.setAttribute('aria-activedescendant', all[active].id);
+  };
+  const box = {
+    open(html) {
+      list.innerHTML = html;
+      list.hidden = false;
+      active = -1;
+      input.setAttribute('aria-expanded', 'true');
+      input.removeAttribute('aria-activedescendant');
+    },
+    close() {
+      list.hidden = true;
+      active = -1;
+      input.setAttribute('aria-expanded', 'false');
+      input.removeAttribute('aria-activedescendant');
+    },
+    get isOpen() { return !list.hidden; },
+    get active() { return active; },
+  };
+  input.addEventListener('keydown', (e) => {
+    if (list.hidden) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active < 0 ? -1 : active - 1); }
+    else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); onPick(options()[active]); }
+    else if (e.key === 'Escape') { e.stopPropagation(); box.close(); }
+  });
+  input.addEventListener('blur', () => box.close());
+  list.addEventListener('pointerdown', (e) => e.preventDefault()); // le champ garde le focus
+  list.addEventListener('click', (e) => {
+    const li = e.target.closest('[role="option"]');
+    if (li) onPick(li);
+  });
+  return box;
+}
+
+const api = {
+  async search(query, signal) {
+    const res = await fetch(`${CONFIG.api}/search?q=${encodeURIComponent(query)}`, { signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()).results;
+  },
+  async add(payload, password) {
+    const res = await fetch(`${CONFIG.api}/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${password}` },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw Object.assign(new Error(data.error || `Erreur ${res.status}`), { status: res.status });
+    return data;
+  },
+};
 
 function inViewport(el) {
   const r = el.getBoundingClientRect();
@@ -441,9 +521,12 @@ function cardHtml(g) {
 
 function pendingHtml(p) {
   const meta = platformMeta(p.platform);
+  const inner = safeUrl(p.cover)
+    ? `class="card-inner has-cover" style="background-image:${cssUrl(p.cover)}"`
+    : 'class="card-inner shimmer"';
   return `
-    <div class="card is-pending" style="--pc:${meta.color}" title="Ajout en cours via GitHub">
-      <div class="card-inner shimmer">
+    <div class="card is-pending" style="--pc:${meta.color}" title="Ajout en cours">
+      <div ${inner}>
         <div class="card-fallback"><span class="spinner"></span>${esc(p.name)}<small>Ajout en cours…</small></div>
       </div>
     </div>`;
@@ -612,12 +695,56 @@ els.library.addEventListener('click', (e) => {
    ========================================================================== */
 
 let searchTimer = 0;
+
+// Propositions sous la barre de recherche : les jeux de la collection, puis « Ajouter … »
+const searchBox = listbox(els.search, els.searchSuggest, (li) => {
+  searchBox.close();
+  if (li.dataset.id) { openDetail(li.dataset.id); return; }
+  // On passe la recherche à la fenêtre d'ajout et on vide le filtre de la collection
+  const query = els.search.value.trim();
+  els.search.value = '';
+  state.query = '';
+  renderLibrary();
+  openAdd({ query });
+});
+
+function renderSearchSuggest() {
+  const q = els.search.value.trim();
+  if (!q || document.activeElement !== els.search) { searchBox.close(); return; }
+  const n = norm(q);
+  const matches = state.games
+    .filter((g) => norm(g.name).includes(n))
+    .sort((a, b) => norm(a.name).indexOf(n) - norm(b.name).indexOf(n) || a.name.localeCompare(b.name, 'fr'))
+    .slice(0, 6);
+  const items = matches.map((g, i) => {
+    const thumb = safeUrl(g.images.gridThumb) || safeUrl(g.images.cover) || safeUrl(g.images.grid);
+    return `
+      <li role="option" id="ss-${i}" class="suggest-item" data-id="${g.id}" style="--i:${i}">
+        ${thumb ? `<img class="suggest-cover" src="${esc(thumb)}" alt="">` : '<span class="suggest-cover"></span>'}
+        <span class="suggest-text"><strong>${highlight(g.name, q)}</strong><small>${esc([platformMeta(g.platform).short, year(g)].filter(Boolean).join(' · '))}</small></span>
+      </li>`;
+  });
+  if (q.length >= 2) {
+    items.push(`
+      <li role="option" id="ss-add" class="suggest-item suggest-add" style="--i:${matches.length}">
+        <span class="suggest-cover">+</span>
+        <span class="suggest-text"><strong>Ajouter « ${esc(q)} »</strong><small>Chercher ce jeu pour l'ajouter à ta collection</small></span>
+      </li>`);
+  }
+  if (items.length) searchBox.open(items.join('')); else searchBox.close();
+}
+
 els.search.addEventListener('input', () => {
+  renderSearchSuggest();
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
     state.query = els.search.value;
     renderLibrary();
   }, 120);
+});
+els.search.addEventListener('focus', renderSearchSuggest);
+els.search.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && searchBox.active < 0) searchBox.close();
 });
 
 els.sort.addEventListener('change', () => {
@@ -682,6 +809,13 @@ function cardInnerFor(id) {
   return inner && inViewport(inner) ? inner : null;
 }
 
+function summarySourceHtml(g) {
+  const label = { steam: 'Steam', wikipedia: 'Wikipédia', deepl: 'traduction DeepL', igdb: 'IGDB (en anglais)' }[g.summarySource];
+  if (!g.summary || !label) return '';
+  const link = safeUrl(g.summaryUrl);
+  return `<p class="summary-source">Résumé : ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${label}</a>` : label}</p>`;
+}
+
 function ratingColor(r) {
   return r >= 80 ? '#34d399' : r >= 60 ? '#fbbf24' : '#ff7a59';
 }
@@ -737,6 +871,7 @@ function renderDetail(g) {
         <dl class="facts">${facts.map(([k, v]) => `<div class="fact"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
         ${g.genres.length ? `<div class="genres">${g.genres.map((x) => `<span class="genre">${esc(x)}</span>`).join('')}</div>` : '<div></div>'}
         ${g.summary ? `<p class="summary">${esc(g.summary)}</p>` : '<p class="summary">Pas encore de résumé pour ce jeu.</p>'}
+        ${summarySourceHtml(g)}
         ${shots.length ? `<div class="shots">${shots.map((s) => `<button type="button" data-shot="${esc(s)}"><img src="${esc(s.replace('/t_1080p/', '/t_screenshot_med/'))}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
         ${links.length ? `<div class="links">${links.map(([label, url]) => `<a class="btn btn-ghost" href="${esc(safeUrl(url))}" target="_blank" rel="noopener">${label} ↗</a>`).join('')}</div>` : ''}
       </div>
@@ -829,8 +964,19 @@ els.heroSlides.addEventListener('click', (e) => {
 /* ---------- Ajout d'un jeu ---------- */
 
 let duplicateConfirmed = false;
+let addPick = null;     // jeu choisi dans les propositions
+let addResults = [];
+let suggestCtrl = null;
+let suggestTimer = 0;
+const suggestCache = new Map();
 
-function openAdd() {
+const addBox = listbox(els.addName, els.addSuggest, (li) => pickGame(addResults[Number(li.dataset.index)]));
+
+function selectedPlatform() {
+  return $('input:checked', els.addPlatforms)?.value || 'PC';
+}
+
+function openAdd({ query = '' } = {}) {
   const last = store.get('lastPlatform', 'PC');
   const selected = state.platform !== 'all' ? state.platform : last;
   els.addPlatforms.innerHTML = PLATFORMS.map((p) => `
@@ -842,12 +988,114 @@ function openAdd() {
 
   els.addForm.reset();
   $(`input[value="${CSS.escape(selected)}"]`, els.addPlatforms)?.click();
+  unpick();
+  addBox.close();
   els.addWarning.hidden = true;
+  els.addPasswordField.hidden = !CONFIG.api || Boolean(store.get('password', ''));
   duplicateConfirmed = false;
   updateAddHelp();
   openModal(els.add);
-  setTimeout(() => els.addName.focus(), 50);
+  els.addName.value = query;
+  setTimeout(() => {
+    els.addName.focus();
+    if (query) fetchSuggestions(query);
+  }, 50);
 }
+
+/* Propositions IGDB (via le mini-serveur) */
+
+async function fetchSuggestions(query) {
+  const q = query.trim();
+  if (!CONFIG.api || addPick) return;
+  if (q.length < 2) { addBox.close(); return; }
+
+  suggestCtrl?.abort();
+  let results = suggestCache.get(norm(q));
+  if (!results) {
+    const ctrl = suggestCtrl = new AbortController();
+    els.addSpinner.hidden = false;
+    try {
+      results = await api.search(q, ctrl.signal);
+      suggestCache.set(norm(q), results);
+    } catch (err) {
+      if (err.name !== 'AbortError' && document.activeElement === els.addName) {
+        addBox.open('<li class="suggest-empty">Propositions indisponibles pour le moment : tu peux quand même ajouter le jeu par son nom.</li>');
+      }
+      return;
+    } finally {
+      if (suggestCtrl === ctrl) els.addSpinner.hidden = true;
+    }
+  }
+  // Entre-temps, l'utilisateur a pu continuer à taper ou choisir un jeu
+  if (els.addName.value.trim() !== q || addPick || document.activeElement !== els.addName) return;
+
+  addResults = results;
+  if (!results.length) {
+    addBox.open(`<li class="suggest-empty">Aucun jeu trouvé pour « ${esc(q)} ».</li>`);
+    return;
+  }
+  addBox.open(results.map((r, i) => {
+    const owned = state.games.filter((g) => g.igdbId === r.igdbId).map((g) => platformMeta(g.platform).short);
+    const plats = r.platforms.map((id) => platformMeta(id).short).slice(0, 4).join(', ');
+    return `
+      <li role="option" id="as-${i}" class="suggest-item" data-index="${i}" style="--i:${i}">
+        ${safeUrl(r.cover) ? `<img class="suggest-cover" src="${esc(r.cover)}" alt="" loading="lazy">` : '<span class="suggest-cover"></span>'}
+        <span class="suggest-text"><strong>${highlight(r.name, q)}</strong><small>${esc([r.year, plats].filter(Boolean).join(' · '))}</small></span>
+        ${owned.length ? `<span class="suggest-tag">Déjà sur ${esc(owned.join(', '))}</span>` : ''}
+      </li>`;
+  }).join(''));
+}
+
+function pickGame(r) {
+  if (!r) return;
+  addPick = r;
+  els.addName.value = r.name;
+  addBox.close();
+
+  const plats = r.platforms.map((id) => platformMeta(id).short).join(', ');
+  els.addPicked.innerHTML = `
+    ${safeUrl(r.cover) ? `<img src="${esc(r.cover)}" alt="">` : '<span class="suggest-cover"></span>'}
+    <div><strong>${esc(r.name)}</strong><small>${esc([r.year, plats].filter(Boolean).join(' · '))}</small></div>
+    <button class="btn btn-ghost" type="button" data-unpick>Changer</button>`;
+  els.addPicked.hidden = false;
+
+  // On signale les plateformes sur lesquelles le jeu existe, et on en choisit une si besoin
+  const available = new Set(r.platforms);
+  els.addPlatforms.classList.toggle('has-hints', available.size > 0);
+  for (const chip of $$('.chip', els.addPlatforms)) chip.classList.toggle('is-available', available.has($('input', chip).value));
+  if (available.size && !available.has(selectedPlatform())) {
+    const first = $(`input[value="${CSS.escape([...available][0])}"]`, els.addPlatforms);
+    if (first) first.checked = true;
+  }
+  duplicateConfirmed = false;
+  els.addWarning.hidden = true;
+  updateAddHelp();
+}
+
+function unpick() {
+  addPick = null;
+  els.addPicked.hidden = true;
+  els.addPlatforms.classList.remove('has-hints');
+  for (const chip of $$('.chip', els.addPlatforms)) chip.classList.remove('is-available');
+}
+
+els.addPicked.addEventListener('click', (e) => {
+  if (!e.target.closest('[data-unpick]')) return;
+  unpick();
+  els.addName.select();
+  els.addName.focus();
+  fetchSuggestions(els.addName.value);
+});
+
+els.addName.addEventListener('input', () => {
+  if (addPick && els.addName.value !== addPick.name) unpick();
+  clearTimeout(suggestTimer);
+  suggestTimer = setTimeout(() => fetchSuggestions(els.addName.value), 220);
+});
+
+els.addName.addEventListener('focus', () => {
+  if (!addPick && els.addName.value.trim().length >= 2) fetchSuggestions(els.addName.value);
+});
 
 function cliCommand(name, platform, igdb) {
   const q = (s) => `"${String(s).replace(/(["\\$`])/g, '\\$1')}"`;
@@ -855,41 +1103,120 @@ function cliCommand(name, platform, igdb) {
 }
 
 function updateAddHelp() {
-  const platform = $('input:checked', els.addPlatforms)?.value || 'PC';
-  if (state.repo) {
+  const label = $('span', els.addSubmit);
+  $('#add-submit-github').style.display = CONFIG.api ? 'none' : '';
+  if (CONFIG.api) {
+    els.addHelp.hidden = true;
+    label.textContent = duplicateConfirmed ? 'Ajouter quand même' : 'Ajouter';
+  } else if (state.repo) {
+    els.addHelp.hidden = false;
     els.addHelp.innerHTML = `Une page GitHub s'ouvre avec le formulaire déjà rempli : clique sur <b>Create</b>.
       Le jeu apparaît ici environ une minute plus tard.`;
-    $('span', els.addSubmit).textContent = duplicateConfirmed ? 'Ajouter quand même' : 'Continuer sur GitHub';
+    label.textContent = duplicateConfirmed ? 'Ajouter quand même' : 'Continuer sur GitHub';
   } else {
+    els.addHelp.hidden = false;
     els.addHelp.innerHTML = `Dépôt GitHub non détecté (le site tourne en local). Renseigne <b>CONFIG.repo</b> dans
       <b>assets/app.js</b>, ou ajoute le jeu en ligne de commande :
-      <code>${esc(cliCommand(els.addName.value.trim(), platform, els.addIgdb.value.trim()))}</code>`;
-    $('span', els.addSubmit).textContent = 'Copier la commande';
+      <code>${esc(cliCommand(els.addName.value.trim(), selectedPlatform(), els.addIgdb.value.trim()))}</code>`;
+    label.textContent = 'Copier la commande';
   }
 }
 
 els.addForm.addEventListener('input', (e) => {
-  if (e.target === els.addName) { duplicateConfirmed = false; els.addWarning.hidden = true; }
+  if (e.target === els.addName || e.target.name === 'platform') { duplicateConfirmed = false; els.addWarning.hidden = true; }
   updateAddHelp();
 });
 
+function shakeForm(focus) {
+  els.addForm.classList.remove('shake');
+  void els.addForm.offsetWidth;
+  els.addForm.classList.add('shake');
+  focus?.focus();
+}
+
+function warn(text) {
+  els.addWarning.textContent = text;
+  els.addWarning.hidden = false;
+}
+
+function markPending(name, platform, cover) {
+  state.pending = [{ name, platform, cover: cover || null, at: Date.now() }, ...state.pending];
+  store.set('pending', state.pending);
+  closeModal(els.add);
+  renderLibrary();
+  schedulePoll();
+}
+
 els.addForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const name = els.addName.value.trim().replace(/\s+/g, ' ');
-  const platform = $('input:checked', els.addPlatforms)?.value;
-  const igdb = els.addIgdb.value.trim();
-  if (!name || !platform) {
-    els.addForm.classList.remove('shake');
-    void els.addForm.offsetWidth;
-    els.addForm.classList.add('shake');
-    els.addName.focus();
-    return;
+  if (addBox.isOpen && addBox.active >= 0) return; // Entrée sert à choisir dans la liste
+  const typed = els.addName.value.trim().replace(/\s+/g, ' ');
+  if (!typed) { shakeForm(els.addName); return; }
+
+  if (CONFIG.api && !addPick && !els.addIgdb.value.trim() && addResults.length) {
+    // Le nom tapé correspond exactement à la première proposition : on la prend
+    if (norm(addResults[0].name) === norm(typed)) {
+      pickGame(addResults[0]);
+    } else {
+      warn('Choisis le jeu dans la liste des propositions.');
+      els.addName.focus();
+      fetchSuggestions(typed);
+      return;
+    }
   }
+
+  const name = addPick?.name || typed;
+  const platform = selectedPlatform();
+  const igdbId = addPick?.igdbId || els.addIgdb.value.trim() || null;
   store.set('lastPlatform', platform);
 
+  const dup = state.games.find((g) => g.platform === platform
+    && ((addPick && g.igdbId === addPick.igdbId) || norm(g.name) === norm(name)));
+  if (dup && !duplicateConfirmed) {
+    duplicateConfirmed = true;
+    warn(`${dup.name} est déjà dans ta collection sur ${platformMeta(platform).short}.`);
+    updateAddHelp();
+    return;
+  }
+
+  /* Ajout direct via le mini-serveur */
+  if (CONFIG.api) {
+    const password = store.get('password', '') || els.addPassword.value;
+    if (!password) {
+      els.addPasswordField.hidden = false;
+      shakeForm(els.addPassword);
+      return;
+    }
+    const label = $('span', els.addSubmit);
+    els.addSubmit.disabled = true;
+    label.textContent = 'Envoi…';
+    try {
+      await api.add({ name, platform, igdbId }, password);
+      store.set('password', password);
+    } catch (err) {
+      if (err.status === 401) {
+        store.set('password', '');
+        els.addPassword.value = '';
+        els.addPasswordField.hidden = false;
+        warn('Mot de passe incorrect.');
+        shakeForm(els.addPassword);
+      } else {
+        toast('⚠️', 'L\'ajout n\'a pas pu partir', ` ${err.message}`, 8000);
+      }
+      return;
+    } finally {
+      els.addSubmit.disabled = false;
+      updateAddHelp();
+    }
+    markPending(name, platform, addPick?.cover);
+    toast('🚀', `${name} arrive !`, ' Il apparaît dans ta collection d\'ici une minute.', 6000);
+    return;
+  }
+
+  /* Sans mini-serveur : en local, on copie la commande */
   if (!state.repo) {
     try {
-      await navigator.clipboard.writeText(cliCommand(name, platform, igdb));
+      await navigator.clipboard.writeText(cliCommand(name, platform, igdbId));
       toast('📋', 'Commande copiée', ' Colle-la dans un terminal, à la racine du projet.');
     } catch {
       toast('⚠️', 'Copie impossible', ' Sélectionne la commande à la main.');
@@ -897,32 +1224,19 @@ els.addForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  const dup = state.games.find((g) => g.platform === platform && norm(g.name) === norm(name));
-  if (dup && !duplicateConfirmed) {
-    duplicateConfirmed = true;
-    els.addWarning.textContent = `${dup.name} est déjà dans ta collection sur ${platformMeta(platform).short}.`;
-    els.addWarning.hidden = false;
-    updateAddHelp();
-    return;
-  }
-
+  /* Sans mini-serveur : issue GitHub pré-remplie */
   const url = new URL(`https://github.com/${state.repo}/issues/new`);
   url.searchParams.set('template', 'add-game.yml');
   url.searchParams.set('title', `[Ajout] ${name} (${platform})`);
   url.searchParams.set('name', name);
   url.searchParams.set('platform', platform);
-  if (igdb) url.searchParams.set('igdb', igdb);
+  if (igdbId) url.searchParams.set('igdb', igdbId);
   window.open(url, '_blank', 'noopener');
-
-  state.pending = [{ name, platform, at: Date.now() }, ...state.pending];
-  store.set('pending', state.pending);
-  closeModal(els.add);
-  renderLibrary();
-  schedulePoll();
+  markPending(name, platform);
   toast('🚀', `${name} est en route`, ' Valide l\'issue sur GitHub, la carte se mettra à jour toute seule.', 7000);
 });
 
-$('#open-add').addEventListener('click', openAdd);
+$('#open-add').addEventListener('click', () => openAdd());
 
 /* ==========================================================================
    Clavier, scroll, démarrage

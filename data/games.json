@@ -434,7 +434,7 @@
     "platform": "Nintendo Switch",
     "addedAt": "2026-10-23T08:59:15.179Z",
     "releaseDate": "2023-05-12",
-    "summary": "An epic adventure across the land and skies of Hyrule awaits in The Legend of Zelda: Tears of the Kingdom for Nintendo Switch. The adventure is yours to create in a world fueled by your imagination.\n\nIn this sequel to The Legend of Zelda: Breath of the Wild, you'll decide your own path through the sprawling landscapes of Hyrule and the mysterious islands floating in the vast skies above. Can you harness the power of Link's new abilities to fight back against the malevolent forces that threaten the kingdom?",
+    "summary": "The Legend of Zelda: Tears of the Kingdom est un jeu vidéo d'action-aventure développé par Nintendo EPD et édité par Nintendo. Vingtième jeu de la franchise The Legend of Zelda, il paraît d'abord sur Nintendo Switch le 12 mai 2023 puis le 5 juin 2025 sur Nintendo Switch 2.",
     "genres": [
       "Réflexion",
       "Aventure"
@@ -462,7 +462,9 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/scaoj6.jpg",
         "https://images.igdb.com/igdb/image/upload/t_1080p/sc6lnr.jpg"
       ]
-    }
+    },
+    "summarySource": "wikipedia",
+    "summaryUrl": "https://fr.wikipedia.org/wiki/The_Legend_of_Zelda%3A_Tears_of_the_Kingdom"
   },
   {
     "id": "minecraft-pc",
@@ -470,7 +472,7 @@
     "platform": "PC",
     "addedAt": "2026-10-23T08:59:44.885Z",
     "releaseDate": "2016-12-19",
-    "summary": "Minecraft focuses on allowing the player to explore, interact with, and modify a dynamically-generated map made of one-cubic-meter-sized blocks. In addition to blocks, the environment features plants, mobs, and items. Some activities in the game include mining for ore, fighting hostile mobs, and crafting new blocks and tools by gathering various resources found in the game. The game's open-ended model allows players to create structures, creations, and artwork on various multiplayer servers or their single-player maps. Other features include redstone circuits for logic computations and remote actions, minecarts and tracks, and a mysterious underworld called the Nether. A designated but completely optional goal of the game is to travel to a dimension called the End, and defeat the ender dragon.",
+    "summary": "Minecraft est un jeu vidéo de type aventure « bac à sable » développé par le Suédois Markus Persson, alias Notch, puis par la société Mojang Studios. Il s'agit d'un univers composé de voxels et généré de façon procédurale, qui intègre un système d'artisanat axé sur la collecte puis la transformation de ressources naturelles.",
     "genres": [
       "Simulation",
       "Aventure",
@@ -500,6 +502,8 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/sc8d2o.jpg",
         "https://images.igdb.com/igdb/image/upload/t_1080p/sc8d2s.jpg"
       ]
-    }
+    },
+    "summarySource": "wikipedia",
+    "summaryUrl": "https://fr.wikipedia.org/wiki/Minecraft"
   }
 ]

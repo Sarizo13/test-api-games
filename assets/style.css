@@ -1093,6 +1093,7 @@ button, input, select { font: inherit; color: inherit; }
 }
 
 .field > span,
+.field > label,
 .field > legend {
   display: block;
   margin-bottom: 8px;
@@ -1118,6 +1119,165 @@ button, input, select { font: inherit; color: inherit; }
   border-color: var(--accent);
   box-shadow: 0 0 0 4px rgba(124, 92, 255, .2);
 }
+
+/* ---------- Propositions (recherche et ajout) ---------- */
+
+.combo {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.combo > svg {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.field .combo input { padding-left: 42px; padding-right: 44px; }
+
+.combo-spinner {
+  position: absolute;
+  right: 14px;
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+}
+
+.suggest {
+  margin: 8px 0 0;
+  padding: 6px;
+  list-style: none;
+  max-height: 330px;
+  overflow: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface-2);
+  scrollbar-width: thin;
+  animation: drop .25s var(--ease-out) both;
+}
+
+.search .suggest {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  margin: 0;
+  background: rgba(23, 26, 37, .97);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .85);
+}
+
+@keyframes drop { from { opacity: 0; transform: translateY(-6px); } }
+@keyframes slide-in { from { opacity: 0; transform: translateY(6px); } }
+
+.suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  animation: slide-in .3s var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 28ms);
+  transition: background .15s;
+}
+
+.suggest-item:hover,
+.suggest-item.is-active { background: rgba(255, 255, 255, .08); }
+.suggest-item.is-active { box-shadow: inset 3px 0 0 var(--accent); }
+
+.suggest-cover {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--surface-3);
+  color: var(--accent-2);
+  font-size: 20px;
+}
+
+.suggest-text { flex: 1; min-width: 0; }
+
+.suggest-text strong {
+  display: block;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggest-text small { color: var(--muted); font-size: 12px; }
+.suggest-text mark { background: none; color: var(--accent-2); }
+
+.suggest-tag {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(124, 92, 255, .18);
+  color: #c9bcff;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.suggest-empty { padding: 10px; color: var(--muted); font-size: 13px; }
+
+.suggest-add { border-top: 1px solid var(--line); border-radius: 0 0 10px 10px; margin-top: 4px; }
+
+.picked {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: -6px 0 18px;
+  padding: 10px;
+  border: 1px solid rgba(124, 92, 255, .4);
+  border-radius: 14px;
+  background: rgba(124, 92, 255, .08);
+  animation: pop .45s var(--ease-spring) both;
+}
+
+.picked img,
+.picked .suggest-cover { width: 54px; height: 72px; border-radius: 8px; object-fit: cover; flex: none; }
+.picked strong { display: block; font: 600 16px/1.25 var(--font-display); }
+.picked small { color: var(--muted); font-size: 13px; }
+.picked .btn { height: 32px; margin-left: auto; padding: 0 12px; font-size: 13px; }
+
+.chips.has-hints .chip:not(.is-available) span { opacity: .5; }
+.chips.has-hints .chip:not(.is-available) input:checked + span { opacity: 1; }
+
+.chip.is-available span::after {
+  content: "✓";
+  margin-left: -2px;
+  color: var(--pc);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.summary-source {
+  margin: -14px 0 22px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.summary-source a { color: inherit; }
+
+/* Carte « en cours d'ajout » avec la jaquette floutée */
+.card.is-pending .card-inner.has-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  filter: blur(3px) brightness(.45);
+  transform: scale(1.05);
+}
+
+.card.is-pending .card-inner.has-cover .card-fallback { background: none; color: #fff; }
 
 .chips {
   display: flex;

@@ -6,15 +6,29 @@ Le tout est hébergé gratuitement sur GitHub : le site sur **GitHub Pages**, et
 ## Comment ça marche
 
 ```
-Bouton « Ajouter un jeu » ──► issue GitHub pré-remplie ──► GitHub Action
-                                                             │  cherche le jeu sur IGDB (infos)
-                                                             │  et SteamGridDB (jaquette, hero, logo)
-                                                             ▼
-                              site mis à jour ◄── data/games.json commité + redéploiement
+Site (GitHub Pages)
+  │  tu tapes un nom ──► mini-serveur (Cloudflare Worker) ──► propositions IGDB
+  │  tu choisis + « Ajouter »  ──► mini-serveur ──► lance la GitHub Action
+  ▼
+GitHub Action « Ajouter un jeu »
+  │  infos IGDB · visuels SteamGridDB · résumé en français (Steam, Wikipédia)
+  ▼
+data/games.json commité + redéploiement ──► le jeu apparaît sur le site (~1 min)
 ```
 
-Les clés d'API ne sont **jamais** dans le code : elles vivent dans les *secrets* du dépôt et seule l'Action les utilise.
-Seules les issues ouvertes par le propriétaire du dépôt déclenchent un ajout.
+Les clés d'API ne sont **jamais** dans le code : elles vivent dans les *secrets* du dépôt et du Worker.
+L'ajout est protégé par un mot de passe (retenu sur ton appareil après la première fois).
+Sans le mini-serveur, le site retombe sur l'ancien mode : une issue GitHub pré-remplie, sans propositions.
+
+### Résumés en français
+
+IGDB ne donne ses résumés qu'en anglais. Le script cherche donc, dans l'ordre :
+1. la description française de **Steam** ;
+2. l'introduction de l'article **Wikipédia** en français (retrouvé via Wikidata) ;
+3. une traduction **DeepL** du résumé IGDB, si le secret `DEEPL_API_KEY` existe (compte gratuit sur deepl.com, optionnel) ;
+4. à défaut, le résumé anglais d'IGDB.
+
+La source est indiquée sous le résumé sur la fiche du jeu. Pour retraduire les jeux déjà présents : `node scripts/refresh-summaries.mjs`.
 
 ## Mise en route
 
@@ -48,10 +62,36 @@ Le site se déploie à chaque push sur `main` et après chaque ajout de jeu.
 
 > Sur un compte GitHub gratuit, Pages n'est disponible que pour les dépôts **publics**.
 
+### 4. Le mini-serveur (propositions + ajout sans passer par GitHub)
+
+C'est un Cloudflare Worker gratuit, dans le dossier `worker/`.
+
+1. **Jeton GitHub** : [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
+   - *Repository access* : *Only select repositories* → `test-api-games`
+   - *Permissions → Repository permissions → Actions* : **Read and write**
+2. **Déploiement** (compte Cloudflare gratuit) :
+
+   ```bash
+   cd worker
+   npx wrangler login
+   npx wrangler deploy
+   ```
+
+3. **Secrets du Worker** (*Cloudflare → Workers & Pages → ludotheque → Settings → Variables and Secrets*, type *Secret*) :
+
+   | Nom | Valeur |
+   |---|---|
+   | `IGDB_CLIENT_ID` | comme pour GitHub |
+   | `IGDB_CLIENT_SECRET` | comme pour GitHub |
+   | `GITHUB_TOKEN` | le jeton de l'étape 1 |
+   | `ADMIN_PASSWORD` | le mot de passe que tu taperas sur le site pour ajouter un jeu |
+
+4. Mettre l'adresse du Worker (`https://ludotheque.<ton-compte>.workers.dev`) dans `CONFIG.api` en haut de `assets/app.js`.
+
 ## Ajouter un jeu
 
-- **Depuis le site** : bouton *Ajouter un jeu* → une issue pré-remplie s'ouvre → *Create*. Le jeu apparaît environ une minute plus tard (la carte « Ajout en cours… » se met à jour toute seule).
-- **Depuis GitHub** : *Actions → Ajouter un jeu → Run workflow*.
+- **Depuis le site** : bouton *Ajouter un jeu* (ou tape un nom dans la recherche → *Ajouter « … »*), choisis le jeu dans les propositions, la plateforme, puis *Ajouter*. Le jeu apparaît environ une minute plus tard (la carte « Ajout en cours… » se met à jour toute seule).
+- **Depuis GitHub** : *Actions → Ajouter un jeu → Run workflow*, ou une issue avec le formulaire *Ajouter un jeu*.
 - **En local** :
 
   ```bash
@@ -78,6 +118,9 @@ puis ouvrir http://localhost:8000.
 | `assets/platforms.js` | Liste des plateformes : nom, couleur, alias. Partagée par le site et le script |
 | `data/games.json` | La collection |
 | `scripts/add-game.mjs` | Cherche un jeu sur IGDB + SteamGridDB et l'ajoute à la collection |
+| `scripts/lib/summary-fr.mjs` | Trouve un résumé en français (Steam, Wikipédia, DeepL) |
+| `scripts/refresh-summaries.mjs` | Retraduit les résumés des jeux déjà présents |
+| `worker/` | Le mini-serveur Cloudflare : propositions et ajout direct |
 | `.github/workflows/add-game.yml` | L'Action qui fait l'ajout depuis une issue |
 | `.github/workflows/deploy.yml` | Le déploiement sur GitHub Pages |
 | `.github/ISSUE_TEMPLATE/add-game.yml` | Le formulaire d'ajout |
