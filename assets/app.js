@@ -6,7 +6,7 @@ const CONFIG = {
   repo: 'Sarizo13/test-api-games',
   // Adresse du mini-serveur (dossier worker/) : propositions de jeux et ajout direct depuis le site.
   // Vide = ajout via une issue GitHub, sans propositions.
-  api: '',
+  api: 'https://ludotheque.theopacheco5.workers.dev',
   heroCount: 5,
   pendingTtl: 20 * 60 * 1000, // un ajout en attente disparaît au bout de 20 min
   pollEvery: 30 * 1000,

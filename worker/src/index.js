@@ -97,8 +97,15 @@ async function searchGames(env, term) {
       name: g.name,
       year: g.first_release_date ? new Date(g.first_release_date * 1000).getUTCFullYear() : null,
       cover: g.cover ? IGDB_IMG('cover_small_2x', g.cover.image_id) : null,
-      platforms: PLATFORMS.filter((p) => p.igdb && (g.platforms ?? []).some((x) => p.igdb.test(x.name))).map((p) => p.id),
+      platforms: platformsOf(g),
     }));
+}
+
+/** Plateformes de la Ludothèque où le jeu existe ; uniquement d'anciennes consoles → « Rétro ». */
+function platformsOf(game) {
+  const names = (game.platforms ?? []).map((p) => p.name);
+  const ids = PLATFORMS.filter((p) => p.igdb && names.some((n) => p.igdb.test(n))).map((p) => p.id);
+  return ids.length || !names.length ? ids : ['Rétro'];
 }
 
 /* ---------- Routes ---------- */
