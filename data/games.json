@@ -701,5 +701,44 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/sc13652.jpg"
       ]
     }
+  },
+  {
+    "id": "atmosfar-pc",
+    "name": "Atmosfar",
+    "platform": "PC",
+    "addedAt": "2026-10-23T11:30:00.762Z",
+    "releaseDate": "2026-01-01",
+    "summary": "Découvrez le destin du dernier avant-poste de l’humanité et luttez pour survivre en explorant un monde fascinant d’îles flottantes.",
+    "summarySource": "steam",
+    "summaryUrl": "https://store.steampowered.com/app/1798230",
+    "genres": [
+      "Aventure",
+      "Indé"
+    ],
+    "developers": [
+      "Apog Labs"
+    ],
+    "rating": null,
+    "igdbId": 244677,
+    "igdbUrl": "https://www.igdb.com/games/atmosfar",
+    "sgdbId": 5387758,
+    "steamAppId": 1798230,
+    "images": {
+      "grid": null,
+      "gridThumb": null,
+      "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/cod5l5.jpg",
+      "hero": "https://images.igdb.com/igdb/image/upload/t_1080p/ar29fv.jpg",
+      "heroThumb": "https://images.igdb.com/igdb/image/upload/t_screenshot_med/ar29fv.jpg",
+      "logo": "https://cdn2.steamgriddb.com/logo/7845ec545f789e45e105bc67aea50aa6.png",
+      "icon": "https://cdn2.steamgriddb.com/icon/16c6349807220dfca66e9da9c2434462.png",
+      "screenshots": [
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scm1kv.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scm1ko.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scm1ku.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scm1kp.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scm1kq.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scm1kr.jpg"
+      ]
+    }
   }
 ]
