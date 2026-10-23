@@ -376,10 +376,12 @@ function loadYouTubeApi() {
  * onEnd est appelé une seule fois : fin de la vidéo, ou abandon (YouTube bloqué, vidéo refusée, trop lente).
  */
 const TRAILER_START_TIMEOUT = 12000;
-// YouTube affiche une icône lecture/pause pendant ~1,5 s chaque fois que la lecture (re)part :
-// au démarrage, mais aussi après un chargement en cours de route. La vidéo s'efface donc dès
-// qu'elle charge, et ne se (re)montre qu'après 2 s de lecture continue.
+// YouTube affiche son bouton lecture/pause chaque fois que la lecture (re)part, puis le cache
+// automatiquement au bout de ~3 s. La vidéo s'efface donc dès qu'elle charge, et ne se (re)montre
+// qu'après 2 s de vidéo ET 3,5 s réelles de lecture continue (sur une connexion rapide,
+// les 2 s de vidéo peuvent passer avant que YouTube ait caché son bouton).
 const TRAILER_REVEAL_AFTER = 2;
+const TRAILER_REVEAL_WAIT = 3500;
 
 function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DELAY, onEnd } = {}) {
   let player = null;
@@ -417,9 +419,11 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
   const reveal = () => {
     clearInterval(revealTimer);
     const from = player.getCurrentTime();
+    const since = performance.now();
     revealTimer = setInterval(() => {
       if (stopped || ended) { clearInterval(revealTimer); return; }
       if (!zoomDone || player.getCurrentTime() - from < TRAILER_REVEAL_AFTER) return;
+      if (performance.now() - since < TRAILER_REVEAL_WAIT) return;
       clearInterval(revealTimer);
       layer.classList.add('is-on');
       sound.classList.add('is-visible');
