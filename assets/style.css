@@ -445,6 +445,30 @@ button, input, select { font: inherit; color: inherit; }
 .hero-bg.is-faded,
 .detail-hero-bg.is-faded { opacity: 0; transition: opacity 1.2s ease; }
 
+/* YouTube : au moment où la vidéo devient visible, certains navigateurs (Firefox) montrent une fraction
+   de seconde le bouton lecture/pause de YouTube, toujours au centre. L'image ne s'efface donc pas d'un bloc :
+   elle s'ouvre comme un diaphragme, des bords vers le centre, et le centre n'est dévoilé qu'en dernier. */
+.has-trailer .hero-bg.is-faded.is-iris,
+.has-trailer .detail-hero-bg.is-faded.is-iris {
+  opacity: .995;
+  mask-image: radial-gradient(closest-side, #000 60%, transparent 100%);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: 0% 0%;
+}
+
+/* La liste garde zoom-in en premier : le zoom déjà joué n'est pas relancé */
+.hero-slide.has-trailer.is-active .hero-bg.is-iris,
+.detail-hero.has-trailer .detail-hero-bg.is-iris {
+  animation: zoom-in 3.6s cubic-bezier(.45, 0, .25, 1) forwards, iris 1.8s cubic-bezier(.4, 0, .7, 1) forwards;
+}
+
+/* Les bords s'ouvrent tout de suite ; le centre reste couvert jusqu'à ~1,7 s */
+@keyframes iris {
+  from { mask-size: 200% 200%; }
+  to   { mask-size: 0% 0%; }
+}
+
 /* La vidéo 16:9 couvre tout le cadre ; le léger agrandissement masque l'interface de YouTube */
 .trailer iframe {
   position: absolute;

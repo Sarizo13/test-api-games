@@ -455,7 +455,7 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
     clearInterval(revealTimer);
     if (bg.classList.contains('is-faded')) dbg(`${youtubeId} image remise`);
     layer.classList.remove('is-on');
-    bg.classList.remove('is-faded');
+    bg.classList.remove('is-faded', 'is-iris');
   };
   // Se montre quand le zoom est fini ET que la vidéo joue depuis assez longtemps
   const reveal = () => {
@@ -469,7 +469,7 @@ function backgroundTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER_DEL
       clearInterval(revealTimer);
       dbg(`${youtubeId} IMAGE EFFACÉE (vidéo à ${player.getCurrentTime().toFixed(1)}s)`);
       layer.classList.add('is-on');
-      bg.classList.add('is-faded');
+      bg.classList.add('is-faded', 'is-iris'); // ouverture des bords vers le centre (voir style.css)
       sound.classList.add('is-visible');
     }, 100);
   };
