@@ -584,5 +584,44 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/scawfp.jpg"
       ]
     }
+  },
+  {
+    "id": "fifa-18-ps4",
+    "name": "FIFA 18",
+    "platform": "PlayStation 4",
+    "addedAt": "2026-10-23T11:26:13.323Z",
+    "releaseDate": "2017-09-29",
+    "summary": "FIFA 18 est un jeu vidéo de football développé par EA Canada et édité par EA Sports, sorti le 29 septembre 2017 sur PlayStation 3, PlayStation 4, Xbox 360, Xbox One, PC et Nintendo Switch. L'international portugais Cristiano Ronaldo figure sur la jaquette du jeu. L'ancien footballeur brésilien Ronaldo apparaît sur l'édition Icône du jeu. Cristiano Ronaldo est le joueur le mieux noté du jeu avec 94 de général devant Lionel Messi qui a 93 et Manuel Neuer, Luis Suárez et Neymar qui ont 92 . Les versions sur PS3 et Xbox 360, à l'instar des versions précédentes, diffèrent de leurs homologues sur PS4 et Xbox One et ne comprennent pas le mode The Journey.",
+    "summarySource": "wikipedia",
+    "summaryUrl": "https://fr.wikipedia.org/wiki/FIFA_18",
+    "genres": [
+      "Sport"
+    ],
+    "developers": [
+      "EA Romania",
+      "EA Vancouver"
+    ],
+    "rating": 76,
+    "igdbId": 27081,
+    "igdbUrl": "https://www.igdb.com/games/fifa-18",
+    "sgdbId": 33780,
+    "steamAppId": null,
+    "images": {
+      "grid": "https://cdn2.steamgriddb.com/grid/49cf29ace37f49be10bfc6d26498d406.png",
+      "gridThumb": "https://cdn2.steamgriddb.com/thumb/49cf29ace37f49be10bfc6d26498d406.jpg",
+      "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1uxd.jpg",
+      "hero": "https://cdn2.steamgriddb.com/hero/96fa4d32d0cf6d317c065e61fc29b6ad.png",
+      "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/96fa4d32d0cf6d317c065e61fc29b6ad.jpg",
+      "logo": "https://cdn2.steamgriddb.com/logo/0128f24f1f135d979fa84ce9dcd37f9f.png",
+      "icon": "https://cdn2.steamgriddb.com/icon/bb62ffecf68202ef17726ed2b1f3fb4f.png",
+      "screenshots": [
+        "https://images.igdb.com/igdb/image/upload/t_1080p/nwpi8g3dbxazjftents8.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/wceortcxft58cwvobtik.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/znfeta90wlw14djxckpx.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/xfaevz5ale6po2ke5xsz.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/li43va0vnqjbsyaqjkhc.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/cbt9ooc8irnm4jx49nfg.jpg"
+      ]
+    }
   }
 ]
