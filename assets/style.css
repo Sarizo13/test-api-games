@@ -462,7 +462,7 @@ button, input, select { font: inherit; color: inherit; }
 .hero .trailer-sound { top: clamp(16px, 3vw, 28px); right: clamp(16px, 3vw, 28px); }
 .detail-hero .trailer-sound { right: 18px; bottom: 18px; z-index: 2; }
 
-/* Pendant la vidéo, le carrousel attend */
+/* Pendant le zoom et la vidéo, le carrousel attend (la classe disparaît à la fin ou si la vidéo ne démarre pas) */
 .hero.is-trailer .hero-dot.is-active::after { animation-play-state: paused; }
 
 /* ---------- Platform badge ---------- */

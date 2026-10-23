@@ -373,11 +373,17 @@ function loadYouTubeApi() {
 /**
  * Lance la bande-annonce par-dessus une image de fond, une fois le zoom terminé.
  * La vidéo n'apparaît (en fondu) qu'une fois qu'elle joue vraiment, et disparaît juste avant la fin.
+ * onEnd est appelé une seule fois : fin de la vidéo, ou abandon (YouTube bloqué, vidéo refusée, trop lente).
  */
+const TRAILER_START_TIMEOUT = 9000;
+
 function backgroundTrailer(bg, youtubeId, { soundParent, onStart, onEnd } = {}) {
   let player = null;
   let stopped = false;
+  let ended = false;
   let watch = 0;
+  let startTimer = 0;
+  let held = false; // mis en pause avant même d'avoir démarré (fiche ouverte par-dessus)
 
   const layer = document.createElement('div');
   layer.className = 'trailer';
@@ -398,21 +404,24 @@ function backgroundTrailer(bg, youtubeId, { soundParent, onStart, onEnd } = {}) 
 
   const hide = () => {
     clearInterval(watch);
+    clearTimeout(startTimer);
     layer.classList.remove('is-on');
     sound.classList.remove('is-visible');
   };
   const finish = () => {
-    if (!layer.classList.contains('is-on')) return;
+    if (ended || stopped) return;
+    ended = true;
     hide();
     onEnd?.();
   };
 
   const timer = setTimeout(async () => {
     let YT;
-    try { YT = await loadYouTubeApi(); } catch { return; } // YouTube bloqué : on garde l'image
+    try { YT = await loadYouTubeApi(); } catch { finish(); return; } // YouTube bloqué : on garde l'image
     if (stopped) return;
     bg.after(layer);
     soundParent?.append(sound);
+    startTimer = setTimeout(() => { if (!layer.classList.contains('is-on')) finish(); }, TRAILER_START_TIMEOUT);
     player = new YT.Player(layer.firstElementChild, {
       videoId: youtubeId,
       host: 'https://www.youtube-nocookie.com',
@@ -420,7 +429,9 @@ function backgroundTrailer(bg, youtubeId, { soundParent, onStart, onEnd } = {}) 
       events: {
         onReady: (e) => { e.target.mute(); e.target.playVideo(); },
         onStateChange: (e) => {
-          if (e.data !== YT.PlayerState.PLAYING || stopped || layer.classList.contains('is-on')) return;
+          if (e.data !== YT.PlayerState.PLAYING || stopped || ended || layer.classList.contains('is-on')) return;
+          clearTimeout(startTimer);
+          if (held) e.target.pauseVideo();
           layer.classList.add('is-on');
           sound.classList.add('is-visible');
           onStart?.();
@@ -443,8 +454,14 @@ function backgroundTrailer(bg, youtubeId, { soundParent, onStart, onEnd } = {}) 
       sound.remove();
       setTimeout(() => { try { player?.destroy(); } catch { /* déjà détruit */ } layer.remove(); }, 1300);
     },
-    pause() { try { player?.pauseVideo(); } catch { /* pas encore prêt */ } },
-    resume() { try { if (layer.classList.contains('is-on')) player?.playVideo(); } catch { /* pas encore prêt */ } },
+    pause() {
+      held = true;
+      try { player?.pauseVideo(); } catch { /* pas encore prêt */ }
+    },
+    resume() {
+      held = false;
+      try { if (layer.classList.contains('is-on')) player?.playVideo(); } catch { /* pas encore prêt */ }
+    },
   };
 }
 
@@ -509,8 +526,7 @@ function renderHero() {
   }).join('');
 
   els.heroNav.innerHTML = featured.length > 1
-    // Un jeu avec bande-annonce laisse plus de temps à la vidéo pour se charger avant de passer au suivant
-    ? featured.map((g, i) => `<button class="hero-dot" type="button" data-slide="${i}" aria-label="${esc(g.name)}"${g.trailer && trailersAllowed ? ' style="--hero-delay:10s"' : ''}></button>`).join('')
+    ? featured.map((g, i) => `<button class="hero-dot" type="button" data-slide="${i}" aria-label="${esc(g.name)}"></button>`).join('')
     : '';
 
   heroIndex = Math.min(heroIndex, featured.length - 1);
@@ -531,12 +547,12 @@ function showSlide(i) {
   const game = state.games.find((g) => g.id === slides[heroIndex].dataset.id);
   if (game) setAmbient(game.images.grid || heroImage(game));
 
-  // Zoom sur l'image, puis bande-annonce. Pendant la vidéo, le carrousel attend (la barre se fige).
+  // Zoom sur l'image, puis bande-annonce. Le carrousel attend (barre figée) que la vidéo démarre puis se termine.
   stopHeroTrailer();
   if (game?.trailer && trailersAllowed) {
+    els.hero.classList.add('is-trailer');
     heroTrailer = backgroundTrailer($('.hero-bg', slides[heroIndex]), game.trailer.youtubeId, {
       soundParent: els.hero,
-      onStart: () => els.hero.classList.add('is-trailer'),
       onEnd: () => els.hero.classList.remove('is-trailer'),
     });
     if (!els.detail.hidden) heroTrailer.pause();
