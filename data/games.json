@@ -505,5 +505,45 @@
     },
     "summarySource": "wikipedia",
     "summaryUrl": "https://fr.wikipedia.org/wiki/Minecraft"
+  },
+  {
+    "id": "rocket-league-pc",
+    "name": "Rocket League",
+    "platform": "PC",
+    "addedAt": "2026-10-23T11:20:25.139Z",
+    "releaseDate": "2015-07-06",
+    "summary": "Football et voitures font bon ménage dans cette suite basée sur les lois de la physique du grand classique tant apprécié, Supersonic Acrobatic Rocket-Powered Battle-Cars !",
+    "summarySource": "steam",
+    "summaryUrl": "https://store.steampowered.com/app/252950",
+    "genres": [
+      "Course",
+      "Sport",
+      "Indé"
+    ],
+    "developers": [
+      "Psyonix"
+    ],
+    "rating": 85,
+    "igdbId": 11198,
+    "igdbUrl": "https://www.igdb.com/games/rocket-league",
+    "sgdbId": 3113,
+    "steamAppId": 252950,
+    "images": {
+      "grid": "https://cdn2.steamgriddb.com/grid/e4e4005042cf598805d581754fe9256f.png",
+      "gridThumb": "https://cdn2.steamgriddb.com/thumb/e4e4005042cf598805d581754fe9256f.jpg",
+      "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/cocyri.jpg",
+      "hero": "https://cdn2.steamgriddb.com/hero/e6da32eef072f987685b6eddca072d4f.jpg",
+      "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/e6da32eef072f987685b6eddca072d4f.jpg",
+      "logo": "https://cdn2.steamgriddb.com/logo/7b4773c039d539af17c883eb9283dd14.png",
+      "icon": "https://cdn2.steamgriddb.com/icon/f1e513f02d2dbe70b939178cb7d4fbac.ico",
+      "screenshots": [
+        "https://images.igdb.com/igdb/image/upload/t_1080p/ipnuinh71ny8bcblibgq.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/obxqkxqtfhpvgd4wkb24.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/x2ebxdsn5kfjcnjbo7q2.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/zbk8r9mm9bb56duk5tjp.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/w23nbjchdt6ulfxws9nt.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/ygepetru87ka9nzqowr6.jpg"
+      ]
+    }
   }
 ]
