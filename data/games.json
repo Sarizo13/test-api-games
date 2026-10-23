@@ -623,5 +623,43 @@
         "https://images.igdb.com/igdb/image/upload/t_1080p/cbt9ooc8irnm4jx49nfg.jpg"
       ]
     }
+  },
+  {
+    "id": "the-legend-of-zelda-ocarina-of-time-switch-2",
+    "name": "The Legend of Zelda: Ocarina of Time",
+    "platform": "Nintendo Switch 2",
+    "addedAt": "2026-10-23T11:28:58.897Z",
+    "releaseDate": "2026-11-05",
+    "summary": "The Legend of Zelda: Ocarina of Time (ゼルダの伝説 時のオカリナ, Zeruda no densetsu: Toki no okarina, litt. « La légende de Zelda : l’Ocarina du temps ») est un jeu vidéo d'action-aventure en trois dimensions, développé et édité par Nintendo, dont la sortie est prévue le 5 novembre 2026 sur Nintendo Switch 2. Il fait partie de la franchise The Legend of Zelda et est un remake de The Legend of Zelda: Ocarina of Time, ce dernier ayant fait l'objet d'un remaster, The Legend of Zelda: Ocarina of Time 3D, paru sur Nintendo 3DS en 2011.",
+    "summarySource": "wikipedia",
+    "summaryUrl": "https://fr.wikipedia.org/wiki/The_Legend_of_Zelda%3A_Ocarina_of_Time_(jeu_vid%C3%A9o%2C_2026)",
+    "genres": [
+      "Aventure"
+    ],
+    "developers": [
+      "Nintendo"
+    ],
+    "rating": null,
+    "igdbId": 405460,
+    "igdbUrl": "https://www.igdb.com/games/the-legend-of-zelda-ocarina-of-time--1",
+    "sgdbId": 21202,
+    "steamAppId": null,
+    "images": {
+      "grid": "https://cdn2.steamgriddb.com/grid/ed89e6477ff6a465891a5f17f77948ae.png",
+      "gridThumb": "https://cdn2.steamgriddb.com/thumb/ed89e6477ff6a465891a5f17f77948ae.jpg",
+      "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/cocv5r.jpg",
+      "hero": "https://cdn2.steamgriddb.com/hero/1595af6435015c77a7149e92a551338e.png",
+      "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/1595af6435015c77a7149e92a551338e.jpg",
+      "logo": "https://cdn2.steamgriddb.com/logo/31e4b5d12b9d13865fc410864a48fe6e.png",
+      "icon": "https://cdn2.steamgriddb.com/icon/a896144046a1b5bd6e3e034d00b4f73a.png",
+      "screenshots": [
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sc153eu.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sc13qrq.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sc153ew.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sc153ev.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sc153ex.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sc153et.jpg"
+      ]
+    }
   }
 ]
