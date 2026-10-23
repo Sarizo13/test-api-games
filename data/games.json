@@ -427,5 +427,41 @@
       "icon": "https://cdn2.steamgriddb.com/icon/a429ee6281b4bad77a94b44df89f4036.ico",
       "screenshots": []
     }
+  },
+  {
+    "id": "the-legend-of-zelda-tears-of-the-kingdom-switch",
+    "name": "The Legend of Zelda: Tears of the Kingdom",
+    "platform": "Nintendo Switch",
+    "addedAt": "2026-10-23T08:59:15.179Z",
+    "releaseDate": "2023-05-12",
+    "summary": "An epic adventure across the land and skies of Hyrule awaits in The Legend of Zelda: Tears of the Kingdom for Nintendo Switch. The adventure is yours to create in a world fueled by your imagination.\n\nIn this sequel to The Legend of Zelda: Breath of the Wild, you'll decide your own path through the sprawling landscapes of Hyrule and the mysterious islands floating in the vast skies above. Can you harness the power of Link's new abilities to fight back against the malevolent forces that threaten the kingdom?",
+    "genres": [
+      "Réflexion",
+      "Aventure"
+    ],
+    "developers": [
+      "Nintendo EPD Production Group No. 3"
+    ],
+    "rating": 94,
+    "igdbId": 119388,
+    "igdbUrl": "https://www.igdb.com/games/the-legend-of-zelda-tears-of-the-kingdom",
+    "sgdbId": 5303117,
+    "steamAppId": null,
+    "images": {
+      "grid": "https://cdn2.steamgriddb.com/grid/ae758fbcbd5bd841516c53b3c08ebc6f.png",
+      "gridThumb": "https://cdn2.steamgriddb.com/thumb/ae758fbcbd5bd841516c53b3c08ebc6f.jpg",
+      "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co5vmg.jpg",
+      "hero": "https://cdn2.steamgriddb.com/hero/7048d1540fa99464f489f1d11db688b1.png",
+      "heroThumb": "https://cdn2.steamgriddb.com/hero_thumb/7048d1540fa99464f489f1d11db688b1.jpg",
+      "logo": "https://cdn2.steamgriddb.com/logo/19e524e7aa887f6311e8b6ae061bf5d7.png",
+      "icon": "https://cdn2.steamgriddb.com/icon/aeb6c3640dead557f8f59634660ff0da.png",
+      "screenshots": [
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scaoj8.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scaoj9.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scaoj7.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/scaoj6.jpg",
+        "https://images.igdb.com/igdb/image/upload/t_1080p/sc6lnr.jpg"
+      ]
+    }
   }
 ]
