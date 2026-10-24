@@ -9,7 +9,6 @@ COPY scripts/lib ./scripts/lib
 COPY server/package.json ./server/package.json
 COPY server/src ./server/src
 COPY server/migrations ./server/migrations
-COPY server/scripts ./server/scripts
 
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=8095 DATA_DIR=/data
 RUN mkdir -p /data && chown node:node /data
