@@ -2,12 +2,12 @@
   "name": "asobi",
   "private": true,
   "type": "module",
-  "description": "Asobi : ma collection de jeux vidéo en cartes à collectionner, avec IGDB, SteamGridDB et Steam.",
+  "description": "Asobi : ta collection de jeux vidéo en cartes à collectionner. Connexion Discord, comptes de jeu, IGDB, SteamGridDB.",
   "scripts": {
-    "serve": "npx --yes serve .",
-    "deploy:worker": "cd worker && npx wrangler deploy"
+    "start": "npm --prefix server start",
+    "test": "npm --prefix server test"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   }
 }

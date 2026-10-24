@@ -45,7 +45,6 @@ server/
       index.js             registre des connecteurs
     tasks.js               ménage, sauvegarde quotidienne, synchro automatique
   migrations/001_init.sql  schéma de la base
-  scripts/import-legacy.mjs  reprise de l'ancienne collection (Cloudflare)
   test/                    tests (node --test)
 ```
 

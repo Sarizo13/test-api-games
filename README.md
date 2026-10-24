@@ -3,7 +3,7 @@
 Ta collection de jeux vidéo, rangée console par console, où chaque jeu devient une carte à collectionner.
 Connexion avec Discord, import Steam, infos d'[IGDB](https://www.igdb.com) et visuels de [SteamGridDB](https://www.steamgriddb.com).
 
-Site : **https://asobi.sarizo.fr** · Démo (données fictives, rien n'est enregistré) : [`/?test`](https://asobi.sarizo.fr/?test)
+Site : **https://asobi.sarizo.fr**
 
 ## Ce qu'on y trouve
 
@@ -41,12 +41,6 @@ Application Discord, clé Steam, IGDB : voir [GAMING_INTEGRATIONS.md](GAMING_INT
 
 Mise à jour : `git pull && docker compose up -d --build`.
 
-Reprendre l'ancienne collection (Cloudflare) dans un compte, après sa première connexion :
-
-```bash
-docker compose exec asobi node --disable-warning=ExperimentalWarning server/scripts/import-legacy.mjs <pseudo> /data/legacy-collection.json
-```
-
 ## Développement
 
 ```bash
@@ -55,7 +49,7 @@ npm test                       # 35 tests, sans appel réseau réel
 PUBLIC_URL=http://localhost:8095 npm start
 ```
 
-puis <http://localhost:8095/?test> pour la démo. Node 22.13 ou plus (SQLite intégré).
+puis <http://localhost:8095>. Données de test : <http://localhost:8095/?dev-test> (réservé au développement, aucun lien du site n'y mène). Node 22.13 ou plus (SQLite intégré).
 
 ## Fichiers
 
@@ -67,6 +61,5 @@ puis <http://localhost:8095/?test> pour la démo. Node 22.13 ou plus (SQLite int
 | `server/migrations/` | Schéma de la base |
 | `server/test/` | Tests |
 | `scripts/lib/` | Résumés en français, genres, bandes-annonces (utilisés par le serveur) |
-| `data/test-games.json` | Les données de la démo |
+| `data/test-games.json` | Les données de test (`?dev-test`) |
 | `Dockerfile`, `docker-compose.yml`, `deploy/` | Déploiement |
-| `worker/` | Ancien mini-serveur Cloudflare (gardé le temps de la migration) |

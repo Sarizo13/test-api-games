@@ -1,4 +1,4 @@
-// Accueil des visiteurs non connectés : ce qu'est Asobi, connexion avec Discord, démo.
+// Accueil des visiteurs non connectés : ce qu'est Asobi, connexion avec Discord.
 
 import { state, login } from '../state.js';
 import { providerLogo } from '../brands.js';
@@ -23,7 +23,6 @@ export function renderLanding(view, { error } = {}) {
         ${state.discordConfigured ? '' : '<p class="modal-warning">La connexion Discord n\'est pas encore configurée sur ce serveur.</p>'}
         <div class="chips landing-actions">
           <button class="btn btn-primary btn-discord btn-lg" type="button" id="landing-login"${state.discordConfigured ? '' : ' disabled'}>${providerLogo('discord', 'btn-logo')}Se connecter avec Discord</button>
-          <a class="btn btn-ghost btn-lg" href="/?test">Voir la démo</a>
         </div>
         <p class="source-note">Asobi ne lit que ton pseudo, ton avatar et la liste des comptes reliés à ton Discord. Aucun mot de passe, aucun e-mail.</p>
       </div>

@@ -133,7 +133,6 @@ function settingsHtml(games) {
           ${fmtHours(games.reduce((a, g) => a + (g.playtimeMinutes ?? 0), 0))} de jeu au total.</p>
         <div class="chips">
           <button class="btn btn-ghost btn-sm" type="button" id="export">${ICONS.download}Télécharger mes données</button>
-          ${TEST ? '<a class="btn btn-ghost btn-sm" href="/">Quitter le mode test</a>' : '<a class="btn btn-ghost btn-sm" href="/?test">Essayer le mode test</a>'}
           ${TEST ? '' : '<button class="btn btn-danger btn-sm" type="button" id="delete-account">Supprimer mon compte</button>'}
         </div>
         <p class="source-note">Ta collection est sauvegardée chaque nuit sur le serveur d'Asobi.</p>

@@ -1,6 +1,4 @@
 .claude/
 node_modules/
 .env
-worker/.wrangler/
-worker/.dev.vars
 server/data/

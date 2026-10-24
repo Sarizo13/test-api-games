@@ -2,13 +2,13 @@
 // et appels au serveur (/api, même adresse que le site). Trois modes :
 //   - connecté avec Discord : sa propre collection, modifiable ;
 //   - /u/<pseudo> : la collection publique de quelqu'un, en lecture seule ;
-//   - ?test : data/test-games.json, en mémoire (rien n'est enregistré).
+//   - ?dev-test (réservé au développement, aucun lien n'y mène) : data/test-games.json, en mémoire.
 // La session est un cookie HttpOnly posé par le serveur : aucun jeton n'est gardé dans le navigateur.
 
 import { toast } from './util.js';
 
 export const API = '/api';
-export const TEST = new URLSearchParams(location.search).has('test');
+export const TEST = new URLSearchParams(location.search).has('dev-test');
 /** Pseudo du profil public affiché (/u/<pseudo>), ou null. */
 export const PROFILE = TEST ? null : location.pathname.match(/^\/u\/([\w.\-]{1,40})\/?$/)?.[1] ?? null;
 

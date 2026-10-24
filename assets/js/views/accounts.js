@@ -27,7 +27,7 @@ const when = (iso) => fmtDate(iso, { day: 'numeric', month: 'short', year: 'nume
 
 export function renderAccounts(view) {
   if (TEST) {
-    view.innerHTML = emptyState('🧪', 'Indisponible en mode test', 'Connecte-toi avec Discord pour relier tes comptes de jeu.', '<a class="btn btn-ghost" href="/">Quitter le mode test</a>');
+    view.innerHTML = emptyState('🧪', 'Indisponible en mode test', 'Connecte-toi avec Discord pour relier tes comptes de jeu.');
     return null;
   }
   view.innerHTML = `
