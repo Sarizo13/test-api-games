@@ -46,7 +46,7 @@ test('à la connexion, les comptes de jeu liés à Discord sont détectés (et s
   assert.equal(xbox.enabled, false); // pas de clé OpenXBL sur ce serveur de test
   assert.match(xbox.limitations, /non officiel/);
   assert.equal(res.data.providers.find((p) => p.id === 'epicgames').link, 'code');
-  assert.equal(res.data.providers.find((p) => p.id === 'nintendo').link, 'paste-link');
+  assert.equal(res.data.providers.find((p) => p.id === 'nintendo').capabilities.library, false); // service Nintendo fermé
 });
 
 test('un compte Steam non vérifié par Discord demande une preuve de propriété', async () => {

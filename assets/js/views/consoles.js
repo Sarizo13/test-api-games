@@ -7,7 +7,7 @@ import { cardHtml, cardStats, attachHolo, ratingAverage, STATUS, TIERS } from '.
 import { youtubeTrailer, trailersAllowed } from '../trailer.js';
 import { requireEdit, openAdd } from '../add.js';
 import { makerLogo, consoleLogo, consolePhoto } from '../brands.js';
-import { pageHead, emptyState } from './common.js';
+import { pageHead, emptyState, cardGrid } from './common.js';
 import { $, esc, safeUrl, norm, fmtHours, avg, sum, local, setAmbient, toast } from '../util.js';
 
 const slug = (s) => norm(s).replace(/ /g, '-');
@@ -134,16 +134,17 @@ export function renderConsole(view, platformSlug) {
       <div id="grid"></div>
     </div>`;
 
+  let stopGrid = null;
   const renderGrid = () => {
+    stopGrid?.();
     $('#filters', view).innerHTML = FILTERS.map(([k, label, icon]) => {
       const n = k === 'all' ? games.length : games.filter((g) => g.status === k).length;
       if (k !== 'all' && !n) return '';
       return `<button class="chip" type="button" data-filter="${k}" aria-pressed="${k === filter}">${icon ? `${icon} ` : ''}${esc(label)} <span class="n">${n}</span></button>`;
     }).join('');
     const list = games.filter((g) => filter === 'all' || g.status === filter).sort(SORTS[sort][1]);
-    $('#grid', view).innerHTML = list.length
-      ? `<div class="grid-cards">${list.map((g, i) => cardHtml(g, { i })).join('')}</div>`
-      : emptyState('▦', 'Rien ici', 'Aucun jeu ne correspond à ce filtre.', `<button class="btn btn--primary" type="button" data-add-here data-edit>+ Ajouter un jeu ${esc(p.short)}</button>`);
+    if (list.length) { stopGrid = cardGrid($('#grid', view), list); return; }
+    $('#grid', view).innerHTML = emptyState('▦', 'Rien ici', 'Aucun jeu ne correspond à ce filtre.', `<button class="btn btn--primary" type="button" data-add-here data-edit>+ Ajouter un jeu ${esc(p.short)}</button>`);
   };
   renderGrid();
   attachHolo(view);
@@ -172,5 +173,5 @@ export function renderConsole(view, platformSlug) {
   if (trailerId && trailersAllowed) {
     trailer = youtubeTrailer($('.banner__cover', view), trailerId, { soundParent: $('.banner__tools', view) });
   }
-  return () => trailer?.stop();
+  return () => { trailer?.stop(); stopGrid?.(); };
 }

@@ -2,7 +2,7 @@
 // trophées, et une rareté qui décide des effets (holo, étincelles, cadre arc-en-ciel, carte parfaite à 100).
 
 import { platformMeta } from '../platforms.js';
-import { esc, safeUrl, clamp, avg, year, canHover, reduceMotion } from './util.js';
+import { esc, safeUrl, cssUrl, clamp, avg, year, canHover, reduceMotion } from './util.js';
 
 export const STATUS = {
   backlog: { label: 'Jamais joué', short: 'Jamais', color: 'var(--st-backlog)', icon: '✦' },
@@ -86,8 +86,19 @@ const motes = (tier) => (tier === 'perfect'
   : '');
 const meter = (k, label, value) => `<span class="tcg__meter" data-k="${k}" style="--v:${value == null ? 0 : Math.round(value)}%">${label}</span>`;
 
-/** Image de la carte (jaquette verticale). */
-export const cardArt = (g) => safeUrl(g.images?.grid) || safeUrl(g.images?.cover) || safeUrl(g.images?.gridThumb);
+/**
+ * Images d'une carte : vignette légère (≈ 267×400, 80 Ko) et image HD (600×900, souvent 1 Mo),
+ * plus les autres visuels du jeu à essayer si l'une ne se charge pas.
+ */
+export function cardImages(g) {
+  const thumb = safeUrl(g.images?.gridThumb);
+  const full = safeUrl(g.images?.grid) || safeUrl(g.images?.cover);
+  const alt = [safeUrl(g.images?.cover), safeUrl(g.images?.grid), thumb].filter((u, i, all) => u && u !== full && all.indexOf(u) === i);
+  return { thumb: thumb || full, full: full || thumb, alt };
+}
+
+/** Image légère d'une carte (rouleau de la roulette…). */
+export const cardArt = (g) => cardImages(g).thumb;
 
 /**
  * HTML d'une carte. `href` : lien vers la fiche ; `large` : grande carte de la fiche (pas un lien) ;
@@ -97,7 +108,12 @@ export function cardHtml(g, { large = false, mini = false, foreign = false, i = 
   const p = platformMeta(g.platform);
   const s = cardStats(g);
   const tier = TIERS[s.tier];
-  const img = cardArt(g);
+  const { thumb, full, alt } = cardImages(g);
+  // Grille : la vignette suffit sur un écran classique, l'image HD seulement sur un écran haute densité.
+  // Grande carte : l'image HD, avec la vignette affichée dessous pendant qu'elle arrive.
+  const img = large ? full : thumb;
+  const srcset = !large && !mini && thumb !== full ? ` srcset="${esc(thumb)} 267w, ${esc(full)} 600w" sizes="(max-width: 600px) 46vw, 230px"` : '';
+  const under = large && thumb !== full ? ` style="background:${esc(cssUrl(thumb))} center/cover"` : '';
   const tag = large ? 'div' : 'a';
   const sealed = s.tier === 'sealed';
   return `
@@ -107,7 +123,7 @@ export function cardHtml(g, { large = false, mini = false, foreign = false, i = 
         <div class="tcg__aura"></div>
         <div class="tcg__frame"><div class="tcg__spin"></div><div class="tcg__glitter"></div><div class="tcg__sweep"></div></div>
         <div class="tcg__inner">
-          ${img ? `<img class="tcg__art" src="${esc(img)}" alt="" loading="lazy" decoding="async" data-title="${esc(g.name)}">` : `<div class="tcg__fallback">${esc(g.name)}</div>`}
+          ${img ? `<img class="tcg__art" src="${esc(img)}"${srcset}${under} alt="" loading="${large ? 'eager' : 'lazy'}" decoding="async" data-title="${esc(g.name)}" data-alt="${esc(alt.join(' '))}">` : `<div class="tcg__fallback">${esc(g.name)}</div>`}
           <div class="tcg__foil"></div><div class="tcg__holo"></div><div class="tcg__rays"></div>
           <div class="tcg__stars">${stars(s.tier)}</div>
           <div class="tcg__motes">${motes(s.tier)}</div>
@@ -144,10 +160,13 @@ export function flashCard(card) {
   setTimeout(() => card.classList.remove('is-flash'), 900);
 }
 
+const holoRoots = new WeakSet();
+
 /** Inclinaison 3D et reflet qui suivent la souris (délégué : un seul écouteur par conteneur). */
 export function attachHolo(root) {
-  if (!canHover || reduceMotion || root.dataset.holo) return;
-  root.dataset.holo = '1';
+  // Pas d'attribut sur l'élément : la vue est clonée à chaque page et le copierait sans ses écouteurs
+  if (!canHover || reduceMotion || holoRoots.has(root)) return;
+  holoRoots.add(root);
   let current = null;
   let frame = 0;
   const reset = (card) => {

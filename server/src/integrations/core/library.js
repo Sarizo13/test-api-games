@@ -208,6 +208,10 @@ async function importGames(ctx, provider, account, ids, job) {
       link(db, account, game.id, g.id);
       if (igdbId) stats.added++; else stats.unmatched++;
     } catch (err) {
+      // Deux jeux de la plateforme qui mènent au même jeu IGDB, importés en même temps : on relie le second
+      const igdbId = /UNIQUE/.test(err.message) || err.status === 409 ? db.prepare('SELECT igdb_id FROM external_games WHERE provider = ? AND external_game_id = ?').get(provider.id, String(g.id))?.igdb_id : null;
+      const twin = igdbId && db.prepare('SELECT * FROM collection WHERE user_id = ? AND igdb_id = ? AND platform = ?').get(account.user_id, igdbId, findPlatform(g.platform).id);
+      if (twin) { link(db, account, twin.id, g.id); stats.linked++; return; }
       ctx.log?.(`import ${provider.id} ${g.id} : ${err.message}`);
       stats.failed++;
     } finally {

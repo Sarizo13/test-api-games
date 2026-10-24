@@ -242,6 +242,9 @@ async function importGames(ctx, account, ids, job) {
         stats.unmatched++;
       }
     } catch (err) {
+      const twin = (/UNIQUE/.test(err.message) || err.status === 409) && matches.get(appId)?.igdbId
+        && db.prepare("SELECT id FROM collection WHERE user_id = ? AND igdb_id = ? AND platform = 'PC'").get(account.user_id, matches.get(appId).igdbId);
+      if (twin) { stats.linked++; created.push(twin.id); return; } // même jeu IGDB qu'une autre appli Steam de l'import
       ctx.log?.(`import Steam ${appId} : ${err.message}`);
       stats.failed++;
     } finally {

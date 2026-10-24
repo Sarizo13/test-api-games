@@ -22,7 +22,9 @@ export async function withRetry(fn, { retries = 4, base = 500 } = {}) {
     try {
       return await fn();
     } catch (err) {
-      const retryable = err.retryable || err.name === 'TypeError'; // TypeError : échec réseau de fetch
+      const network = err.name === 'TypeError'; // TypeError : échec réseau de fetch (DNS, coupure, délai)
+      const retryable = err.retryable || network;
+      if (network && attempt >= retries) throw new ProviderError('La plateforme ne répond pas pour le moment (réseau). Réessaie plus tard.', { status: 502, code: 'network' });
       if (!retryable || attempt >= retries) throw err;
       await sleep(err.retryAfterMs ?? base * 2 ** attempt + Math.random() * 250);
     }

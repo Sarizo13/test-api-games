@@ -24,7 +24,7 @@ export function renderLogin(view) {
       <div class="login__veil"></div>
       <div class="login__panel">
         <div class="login__brand"><span class="logo__mark" aria-hidden="true">遊</span><div><strong>ASOBI</strong><small>« jouer », en japonais</small></div></div>
-        <p>Ta collection de jeux vidéo, console par console, en cartes à collectionner. Note, range, suis ta progression et retrouve tes comptes Steam, PlayStation, Xbox, Epic et Nintendo.</p>
+        <p>Ta collection de jeux vidéo, console par console, en cartes à collectionner. Note, range, suis ta progression et retrouve tes comptes Steam, PlayStation, Xbox et Epic.</p>
         ${state.discordConfigured ? '' : '<p class="warn">La connexion Discord n\'est pas encore configurée sur ce serveur.</p>'}
         <button class="btn btn--discord" type="button" id="login-discord"${state.discordConfigured ? '' : ' disabled'}>${providerLogo('discord', 'btn-logo')}Se connecter avec Discord</button>
         <p class="login__note">Asobi ne lit que ton pseudo, ton avatar et la liste des comptes reliés à ton Discord. Aucun mot de passe, aucun e-mail. Ta collection reste privée tant que tu ne la partages pas.</p>

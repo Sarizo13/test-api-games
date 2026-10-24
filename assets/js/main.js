@@ -301,10 +301,22 @@ function checkLevel({ silent = false } = {}) {
 
 /* ---------- Démarrage ---------- */
 
-// Image cassée : le titre du jeu sur une carte, sinon l'image disparaît simplement
+// Image cassée d'une carte : un nouvel essai (souvent une erreur passagère du CDN), puis les autres visuels
+// du jeu, et seulement ensuite le titre. Ailleurs, l'image disparaît simplement.
 document.addEventListener('error', (e) => {
   const img = e.target;
   if (!(img instanceof HTMLImageElement)) return;
+  if (img.classList.contains('tcg__art')) {
+    const failed = img.currentSrc || img.src;
+    img.removeAttribute('srcset');
+    if (!img.dataset.retry) {
+      img.dataset.retry = '1';
+      setTimeout(() => { if (img.isConnected) img.src = `${failed}${failed.includes('?') ? '&' : '?'}r=1`; }, 1500 + Math.random() * 2000);
+      return;
+    }
+    const alts = (img.dataset.alt ?? '').split(' ').filter(Boolean);
+    if (alts.length) { img.dataset.alt = alts.slice(1).join(' '); img.src = alts[0]; return; }
+  }
   if (img.dataset.title) {
     const fallback = Object.assign(document.createElement('div'), { className: 'tcg__fallback', textContent: img.dataset.title });
     img.replaceWith(fallback);

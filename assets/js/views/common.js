@@ -3,6 +3,7 @@
 import { platformMeta } from '../../platforms.js';
 import { state, addWish } from '../state.js';
 import { openAdd, requireEdit } from '../add.js';
+import { cardHtml } from '../card.js';
 import { esc, safeUrl, ICONS, toast } from '../util.js';
 
 /** Titre de page : sur-titre, grand titre (la fin en couleur principale), texte, actions à droite. */
@@ -24,6 +25,32 @@ export const emptyState = (icon, title, text, action = '') => `
 
 /** Squelettes de chargement : `n` cartes. */
 export const skeletonCards = (n = 6) => `<div class="grid-cards" aria-busy="true">${Array.from({ length: n }, () => '<div class="skeleton" style="aspect-ratio:5/7"></div>').join('')}</div>`;
+
+/**
+ * Grille de cartes dessinée par paquets de 48 à mesure qu'on descend : une collection de 1 000+ jeux reste fluide.
+ * Renvoie une fonction d'arrêt (à appeler avant de redessiner la grille ou en quittant la page).
+ */
+export function cardGrid(box, games, opts = {}) {
+  const STEP = 48;
+  let shown = 0;
+  box.innerHTML = '<div class="grid-cards"></div><div class="grid-more" aria-hidden="true"></div>';
+  const grid = box.firstElementChild;
+  const more = box.lastElementChild;
+  let observer = null;
+  const next = () => {
+    grid.insertAdjacentHTML('beforeend', games.slice(shown, shown + STEP).map((g, i) => cardHtml(g, { ...opts, i })).join(''));
+    shown += STEP;
+    if (shown >= games.length) { observer?.disconnect(); more.remove(); }
+  };
+  next();
+  if (shown < games.length) {
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver((entries) => { if (entries.some((x) => x.isIntersecting)) next(); }, { rootMargin: '900px 0px' });
+      observer.observe(more);
+    } else while (shown < games.length) next();
+  }
+  return () => observer?.disconnect();
+}
 
 /** Petite jaquette d'un jeu de la collection. */
 export const thumb = (g, cls = 'thumb') => {

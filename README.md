@@ -1,14 +1,14 @@
 # <img src="assets/img/logo.svg" width="32" height="32" alt=""> Asobi
 
 Ta collection de jeux vidéo, rangée console par console, où chaque jeu devient une carte à collectionner.
-Connexion avec Discord, import Steam, PlayStation, Xbox, Epic et Nintendo, infos d'[IGDB](https://www.igdb.com) et visuels de [SteamGridDB](https://www.steamgriddb.com).
+Connexion avec Discord, import Steam, PlayStation, Xbox et Epic, infos d'[IGDB](https://www.igdb.com) et visuels de [SteamGridDB](https://www.steamgriddb.com).
 
 Site : **https://asobi.sarizo.fr**
 
 ## Ce qu'on y trouve
 
 - **Comptes** : chacun se connecte avec Discord et a sa propre collection, privée par défaut, publiable à `/u/<pseudo>`.
-- **Comptes de jeu** : Discord retrouve tes comptes Steam, Xbox, PlayStation, Epic… Steam (API officielle) et PlayStation, Xbox, Epic, Nintendo (connecteurs **non officiels**, signalés comme tels) importent ta bibliothèque et ton temps de jeu, et se synchronisent tout seuls. Détails et limites : [GAMING_INTEGRATIONS.md](GAMING_INTEGRATIONS.md).
+- **Comptes de jeu** : Discord retrouve tes comptes Steam, Xbox, PlayStation, Epic… Steam (API officielle) et PlayStation, Xbox, Epic (connecteurs **non officiels**, signalés comme tels) importent ta bibliothèque et ton temps de jeu, et se synchronisent tout seuls. Détails et limites : [GAMING_INTEGRATIONS.md](GAMING_INTEGRATIONS.md).
 - **Niveaux** : de l'XP pour chaque jeu ajouté, carte déballée, heure jouée, note, avis, jeu terminé ou badge ; un rang tous les 10 niveaux.
 - **Amis et duel** : ajoute un ami avec le lien de son Asobi (profil public), compare vos chiffres, vos cartes en commun, vos envies et vos genres.
 - **8 thèmes** (Profil › Apparence) : graphite, espace, néon, borne, forêt, magma, abysses, LCD.

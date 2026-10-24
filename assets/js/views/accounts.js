@@ -1,5 +1,5 @@
-// Comptes connectés : Discord (identité et découverte des comptes), Steam (API officielle) et les connecteurs
-// non officiels PlayStation, Xbox (via Discord), Epic et Nintendo (liaison par copier-coller), affichés tels qu'ils sont.
+// Comptes connectés : Discord (identité et découverte des comptes), Steam (API officielle), les connecteurs
+// non officiels PlayStation, Xbox (via Discord) et Epic (code collé), et Nintendo (ajout manuel), affichés tels qu'ils sont.
 
 import {
   state, TEST, fetchAccounts, discoverAccounts, enableAccount, accountLibrary, runAccountJob, setAutoSync,
@@ -31,7 +31,7 @@ const ready = (a) => ['connected', 'synced'].includes(a.status) || (a.status ===
 
 export function renderAccounts(view) {
   view.innerHTML = `
-    ${pageHead('Réglages', 'Comptes', 'connectés', 'Discord retrouve tes comptes de jeu. Steam passe par son API officielle ; PlayStation, Xbox, Epic et Nintendo par des connecteurs non officiels, signalés comme tels. Tes jetons restent chiffrés sur le serveur.',
+    ${pageHead('Réglages', 'Comptes', 'connectés', 'Discord retrouve tes comptes de jeu. Steam passe par son API officielle ; PlayStation, Xbox et Epic par des connecteurs non officiels, signalés comme tels ; les jeux Nintendo s\'ajoutent à la main. Tes jetons restent chiffrés sur le serveur.',
       `<button class="btn btn--discord" type="button" id="discover">${providerLogo('discord', 'btn-logo')}Découvrir mes comptes avec Discord</button>`)}
     <div id="accounts" class="section"><div class="skeleton" style="height:110px"></div><div class="providers">${'<div class="skeleton" style="height:260px"></div>'.repeat(3)}</div></div>`;
 
@@ -211,7 +211,7 @@ function accountCard(provider, a) {
     </div>
     ${facts.length ? `<p class="provider__facts">${facts.map(esc).join(' · ')}</p>` : ''}
     ${caps(provider)}
-    <p>${esc(a.message ?? provider.limitations ?? '')}</p>
+    <p>${esc(provider.capabilities.library ? a.message ?? provider.limitations ?? '' : provider.limitations ?? '')}</p>
     ${provider.capabilities.sync && ready(a) ? `<label class="check"><input type="checkbox" data-autosync${a.autoSync ? ' checked' : ''}> Synchroniser automatiquement toutes les 12 h</label>` : ''}
     <div class="bar job-bar" hidden><i style="--v:5%"></i></div>
     <div class="actions">${accountActions(provider, a)}</div>`, { account: a });
@@ -237,7 +237,7 @@ function placeholderCard(provider) {
     <div class="actions">${action}${manual}</div>`);
 }
 
-/* ---------- Liaison directe : Epic (code) et Nintendo (lien « Choisir cette personne ») ---------- */
+/* ---------- Liaison directe : Epic (code collé) ---------- */
 
 const LINK_STEPS = {
   epicgames: {
@@ -249,16 +249,6 @@ const LINK_STEPS = {
     ],
     placeholder: 'Code Epic (32 caractères) ou tout le texte affiché',
     note: 'Connecteur non officiel, comme les lanceurs libres Legendary et Heroic. Le code ne sert qu\'une fois et expire en quelques minutes ; Asobi ne voit jamais ton mot de passe.',
-  },
-  nintendo: {
-    open: 'Ouvrir accounts.nintendo.com ↗',
-    steps: [
-      'Ouvre la connexion Nintendo et connecte-toi avec ton compte.',
-      'Sur la page « Choisir cette personne », fais un <b>clic droit</b> (appui long sur téléphone) sur le bouton rouge <b>« Choisir cette personne »</b>, puis « Copier l\'adresse du lien ». Ne clique pas dessus.',
-      'Colle l\'adresse ci-dessous : elle commence par <code>npf5c38e31cd085304b://auth#</code>.',
-    ],
-    placeholder: 'npf5c38e31cd085304b://auth#session_token_code=…',
-    note: 'Connecteur non officiel (comme nxapi) : Nintendo ne l\'autorise pas officiellement et peut l\'interdire dans ses conditions d\'utilisation. Le lien expire en 10 minutes ; Asobi ne voit jamais ton mot de passe.',
   },
 };
 
@@ -278,14 +268,11 @@ function openLink(provider, onLinked) {
   const input = $('#link-code', el);
   const go = $('#link-go', el);
   const error = (msg) => { $('#link-error', el).textContent = msg; $('#link-error', el).hidden = !msg; input.setAttribute('aria-invalid', msg ? 'true' : 'false'); };
-  let started = false;
-
   $('#link-open', el).addEventListener('click', async () => {
     // Fenêtre ouverte tout de suite (sinon bloquée), puis envoyée à l'adresse donnée par le serveur
     const win = window.open('about:blank', '_blank');
     try {
       const { url } = await linkStart(provider.id);
-      started = true;
       if (win && safeUrl(url)) { win.opener = null; win.location.href = url; } else if (safeUrl(url)) location.assign(url);
       setTimeout(() => input.focus(), 300);
     } catch (err) {
@@ -295,7 +282,6 @@ function openLink(provider, onLinked) {
   });
   input.addEventListener('input', () => { go.disabled = !input.value.trim(); error(''); });
   go.addEventListener('click', async () => {
-    if (provider.id === 'nintendo' && !started) { error('Ouvre d\'abord la connexion Nintendo depuis cette fenêtre (le lien est propre à chaque essai).'); return; }
     go.disabled = true;
     go.innerHTML = '<span class="spinner"></span>Connexion…';
     try {

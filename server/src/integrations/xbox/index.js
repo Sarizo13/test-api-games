@@ -27,7 +27,8 @@ async function xbl(config, path, { method = 'GET', body } = {}) {
     if (res.status >= 500) throw new ProviderError(`OpenXBL a répondu ${res.status}.`, { retryable: true });
     if (res.status === 401) throw new ProviderError('La clé OpenXBL du serveur est refusée.', { status: 503, code: 'server_token' });
     const data = await res.json().catch(() => null);
-    return res.ok ? data : { error: res.status };
+    // OpenXBL renvoie en général { content: { … }, code } ; certaines routes renvoient la réponse Xbox telle quelle
+    return res.ok ? data?.content ?? data : { error: res.status };
   }, { retries: 2 });
 }
 
@@ -39,7 +40,7 @@ async function xuidOf(ctx, account) {
   const gamertag = account.external_username;
   if (gamertag) {
     const data = await xbl(ctx.config, `/search/${encodeURIComponent(gamertag)}`);
-    const people = data?.people ?? data?.content?.people ?? [];
+    const people = data?.people ?? [];
     xuid = people.find((p) => String(p.gamertag ?? '').toLowerCase() === gamertag.toLowerCase())?.xuid ?? null;
   }
   if (!xuid && /^\d{15,17}$/.test(account.external_user_id)) xuid = account.external_user_id; // Discord donne en général le XUID

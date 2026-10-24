@@ -285,7 +285,7 @@ export const enableAccount = (id) => post(`/accounts/${id}/enable`);
 export const accountLibrary = (id) => get(`/accounts/${id}/library`).then((r) => r.results);
 export const setAutoSync = (id, autoSync) => request('PATCH', `/accounts/${id}`, { autoSync });
 export const disconnectAccount = (id) => request('DELETE', `/accounts/${id}`);
-/** Liaison directe (Epic, Nintendo) : adresse où se connecter, puis le code ou le lien collé par le joueur. */
+/** Liaison directe (Epic) : adresse où se connecter, puis le code collé par le joueur. */
 export const linkStart = (provider) => post(`/accounts/link/${encodeURIComponent(provider)}/start`);
 export const linkFinish = (provider, code) => post(`/accounts/link/${encodeURIComponent(provider)}/finish`, { code });
 

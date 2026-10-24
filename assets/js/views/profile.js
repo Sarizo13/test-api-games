@@ -170,7 +170,7 @@ function settingsHtml(games) {
 
         <div class="tile">
           <h3 class="tile__title">Comptes de jeu</h3>
-          <p>Steam, PlayStation, Xbox, Epic Games et Nintendo : importe ta bibliothèque, ton temps de jeu et tes succès. Discord retrouve la plupart de tes comptes.</p>
+          <p>Steam, PlayStation, Xbox et Epic Games : importe ta bibliothèque, ton temps de jeu et tes succès. Discord retrouve la plupart de tes comptes. Les jeux Nintendo s'ajoutent à la main.</p>
           <div class="actions"><a class="btn btn--primary" href="#/comptes">Gérer mes comptes connectés</a><a class="btn" href="#/amis">Mes amis</a></div>
         </div>
 

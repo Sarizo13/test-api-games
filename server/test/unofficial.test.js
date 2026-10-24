@@ -1,21 +1,18 @@
-// Connecteurs non officiels : PlayStation (NPSSO du serveur), Xbox (OpenXBL), Epic (code collé), Nintendo (lien collé, PKCE).
+// Connecteurs non officiels : PlayStation (NPSSO du serveur), Xbox (OpenXBL), Epic (code collé). Nintendo : ajout manuel.
 // Toutes les plateformes sont simulées : on vérifie les règles d'Asobi (preuve de propriété, confidentialité,
 // pas de doublon, pas d'écrasement des données personnelles, jetons chiffrés, liaison à usage unique).
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { startTestServer, fakeDiscord, fakeIgdb, login, browser, json, DISCORD_USER, OTHER_USER } from './helpers.js';
 import { resetSession, durationMinutes } from '../src/integrations/playstation/index.js';
 import { xboxPlatform } from '../src/integrations/xbox/index.js';
-import { nintendoPlatform } from '../src/integrations/nintendo/index.js';
 
 const IGDB = {
   1001: { name: 'Astro Bot', platforms: [{ name: 'PlayStation 5' }] },
   1002: { name: 'Bloodborne', platforms: [{ name: 'PlayStation 4' }] },
   2001: { name: 'Hades', platforms: [{ name: 'PC (Microsoft Windows)' }] },
   2002: { name: 'Fortnite', platforms: [{ name: 'PC (Microsoft Windows)' }] },
-  3001: { name: 'The Legend of Zelda: Tears of the Kingdom', platforms: [{ name: 'Nintendo Switch' }] },
   4001: { name: 'Halo Infinite', platforms: [{ name: 'Xbox Series X|S' }] },
 };
 
@@ -48,15 +45,15 @@ function fakePsn(net) {
 
 function fakeXbox(net) {
   const seen = { keys: new Set(), stats: 0 };
-  net.on(/xbl\.io\/api\/v2\/search\/SarizoXbox/, (url, init) => { seen.keys.add(init.headers['X-Authorization']); return { people: [{ xuid: '2535411111111111', gamertag: 'SarizoXbox' }] }; });
-  net.on(/xbl\.io\/api\/v2\/player\/titleHistory\/2535411111111111/, () => ({
+  net.on(/xbl\.io\/api\/v2\/search\/SarizoXbox/, (url, init) => { seen.keys.add(init.headers['X-Authorization']); return { content: { people: [{ xuid: '2535411111111111', gamertag: 'SarizoXbox' }] }, code: 200 }; });
+  net.on(/xbl\.io\/api\/v2\/player\/titleHistory\/2535411111111111/, () => ({ code: 200, content: {
     xuid: '2535411111111111',
     titles: [
       { titleId: '1001', name: 'Halo Infinite', type: 'Game', devices: ['XboxSeries', 'PC'], displayImage: 'https://store-images.s-microsoft.com/halo.png', achievement: { currentAchievements: 30, totalAchievements: 119, progressPercentage: 25 }, titleHistory: { lastTimePlayed: '2024-05-01T10:00:00Z' } },
       { titleId: '2002', name: 'Application Xbox', type: 'App', devices: ['XboxSeries'] },
       { titleId: '3003', name: 'Rétro 360', type: 'Game', devices: ['Xbox360'], achievement: { currentAchievements: 0, totalAchievements: 0, progressPercentage: 10 } },
     ],
-  }));
+  } }));
   net.on(/xbl\.io\/api\/v2\/player\/stats/, (url, init) => {
     seen.stats++;
     const body = JSON.parse(init.body);
@@ -92,24 +89,6 @@ function fakeEpic(net) {
   return seen;
 }
 
-function fakeNintendo(net) {
-  const seen = { challenge: null, verifierOk: null, me: 0 };
-  net.on(/accounts\.nintendo\.com\/connect\/1\.0\.0\/api\/session_token/, (url, init) => {
-    const form = new URLSearchParams(String(init.body));
-    seen.verifierOk = createHash('sha256').update(form.get('session_token_code_verifier')).digest('base64url') === seen.challenge;
-    return form.get('session_token_code') === 'stc-1' && seen.verifierOk ? { session_token: 'nso-session', code: 'stc-1' } : json({ error: 'invalid_grant' }, 400);
-  });
-  net.on(/accounts\.nintendo\.com\/connect\/1\.0\.0\/api\/token/, (url, init) => (JSON.parse(init.body).session_token === 'nso-session' ? { access_token: 'nso-access', expires_in: 900 } : json({ error: 'invalid_grant' }, 400)));
-  net.on(/api\.accounts\.nintendo\.com\/2\.0\.0\/users\/me/, () => { seen.me++; return { id: 'abcd1234ef', nickname: 'Théo', email: 'secret@example.com', birthday: '1990-01-01' }; });
-  net.on(/mypage-api\.entry\.nintendo\.co\.jp\/api\/v1\/users\/me\/play_histories/, () => ({
-    playHistories: [
-      { titleId: '0100F2C0115B6000', titleName: 'The Legend of Zelda: Tears of the Kingdom', deviceType: 'HAC', totalPlayedMinutes: 6000, firstPlayedAt: '2023-05-12T08:00:00+09:00', lastPlayedAt: '2024-02-01T20:00:00+09:00', imageUrl: 'https://atum-img-lp1.cdn.nintendo.net/zelda.jpg' },
-      { titleId: '0100MKW', titleName: 'Mario Kart World', deviceType: 'BEE', totalPlayedMinutes: 300, firstPlayedAt: '2025-06-05T10:00:00+09:00', lastPlayedAt: '2025-06-20T10:00:00+09:00' },
-    ],
-  }));
-  return seen;
-}
-
 /* ---------- Mise en place ---------- */
 
 let t;
@@ -117,7 +96,6 @@ let b;
 let psn;
 let xboxSeen;
 let epicSeen;
-let nso;
 const accountOf = async (provider) => (await b.get('/api/accounts')).data.accounts.find((a) => a.provider === provider);
 const runJob = async (res) => {
   assert.equal(res.status, 200, res.data?.error);
@@ -137,22 +115,19 @@ before(async () => {
   psn = fakePsn(t.net);
   xboxSeen = fakeXbox(t.net);
   epicSeen = fakeEpic(t.net);
-  nso = fakeNintendo(t.net);
   ({ b } = await login(t, DISCORD_USER));
 });
 after(() => t.close());
 
 /* ---------- Petites briques ---------- */
 
-test('briques : durées PSN, consoles Xbox et Nintendo', () => {
+test('briques : durées PSN, consoles Xbox', () => {
   assert.equal(durationMinutes('PT228H56M33S'), 228 * 60 + 57);
   assert.equal(durationMinutes('P1DT2H'), 26 * 60);
   assert.equal(durationMinutes('n\'importe quoi'), null);
   assert.equal(xboxPlatform(['XboxOne', 'XboxSeries', 'PC']), 'Xbox Series X|S');
   assert.equal(xboxPlatform(['PC']), 'PC');
   assert.equal(xboxPlatform(['Mobile']), null);
-  assert.equal(nintendoPlatform('HAC'), 'Nintendo Switch');
-  assert.equal(nintendoPlatform('BEE'), 'Nintendo Switch 2');
 });
 
 /* ---------- PlayStation ---------- */
@@ -330,49 +305,24 @@ test('Epic : session expirée → « reconnexion nécessaire », puis déconnexi
 
 /* ---------- Nintendo ---------- */
 
-test('Nintendo : lien collé seulement depuis le même navigateur, une seule fois, avec PKCE', async () => {
-  const start = await b.post('/api/accounts/link/nintendo/start');
-  assert.equal(start.status, 200);
-  const url = new URL(start.data.url);
-  assert.equal(url.origin + url.pathname, 'https://accounts.nintendo.com/connect/1.0.0/authorize');
-  assert.equal(url.searchParams.get('client_id'), '5c38e31cd085304b');
-  assert.equal(url.searchParams.get('session_token_code_challenge_method'), 'S256');
-  nso.challenge = url.searchParams.get('session_token_code_challenge');
-  const state = url.searchParams.get('state');
-  const pasted = `npf5c38e31cd085304b://auth#session_state=x&session_token_code=stc-1&state=${state}`;
-
-  assert.equal((await b.post('/api/accounts/link/nintendo/finish', { code: 'https://evil.example/#session_token_code=stc-1' })).status, 400);
-  // Un autre navigateur (même compte Asobi ou pas) ne peut pas utiliser ce lien
-  const stranger = browser(t.base);
-  stranger.jar.set('asobi_sid', b.jar.get('asobi_sid'));
-  assert.equal((await stranger.post('/api/accounts/link/nintendo/finish', { code: pasted })).status, 400);
-
-  const res = await b.post('/api/accounts/link/nintendo/finish', { code: pasted });
-  assert.equal(res.status, 200, res.data.error);
-  assert.equal(nso.verifierOk, true);
-  const acc = res.data.accounts.find((a) => a.provider === 'nintendo');
-  assert.equal(acc.status, 'connected');
-  assert.equal(acc.username, 'Théo');
-  // Ni l'e-mail ni la date de naissance ne sont gardés ; le jeton de session est chiffré
-  const row = JSON.stringify(t.db.prepare('SELECT * FROM connected_accounts WHERE id = ?').get(acc.id));
-  assert.ok(!row.includes('secret@example.com') && !row.includes('1990-01-01'));
-  assert.ok(!t.db.prepare('SELECT encrypted_refresh_token r FROM provider_credentials WHERE connected_account_id = ?').get(acc.id).r.includes('nso-session'));
-
-  assert.equal((await b.post('/api/accounts/link/nintendo/finish', { code: pasted })).status, 400); // déjà utilisé
+test('Nintendo : service fermé, ajout manuel seulement (aucune liaison, aucun appel)', async () => {
+  const providers = (await b.get('/api/accounts')).data.providers;
+  const nintendo = providers.find((p) => p.id === 'nintendo');
+  assert.equal(nintendo.capabilities.library, false);
+  assert.equal(nintendo.link, null);
+  assert.deepEqual(nintendo.manualImport, ['Nintendo Switch 2', 'Nintendo Switch']);
+  assert.equal((await b.post('/api/accounts/link/nintendo/start')).status, 404);
 });
 
-test('Nintendo : historique importé sur la bonne console', async () => {
-  const acc = await accountOf('nintendo');
-  const lib = (await b.get(`/api/accounts/${acc.id}/library`)).data.results;
-  assert.deepEqual(lib.map((g) => g.platform), ['Nintendo Switch', 'Nintendo Switch 2']);
-  const job = await runJob(await b.post(`/api/accounts/${acc.id}/import`, { ids: lib.map((g) => g.id) }));
+test('import : deux jeux de la plateforme qui mènent au même jeu IGDB sont reliés, pas en échec', async () => {
+  const acc = await accountOf('xbox');
+  // « Halo Infinite » sous un autre identifiant (édition multijoueur) : même fiche IGDB, même console
+  t.db.prepare(`INSERT INTO platform_games (connected_account_id, external_game_id, name, platform, playtime_minutes, first_seen_at, last_seen_at)
+    VALUES (?, '9999', 'Halo Infinite', 'Xbox Series X|S', 12, ?, ?)`).run(acc.id, new Date().toISOString(), new Date().toISOString());
+  const job = await runJob(await b.post(`/api/accounts/${acc.id}/import`, { ids: ['9999'] }));
   assert.equal(job.status, 'done', job.error);
-  const games = await collection();
-  const zelda = games.find((g) => g.igdbId === 3001);
-  assert.equal(zelda.platform, 'Nintendo Switch');
-  assert.equal(zelda.playtimeMinutes, 6000);
-  assert.equal(zelda.startedAt, '2023-05-12');
-  assert.equal(games.find((g) => g.name === 'Mario Kart World').platform, 'Nintendo Switch 2');
+  assert.deepEqual({ linked: job.stats.linked, failed: job.stats.failed }, { linked: 1, failed: 0 });
+  assert.equal((await collection()).filter((g) => g.igdbId === 4001).length, 1);
 });
 
 /* ---------- Cloisonnement ---------- */
@@ -380,7 +330,7 @@ test('Nintendo : historique importé sur la bonne console', async () => {
 test('un autre utilisateur ne peut ni lire, ni synchroniser, ni utiliser la liaison d\'un autre', async () => {
   const discord = fakeDiscord(t.net, { user: OTHER_USER, connections: [{ type: 'xbox', id: '2535411111111111', name: 'SarizoXbox', verified: true }] });
   const { b: bob } = await login(t, OTHER_USER);
-  const mine = await accountOf('nintendo');
+  const mine = await accountOf('xbox');
   assert.equal((await bob.get(`/api/accounts/${mine.id}/library`)).status, 404);
   assert.equal((await bob.post(`/api/accounts/${mine.id}/sync`)).status, 404);
   // Le Gamertag d'Alice, déjà vérifié chez elle, ne devient pas celui de Bob
@@ -392,6 +342,6 @@ test('un autre utilisateur ne peut ni lire, ni synchroniser, ni utiliser la liai
 
 test('export RGPD sans aucun jeton, et aucun appel réseau imprévu', async () => {
   const exp = JSON.stringify((await b.get('/api/me/export')).data);
-  for (const secret of ['psn-access', 'nso-session', 'nso-access', 'epic-access', 'epic-refresh', 'xbl-test', 'npsso-test']) assert.ok(!exp.includes(secret), secret);
+  for (const secret of ['psn-access', 'epic-access', 'epic-refresh', 'xbl-test', 'npsso-test']) assert.ok(!exp.includes(secret), secret);
   assert.deepEqual(t.net.unexpected.filter((u) => !/store\.steampowered\.com|wikidata|wikipedia|steamgriddb/.test(u)), []);
 });

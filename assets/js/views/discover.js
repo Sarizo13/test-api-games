@@ -6,7 +6,7 @@ import { state, updateGame, fetchRecommend, fetchDiscover, knownIgdbIds } from '
 import { cardHtml, attachHolo, cardArt } from '../card.js';
 import { playerProfile, PROFILE_MIN } from '../taste.js';
 import { requireEdit } from '../add.js';
-import { pageHead, sectionHead, emptyState, miniCover, bindStubs } from './common.js';
+import { pageHead, sectionHead, emptyState, miniCover, bindStubs, cardGrid } from './common.js';
 import { $, esc, reduceMotion, local } from '../util.js';
 
 const LENGTHS = {
@@ -64,9 +64,10 @@ export function renderDiscover(view) {
     ${backlog.length ? `
       <section class="section">
         ${sectionHead('Encore sous blister', `<span class="note">${backlog.length} carte${backlog.length > 1 ? 's' : ''} · clique une carte pour la déballer</span>`)}
-        <div class="grid-cards">${[...backlog].sort((a, b) => (b.igdbRating ?? 0) - (a.igdbRating ?? 0)).map((g, i) => cardHtml(g, { i })).join('')}</div>
+        <div id="sealed"></div>
       </section>` : ''}`;
 
+  const stopGrid = backlog.length ? cardGrid($('#sealed', view), [...backlog].sort((a, b) => (b.igdbRating ?? 0) - (a.igdbRating ?? 0))) : null;
   attachHolo(view);
   bindStubs(view);
 
@@ -197,7 +198,7 @@ export function renderDiscover(view) {
     fetchRecommend([], 'explore', known)
       .then((list) => { explore.innerHTML = list.length ? `${sectionHead('Les incontournables', '<span class="note">les mieux notés sur IGDB</span>')}${row(list, (s) => (s.igdbRating ? `★ ${s.igdbRating}` : ''))}` : ''; })
       .catch(() => { explore.innerHTML = failed('Les incontournables'); });
-    return () => removeEventListener('resize', onResize);
+    return () => { removeEventListener('resize', onResize); stopGrid?.(); };
   }
 
   const genres = profile.favoriteGenres;
@@ -226,5 +227,5 @@ export function renderDiscover(view) {
     })
     .catch(() => { explore.innerHTML = failed('Découvertes'); });
 
-  return () => removeEventListener('resize', onResize);
+  return () => { removeEventListener('resize', onResize); stopGrid?.(); };
 }
