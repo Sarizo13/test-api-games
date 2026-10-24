@@ -31,17 +31,22 @@ test('à la connexion, les comptes de jeu liés à Discord sont détectés (et s
   // Steam vérifié par Discord : détecté, prêt à importer — mais pas « connecté » tant que l'accès n'est pas vérifié
   assert.equal(acc.steam.status, 'detected');
   assert.equal(acc.steam.verified, true);
-  // Pas d'API utilisable : l'interface ne doit pas faire croire à une connexion
-  assert.equal(acc.xbox.status, 'unsupported');
-  assert.equal(acc.playstation.status, 'unsupported');
+  // Connecteurs non officiels : détecté si Discord a vérifié le compte, sinon preuve demandée ; jamais « connecté » d'office
+  assert.equal(acc.xbox.status, 'detected');
+  assert.equal(acc.playstation.status, 'authorization_required');
   assert.equal(acc.playstation.verified, false);
-  assert.equal(acc.epicgames.status, 'unsupported');
-  // Les capacités annoncées sont honnêtes
+  assert.equal(acc.epicgames.status, 'authorization_required'); // il faut coller un code Epic
+  // Les capacités annoncées sont honnêtes, et le caractère non officiel affiché
   const steam = res.data.providers.find((p) => p.id === 'steam');
   assert.equal(steam.capabilities.library, true);
+  assert.equal(steam.experimental, false);
   const xbox = res.data.providers.find((p) => p.id === 'xbox');
-  assert.equal(xbox.capabilities.library, false);
-  assert.match(xbox.limitations, /Microsoft/);
+  assert.equal(xbox.capabilities.library, true);
+  assert.equal(xbox.experimental, true);
+  assert.equal(xbox.enabled, false); // pas de clé OpenXBL sur ce serveur de test
+  assert.match(xbox.limitations, /non officiel/);
+  assert.equal(res.data.providers.find((p) => p.id === 'epicgames').link, 'code');
+  assert.equal(res.data.providers.find((p) => p.id === 'nintendo').link, 'paste-link');
 });
 
 test('un compte Steam non vérifié par Discord demande une preuve de propriété', async () => {

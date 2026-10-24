@@ -10,6 +10,9 @@
 //   sync(ctx, account, job)          : synchronisation (si capabilities.sync)
 //   library(ctx, account)            : jeux de la plateforme pas encore dans la collection (si capabilities.library)
 //   importGames(ctx, account, ids, job) : ajout de jeux choisis à la collection
+//   experimental : connecteur non officiel (API privée d'une application), qui peut cesser de marcher
+//   link         : liaison directe par copier-coller ({ type, start, finish }), quand Discord ne suffit pas
+//   revoke(ctx, account, cred) : ferme la session côté plateforme à la déconnexion
 
 /** États possibles d'un compte connecté. */
 export const ACCOUNT_STATUS = {
@@ -43,6 +46,8 @@ export const describe = (p, config) => ({
   name: p.name,
   kind: p.kind,
   official: p.official,
+  experimental: Boolean(p.experimental),
+  link: p.link?.type ?? null,
   enabled: p.enabled(config),
   capabilities: p.capabilities,
   limitations: p.limitations,

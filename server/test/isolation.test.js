@@ -57,6 +57,17 @@ test('profil privé par défaut, visible une fois rendu public', async () => {
   assert.equal((await visitor.patch(`/api/games/${aliceGame.id}`, { status: 'dropped' })).status, 401);
 });
 
+test('amis : pseudos validés, sans soi-même, et liste jamais visible sur le profil public', async () => {
+  const res = await alice.patch('/api/settings', { friends: ['Rival', 'rival', 'sarizo', '../admin', 'x'.repeat(40), 'mila.42'] });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.data.settings.friends, ['rival', 'mila.42']);
+  assert.deepEqual((await alice.get('/api/collection')).data.settings.friends, ['rival', 'mila.42']);
+  const pub = await browser(t.base).get('/api/users/sarizo');
+  assert.equal(pub.status, 200);
+  assert.equal(JSON.stringify(pub.data).includes('mila.42'), false);
+  assert.deepEqual(Object.keys(pub.data.settings), ['name']);
+});
+
 test('les données personnelles sont validées', async () => {
   const bad = await alice.patch(`/api/games/${aliceGame.id}`, { status: 'pirate' });
   assert.equal(bad.status, 400);

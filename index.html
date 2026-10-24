@@ -1,55 +1,53 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-theme="graphite">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Asobi</title>
-  <meta name="description" content="Asobi : ta collection de jeux vidéo, rangée par console, en cartes à collectionner. Connexion avec Discord, import Steam.">
-  <meta name="theme-color" content="#06070b">
+  <meta name="description" content="Asobi : ta collection de jeux vidéo, rangée par console, en cartes à collectionner. Connexion avec Discord, import Steam, PlayStation, Xbox, Epic et Nintendo.">
+  <meta name="theme-color" content="#0f1014">
   <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/img/logo.svg">
+  <!-- Thème choisi (Profil › Apparence), appliqué avant le premier affichage -->
+  <script src="/assets/js/theme-boot.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&family=Zen+Kaku+Gothic+New:wght@900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/app.css">
+  <link rel="stylesheet" href="/assets/css/pages.css">
 </head>
 <body>
-  <div class="backdrop" aria-hidden="true">
-    <div class="blob"></div><div class="blob"></div><div class="blob"></div>
-    <div class="ambient"></div><div class="ambient"></div>
-  </div>
+  <div class="ambient" aria-hidden="true"></div>
 
-  <aside class="sidebar" aria-label="Navigation">
-    <a class="logo" href="#/" aria-label="Asobi, accueil">
-      <img class="logo-mark" src="/assets/img/logo.svg" alt="" width="36" height="36">
-      <span>Asobi</span>
-    </a>
-    <nav id="nav"></nav>
-    <div class="sidebar-foot">
-      <button class="btn btn-primary btn-block" type="button" data-action="add">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>Ajouter un jeu
-      </button>
-      <a class="nav-link" href="#/profil" id="account-link"></a>
-    </div>
-  </aside>
-
-  <div class="app">
-    <header class="topbar">
-      <div class="crumbs" id="crumbs"></div>
-      <div class="search">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 0 1 5.2 10.4l4.4 4.4-1.4 1.4-4.4-4.4A6.5 6.5 0 1 1 10.5 4zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z"/></svg>
-        <input class="input" id="search" type="search" placeholder="Rechercher dans ta collection…" autocomplete="off" aria-label="Rechercher"
-          role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="search-suggest">
-        <kbd>/</kbd>
-        <ul class="suggest" id="search-suggest" role="listbox" aria-label="Propositions" hidden></ul>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Navigation">
+      <a class="logo" href="#/" aria-label="Asobi, accueil"><span class="logo__mark" aria-hidden="true">遊</span><span class="logo__word">ASOBI</span></a>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar__foot">
+        <button class="btn btn--primary" type="button" data-action="add" data-edit>+ Ajouter un jeu</button>
+        <a class="me" href="#/profil" id="me"></a>
       </div>
-    </header>
-    <main class="view" id="view" aria-live="polite"></main>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <nav class="crumbs" id="crumbs" aria-label="Fil d'Ariane"></nav>
+        <div class="search">
+          <span class="search__icon" aria-hidden="true">⌕</span>
+          <input class="input" id="search" type="search" placeholder="Rechercher dans ta collection…" autocomplete="off" aria-label="Rechercher"
+            role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="search-suggest">
+          <kbd class="kbd">/</kbd>
+          <ul class="suggest" id="search-suggest" role="listbox" aria-label="Propositions" hidden></ul>
+        </div>
+      </header>
+      <div id="notices"></div>
+      <main class="view" id="view"></main>
+    </div>
   </div>
 
   <nav class="tabbar" id="tabbar" aria-label="Navigation"></nav>
   <div id="modals"></div>
-  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 
   <script src="/assets/js/main.js" type="module"></script>
 </body>

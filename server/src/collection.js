@@ -74,7 +74,7 @@ export function readCollection(db, userId) {
     games,
     wishlist,
     playlist: parseJson(user.playlist, []),
-    settings: { name: settings.name ?? user.display_name ?? null, consoleTrailers: settings.consoleTrailers ?? {} },
+    settings: { name: settings.name ?? user.display_name ?? null, consoleTrailers: settings.consoleTrailers ?? {}, friends: settings.friends ?? [] },
   };
 }
 
@@ -103,7 +103,8 @@ export async function addGame(db, env, userId, body, extra = {}) {
     baseId: slugify(`${meta.name} ${platform.short}`),
     igdbId,
     platform: platform.id,
-    steamAppId: extra.steamAppId ?? (platform.id === 'PC' ? meta.steamAppId ?? null : null),
+    // Un import d'une autre plateforme (Epic…) passe steamAppId: null pour ne pas relier le jeu à Steam
+    steamAppId: 'steamAppId' in extra ? extra.steamAppId : (platform.id === 'PC' ? meta.steamAppId ?? null : null),
     status: body.status,
     playlist: body.playlist,
     ...extra,
@@ -198,6 +199,8 @@ export function patchGame(db, userId, id, patch) {
     transaction(db, () => {
       db.prepare(`UPDATE collection SET ${cols.map((c) => `${c} = ?`).join(', ')}, updated_at = ? WHERE user_id = ? AND id = ?`)
         .run(...cols.map((c) => set[c]), now(), userId, id);
+      // Changer de console défait les liens avec les plateformes (un jeu PS5 rangé en Switch n'est plus synchronisé)
+      if (set.platform && set.platform !== game.platform) db.prepare('DELETE FROM collection_links WHERE user_id = ? AND collection_id = ?').run(userId, id);
       if (['finished', 'completed'].includes(set.status)) {
         setPlaylistIds(db, userId, playlistOf(db, userId).filter((x) => x !== id)); // terminé : sort de la liste « à jouer »
       }
@@ -269,6 +272,11 @@ export function patchSettings(db, userId, patch) {
       if (id) s.consoleTrailers[p.id] = id;
       else delete s.consoleTrailers[p.id];
     }
+  }
+  // Amis : des pseudos Asobi (leurs profils publics se lisent en lecture seule), 50 au plus
+  if (Array.isArray(patch.friends)) {
+    const own = user.username.toLowerCase();
+    s.friends = [...new Set(patch.friends.map((f) => String(f ?? '').trim().toLowerCase()).filter((f) => /^[a-z0-9_.]{1,32}$/.test(f) && f !== own))].slice(0, 50);
   }
   const profilePublic = 'profilePublic' in patch ? (patch.profilePublic ? 1 : 0) : user.profile_public;
   db.prepare('UPDATE users SET settings = ?, profile_public = ? WHERE id = ?').run(JSON.stringify(s), profilePublic, userId);

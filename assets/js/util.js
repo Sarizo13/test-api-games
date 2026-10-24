@@ -66,64 +66,71 @@ export function countdown(iso) {
 /* ---------- Animations ---------- */
 
 export function countUp(el, to, { decimals = 0, suffix = '' } = {}) {
-  const format = (v) => `${v.toFixed(decimals).replace('.', ',')}${suffix}`;
+  const format = (v) => `${v.toLocaleString('fr-FR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`;
   if (reduceMotion || !to) { el.textContent = format(to || 0); return; }
   const start = performance.now();
   const step = (now) => {
-    const p = Math.min(1, (now - start) / 1000);
+    const p = Math.min(1, (now - start) / 1500);
     el.textContent = format(to * (1 - (1 - p) ** 3));
     if (p < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
 }
 
-export function confetti(x = innerWidth / 2, y = innerHeight / 2) {
+export function confetti() {
   if (reduceMotion) return;
-  const colors = ['#8b5cf6', '#22d3ee', '#f472b6', '#fbbf24', '#34d399'];
-  for (let i = 0; i < 70; i++) {
-    const c = document.createElement('i');
-    c.className = 'confetti';
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 120 + Math.random() * 260;
-    c.style.cssText = `left:${x}px;top:${y}px;background:${colors[i % colors.length]};--dx:${Math.cos(angle) * dist}px;--dy:${Math.sin(angle) * dist + 160}px;--r:${Math.random() * 720 - 360}deg;animation-delay:${Math.random() * 120}ms`;
-    document.body.append(c);
-    setTimeout(() => c.remove(), 1700);
-  }
+  const colors = ['var(--acc)', '#ff8fc0', '#ffd66b', '#8fb8ff', '#7fe0a8', '#cf9cff'];
+  const box = document.createElement('div');
+  box.className = 'confetti';
+  box.setAttribute('aria-hidden', 'true');
+  box.innerHTML = Array.from({ length: 80 }, (_, i) => `<i style="--x:${Math.random() * 100}%;--c:${colors[i % colors.length]};--w:${6 + Math.random() * 6}px;--d:${(Math.random() * 0.6).toFixed(2)}s;--dur:${(1.8 + Math.random() * 1.2).toFixed(2)}s"></i>`).join('');
+  document.body.append(box);
+  setTimeout(() => box.remove(), 3600);
 }
 
 /* ---------- Fond d'ambiance (image floutée de ce qu'on regarde) ---------- */
 
-let ambientIndex = 0;
 let ambientUrl = '';
 
 export function setAmbient(url) {
-  if (!safeUrl(url) || url === ambientUrl) return;
+  const layer = $('.ambient');
+  if (!layer) return;
+  if (!safeUrl(url)) { layer.classList.remove('is-active'); ambientUrl = ''; return; }
+  if (url === ambientUrl) return;
   ambientUrl = url;
-  const layers = $$('.backdrop .ambient');
-  const next = layers[ambientIndex = 1 - ambientIndex];
-  const prev = layers[1 - ambientIndex];
   const img = new Image();
   img.onload = () => {
     if (ambientUrl !== url) return;
-    next.style.backgroundImage = cssUrl(url);
-    next.classList.add('is-visible');
-    prev.classList.remove('is-visible');
+    layer.style.backgroundImage = cssUrl(url);
+    layer.classList.add('is-active');
   };
   img.src = url;
 }
 
 /* ---------- Notifications ---------- */
 
-export function toast(icon, title, text = '', ms = 5000, link = null) {
+/**
+ * Notification. `icon` : un caractère ; `action` : { label, onClick } pour un bouton (« Annuler »…) ;
+ * `link` : { href, label } vers une page externe.
+ */
+export function toast(icon, title, text = '', ms = 5000, { link = null, action = null, color = null } = {}) {
   const el = document.createElement('div');
   el.className = 'toast';
   const more = link && safeUrl(link.href) ? ` <a href="${esc(link.href)}" target="_blank" rel="noopener">${esc(link.label)}</a>` : '';
-  el.innerHTML = `<span class="toast-icon">${icon}</span><div><strong>${esc(title)}</strong>${esc(text)}${more}</div>`;
-  $('#toasts').append(el);
-  setTimeout(() => {
+  el.innerHTML = `<span class="toast__icon"${color ? ` style="--c:${esc(color)}"` : ''}>${esc(icon)}</span>
+    <div class="toast__body"><b>${esc(title)}</b>${text.trim() ? `<span>${esc(text.trim())}${more}</span>` : ''}</div>
+    ${action ? `<button class="btn" type="button">${esc(action.label)}</button>` : ''}`;
+  let timer = 0;
+  const leave = () => {
+    clearTimeout(timer);
     el.classList.add('is-leaving');
     el.addEventListener('animationend', () => el.remove(), { once: true });
-  }, ms);
+    setTimeout(() => el.remove(), 400);
+  };
+  if (action) el.querySelector('button').addEventListener('click', () => { action.onClick(); leave(); });
+  $('#toasts').append(el);
+  timer = setTimeout(leave, ms);
+  return leave;
 }
 
 /* ---------- Fenêtres (modales) ---------- */
@@ -135,9 +142,8 @@ export function openModal(html, { onClose, wide = false } = {}) {
   el.className = 'modal';
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
-  el.innerHTML = `<div class="modal-backdrop" data-close></div>
-    <div class="modal-panel"${wide ? ' style="max-width:820px"' : ''}>
-      <button class="icon-btn modal-close" type="button" data-close aria-label="Fermer">${ICONS.close}</button>
+  el.innerHTML = `<div class="modal__panel${wide ? ' modal__panel--wide' : ''}">
+      <button class="btn btn--icon btn--ghost modal__close" type="button" data-close aria-label="Fermer">${ICONS.close}</button>
       ${html}
     </div>`;
   $('#modals').append(el);
@@ -160,7 +166,9 @@ export function openModal(html, { onClose, wide = false } = {}) {
     if (e.key === 'Escape' && el === $('#modals').lastElementChild) { e.preventDefault(); close(); }
   };
   document.addEventListener('keydown', onKey, true);
-  el.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) close(); });
+  // Clic sur le voile (hors du panneau) ou sur un bouton [data-close] : fermeture
+  el.addEventListener('click', (e) => { if (e.target === el || e.target.closest('[data-close]')) close(); });
+  setTimeout(() => el.querySelector('.modal__panel')?.focus?.({ preventScroll: true }), 0);
   return { el, close };
 }
 
@@ -180,7 +188,7 @@ export function listbox(input, list, onPick) {
     const all = options();
     if (!all.length) return;
     active = (i + all.length) % all.length;
-    all.forEach((el, n) => el.classList.toggle('is-active', n === active));
+    all.forEach((el, n) => { el.classList.toggle('is-active', n === active); el.setAttribute('aria-selected', String(n === active)); });
     all[active].scrollIntoView({ block: 'nearest' });
     input.setAttribute('aria-activedescendant', all[active].id);
   };
@@ -268,3 +276,31 @@ export const ICONS = {
   refresh: svg('M17.6 6.4A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.2L13 11h7V4z'),
   move: svg('M12 2 8 6h3v5H6V8l-4 4 4 4v-3h5v5H8l4 4 4-4h-3v-5h5v3l4-4-4-4v3h-5V6h3z'),
 };
+
+/* ---------- Contrôle segmenté (statut, destination…) ---------- */
+
+/**
+ * `options` : [{ value, label, icon, color }]. La pastille glisse sous le choix (--i) et prend sa couleur (--c).
+ * Chaque bouton porte data-<name>="valeur".
+ */
+export function segmented(name, options, value, { label = '' } = {}) {
+  const i = Math.max(0, options.findIndex((o) => o.value === value));
+  return `
+    <div class="segmented" role="radiogroup"${label ? ` aria-label="${esc(label)}"` : ''} data-seg="${esc(name)}"
+      style="--n:${options.length};--i:${i};--c:${options[i]?.color ?? 'var(--acc)'}">
+      <span class="segmented__thumb"></span>
+      ${options.map((o) => `<button type="button" role="radio" aria-checked="${o.value === value}" data-${esc(name)}="${esc(o.value)}" data-c="${esc(o.color ?? 'var(--acc)')}">${o.icon ? `<span aria-hidden="true">${o.icon}</span>` : ''}${esc(o.label)}</button>`).join('')}
+    </div>`;
+}
+
+/** Fait glisser la pastille sur `value`. */
+export function setSegmented(seg, value) {
+  if (!seg) return;
+  const buttons = $$(':scope > button', seg);
+  const name = seg.dataset.seg;
+  const i = buttons.findIndex((b) => b.dataset[name] === value);
+  buttons.forEach((b, n) => b.setAttribute('aria-checked', String(n === i)));
+  if (i < 0) return;
+  seg.style.setProperty('--i', i);
+  seg.style.setProperty('--c', buttons[i].dataset.c);
+}

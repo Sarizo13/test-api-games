@@ -3,7 +3,7 @@
 // Le paramètre « state » d'une redirection OAuth/OpenID est aléatoire, à usage unique, valable 10 minutes,
 // et lié au navigateur par un cookie : une réponse ne peut pas être rejouée ni injectée dans une autre session.
 
-import { randomToken, sha256 } from './security.js';
+import { randomToken, sha256, encrypt } from './security.js';
 import { cookie, parseCookies, HttpError } from './http.js';
 import { now } from './db.js';
 import * as discordApi from './integrations/discord/index.js';
@@ -54,12 +54,13 @@ export function destroySession(ctx, req) {
 /** Adresse de retour acceptée : seulement une page du site (#/…), jamais un autre domaine. */
 export const safeNext = (next) => (typeof next === 'string' && /^#\/[\w\-/%.]*$/.test(next) ? next : '#/');
 
-export function beginRedirectFlow(ctx, { provider, purpose, userId = null, next = '#/' }) {
+export function beginRedirectFlow(ctx, { provider, purpose, userId = null, next = '#/', secret = null }) {
   const state = randomToken(24);
   const browser = randomToken(24);
   const t = Date.now();
-  ctx.db.prepare(`INSERT INTO oauth_states (state_hash, provider, purpose, user_id, browser_hash, next, created_at, expires_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(sha256(state), provider, purpose, userId, sha256(browser), safeNext(next), new Date(t).toISOString(), new Date(t + STATE_TTL).toISOString());
+  ctx.db.prepare(`INSERT INTO oauth_states (state_hash, provider, purpose, user_id, browser_hash, next, created_at, expires_at, secret)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(sha256(state), provider, purpose, userId, sha256(browser), safeNext(next), new Date(t).toISOString(), new Date(t + STATE_TTL).toISOString(),
+    secret ? encrypt(ctx.key, secret) : null);
   return { state, cookie: cookie(OAUTH_COOKIE, browser, { maxAge: STATE_TTL / 1000, secure: ctx.config.secureCookies, path: '/api' }) };
 }
 

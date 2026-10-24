@@ -12,7 +12,7 @@ const REVEAL_AFTER = 2;
 const REVEAL_WAIT = 3500;
 
 // Pas de vidéo sur petit écran, en mode économie de données ou si l'utilisateur limite les animations
-export const trailersAllowed = !reduceMotion && !navigator.connection?.saveData && matchMedia('(min-width: 700px)').matches;
+export const trailersAllowed = !reduceMotion && !navigator.connection?.saveData && matchMedia('(min-width: 861px)').matches;
 
 export const hasTrailer = (g) => Boolean(g?.steamTrailer?.hls || g?.trailer?.youtubeId);
 
@@ -23,6 +23,12 @@ export function createTrailer(bg, game, options) {
     : youtubeTrailer(bg, game.trailer.youtubeId, options);
 }
 
+/** L'image du bandeau s'ouvre en diaphragme sur la vidéo (.is-opening sur .banner), ou se referme. */
+const opened = (bg, on) => {
+  bg.classList.toggle('is-faded', on);
+  bg.closest('.banner')?.classList.toggle('is-opening', on);
+};
+
 const SOUND_ICONS = {
   off: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm12.6.4L18 10.8l1.4-1.4 1.4 1.4-1.4 1.4 1.4 1.4-1.4 1.4-1.4-1.4-1.4 1.4-1.4-1.4 1.4-1.4-1.4-1.4z"/></svg>',
   on: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm11.5-1.6a6 6 0 0 1 0 9.2l-1.3-1.5a4 4 0 0 0 0-6.2zm2.6-3a10 10 0 0 1 0 15.2l-1.3-1.5a8 8 0 0 0 0-12.2z"/></svg>',
@@ -32,7 +38,7 @@ const SOUND_ICONS = {
 function soundButton(toggle) {
   const sound = document.createElement('button');
   sound.type = 'button';
-  sound.className = 'trailer-sound';
+  sound.className = 'btn trailer-sound';
   const render = (muted) => {
     sound.innerHTML = muted ? SOUND_ICONS.off : SOUND_ICONS.on;
     sound.setAttribute('aria-label', muted ? 'Activer le son de la bande-annonce' : 'Couper le son de la bande-annonce');
@@ -78,7 +84,7 @@ export function youtubeTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER
   let revealTimer = 0;
 
   const layer = document.createElement('div');
-  layer.className = 'trailer';
+  layer.className = 'banner__video';
   layer.append(document.createElement('div'));
   const sound = soundButton(() => {
     if (!player) return null;
@@ -90,7 +96,7 @@ export function youtubeTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER
   const conceal = () => {
     clearInterval(revealTimer);
     if (bg.classList.contains('is-faded')) dbg(`${youtubeId} image remise`);
-    bg.classList.remove('is-faded', 'is-iris');
+    opened(bg, false);
   };
   // L'image s'efface quand le zoom est fini ET que la vidéo joue depuis assez longtemps
   const reveal = () => {
@@ -102,7 +108,7 @@ export function youtubeTrailer(bg, youtubeId, { soundParent, zoomDelay = TRAILER
       if (!zoomDone || player.getCurrentTime() - from < REVEAL_AFTER || performance.now() - since < REVEAL_WAIT) return;
       clearInterval(revealTimer);
       dbg(`${youtubeId} IMAGE EFFACÉE (vidéo à ${player.getCurrentTime().toFixed(1)}s)`);
-      bg.classList.add('is-faded', 'is-iris');
+      opened(bg, true);
       sound.classList.add('is-visible');
     }, 100);
   };
@@ -196,8 +202,10 @@ export function nativeTrailer(bg, src, { soundParent, zoomDelay = TRAILER_DELAY,
   let zoomDone = false;
   let hls = null;
 
+  const layer = document.createElement('div');
+  layer.className = 'banner__video';
   const video = document.createElement('video');
-  video.className = 'trailer trailer-video';
+  layer.append(video);
   video.muted = true;
   video.playsInline = true;
   video.preload = 'auto';
@@ -213,7 +221,7 @@ export function nativeTrailer(bg, src, { soundParent, zoomDelay = TRAILER_DELAY,
   const reveal = () => {
     if (stopped || ended || !zoomDone || video.paused || video.currentTime < 0.3 || bg.classList.contains('is-faded')) return;
     dbg(`steam IMAGE EFFACÉE (vidéo à ${video.currentTime.toFixed(1)}s)`);
-    bg.classList.add('is-faded', 'is-iris');
+    opened(bg, true);
     sound.classList.add('is-visible');
   };
   const finish = () => {
@@ -221,7 +229,7 @@ export function nativeTrailer(bg, src, { soundParent, zoomDelay = TRAILER_DELAY,
     ended = true;
     dbg('steam fin / abandon');
     clearTimeout(startTimer);
-    bg.classList.remove('is-faded', 'is-iris');
+    opened(bg, false);
     sound.classList.remove('is-visible');
     onEnd?.();
   };
@@ -238,7 +246,7 @@ export function nativeTrailer(bg, src, { soundParent, zoomDelay = TRAILER_DELAY,
 
   const timer = setTimeout(async () => {
     if (stopped) return;
-    bg.before(video);
+    bg.before(layer);
     soundParent?.append(sound);
     dbg('steam chargement');
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -262,14 +270,14 @@ export function nativeTrailer(bg, src, { soundParent, zoomDelay = TRAILER_DELAY,
       clearTimeout(timer);
       clearTimeout(zoomTimer);
       clearTimeout(startTimer);
-      bg.classList.remove('is-faded', 'is-iris');
+      opened(bg, false);
       sound.remove();
       setTimeout(() => {
         hls?.destroy();
         video.pause();
         video.removeAttribute('src');
         video.load();
-        video.remove();
+        layer.remove();
       }, 1300);
     },
     get ended() { return ended; },

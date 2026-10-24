@@ -1,10 +1,12 @@
 // Comptes de jeu connectés : liste, détection via Discord, liaison Steam vérifiée, jetons chiffrés, déconnexion.
+// Les liaisons directes (Epic, Nintendo) passent par provider.link (voir app.js).
 
 import { PROVIDERS, getProvider } from './integrations/index.js';
 import { ACCOUNT_STATUS, describe } from './integrations/core/provider.js';
 import * as discordApi from './integrations/discord/index.js';
 import { jobView } from './integrations/core/sync.js';
-import { encrypt, decrypt } from './security.js';
+import { decrypt } from './security.js';
+import { saveCredentials, loadCredentials } from './integrations/core/credentials.js';
 import { HttpError } from './http.js';
 import { now } from './db.js';
 
@@ -42,12 +44,7 @@ export function getAccount(ctx, userId, id) {
 
 /* ---------- Jetons (chiffrés au repos) ---------- */
 
-export function saveCredentials(ctx, accountId, tokens) {
-  ctx.db.prepare(`INSERT INTO provider_credentials (connected_account_id, encrypted_token, encrypted_refresh_token, scope, expires_at) VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(connected_account_id) DO UPDATE SET encrypted_token = excluded.encrypted_token, encrypted_refresh_token = excluded.encrypted_refresh_token,
-      scope = excluded.scope, expires_at = excluded.expires_at`)
-    .run(accountId, encrypt(ctx.key, tokens.accessToken), encrypt(ctx.key, tokens.refreshToken), tokens.scope ?? null, tokens.expiresAt ?? null);
-}
+export { saveCredentials };
 
 /** Jeton Discord valide pour ce compte, renouvelé s'il expire dans moins de 5 minutes. */
 export async function discordAccessToken(ctx, account) {
@@ -152,5 +149,7 @@ export async function disconnect(ctx, userId, id) {
       .run(ACCOUNT_STATUS.AUTHORIZATION_REQUIRED, 'Accès aux connexions révoqué. Reconnecte-toi avec Discord pour le rétablir.', account.id);
     return;
   }
-  db.prepare('DELETE FROM connected_accounts WHERE id = ? AND user_id = ?').run(account.id, userId); // jetons et données brutes partent en cascade
+  const provider = getProvider(account.provider);
+  if (provider?.revoke && cred) await provider.revoke(ctx, account, loadCredentials(ctx, account.id)).catch(() => {});
+  db.prepare('DELETE FROM connected_accounts WHERE id = ? AND user_id = ?').run(account.id, userId); // jetons, données brutes et liens partent en cascade
 }

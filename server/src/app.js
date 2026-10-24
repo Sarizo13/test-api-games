@@ -6,6 +6,7 @@
 // Collection    GET /api/collection · POST /api/games · PATCH|DELETE /api/games/:id · POST /api/games/:id/match
 //               POST /api/wishlist · DELETE /api/wishlist/:igdbId · PUT /api/playlist · PATCH /api/settings
 // Comptes       GET /api/accounts · POST /api/accounts/discover · GET /api/accounts/steam/openid/start|callback
+//               POST /api/accounts/link/:provider/start|finish (Epic, Nintendo : copier-coller d'un code)
 //               POST /api/accounts/:id/enable|sync|import · GET /api/accounts/:id/library · PATCH|DELETE /api/accounts/:id
 //               GET /api/jobs/:id
 //
@@ -26,6 +27,7 @@ import { startJob, getJob } from './integrations/core/sync.js';
 import * as discordApi from './integrations/discord/index.js';
 import * as steamApi from './integrations/steam/index.js';
 import { ROOT } from './config.js';
+import { decrypt } from './security.js';
 
 const ids = (value, max) => String(value ?? '').split(',').map(Number).filter(Boolean).slice(0, max);
 
@@ -57,7 +59,9 @@ export function createApp(ctx) {
     const owner = db.prepare('SELECT * FROM users WHERE username = ?').get(params.username);
     // Profil privé ou inexistant : même réponse, pour ne pas révéler qui a un compte
     if (!owner || (!owner.profile_public && owner.id !== user?.id)) throw new HttpError(404, 'Profil introuvable ou privé.');
-    return { user: publicUser(owner), ...collection.readCollection(db, owner.id) };
+    const { games, wishlist, playlist, settings } = collection.readCollection(db, owner.id);
+    // La liste d'amis et les réglages restent privés : seul le nom affiché est public
+    return { user: publicUser(owner), games, wishlist, playlist, settings: { name: settings.name } };
   });
 
   r.add('GET', '/api/search', async ({ url }) => {
@@ -172,6 +176,43 @@ export function createApp(ctx) {
       result = err.status === 409 ? 'steam=deja-pris' : 'steam=refuse';
     }
     redirect(res, `/#/comptes?${result}`, { 'Set-Cookie': auth.clearFlowCookie(ctx) });
+  });
+
+  // Liaison directe (Epic, Nintendo) : le joueur se connecte chez la plateforme puis colle le code ou l'adresse obtenus.
+  // Le « state » éventuel est lié au navigateur (cookie) et à l'utilisateur, à usage unique, valable 10 minutes.
+  const linkProvider = (user, id) => {
+    const me = auth.requireUserRow(user);
+    const provider = getProvider(id);
+    if (!provider?.link) throw new HttpError(404, 'Cette plateforme ne se relie pas de cette façon.');
+    if (!provider.enabled(config)) throw new HttpError(501, `${provider.name} n'est pas configuré sur ce serveur.`);
+    limit(`link:${me.id}`, 20);
+    return { me, provider };
+  };
+  r.add('POST', '/api/accounts/link/:provider/start', ({ user, params, res }) => {
+    const { me, provider } = linkProvider(user, params.provider);
+    const flow = {
+      begin(secret) {
+        const f = auth.beginRedirectFlow(ctx, { provider: provider.id, purpose: 'link', userId: me.id, next: '#/comptes', secret });
+        res.setHeader('Set-Cookie', f.cookie);
+        return f.state;
+      },
+    };
+    return provider.link.start(ctx, me.id, flow);
+  });
+  r.add('POST', '/api/accounts/link/:provider/finish', async ({ user, params, req, res, body }) => {
+    const { me, provider } = linkProvider(user, params.provider);
+    const flow = {
+      consume(state) {
+        const row = auth.consumeRedirectFlow(ctx, req, provider.id, state);
+        if (row.user_id !== me.id) throw new HttpError(400, 'Connexion lancée depuis un autre compte.');
+        res.setHeader('Set-Cookie', auth.clearFlowCookie(ctx));
+        return decrypt(ctx.key, row.secret);
+      },
+    };
+    const input = (await body()).code;
+    if (typeof input !== 'string' || !input.trim() || input.length > 4000) throw new HttpError(400, 'Colle le code donné par la plateforme.');
+    await provider.link.finish(ctx, me.id, input, flow);
+    return accounts.listAccounts(ctx, me.id);
   });
 
   const accountAndProvider = (user, id) => {

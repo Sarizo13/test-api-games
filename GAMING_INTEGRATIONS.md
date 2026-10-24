@@ -1,24 +1,26 @@
 # Comptes de jeu connectés
 
 Asobi se connecte avec **Discord**, et s'en sert pour **retrouver les comptes de jeu** de chacun
-(Steam, Xbox, PlayStation, Epic…). Seul **Steam** permet aujourd'hui d'importer une bibliothèque,
-le temps de jeu et les succès ; les autres plateformes sont reconnues, et leurs jeux s'ajoutent à la main.
+(Steam, Xbox, PlayStation, Epic…). **Steam** passe par son API officielle ; **PlayStation, Xbox, Epic et
+Nintendo** n'ouvrent pas leurs données aux sites tiers : Asobi utilise des **connecteurs non officiels**
+(les mêmes méthodes que des projets libres connus), signalés comme tels dans l'interface.
 
 ## Statut réel des plateformes
 
-| Plateforme | Statut | Ce qui marche | Ce qui ne marche pas | API |
+| Plateforme | Statut | Ce qui marche | Ce qui ne marche pas | Accès |
 |---|---|---|---|---|
-| Discord | **Implémenté, à valider en réel** | Connexion, profil, détection des comptes liés, renouvellement et révocation du jeton | — | Officielle (OAuth2) |
-| Steam | **Implémenté, à valider en réel** | Vérification du compte (Discord ou Steam OpenID), import de la bibliothèque, temps de jeu, succès, synchro manuelle et automatique | Profils dont les « détails des jeux » sont privés | Officielle (Web API + OpenID) |
-| PlayStation | **Partiel** : détection seulement | Identifiant PSN reconnu via Discord | Jeux, temps de jeu, trophées | Aucune API ouverte |
-| Xbox | **Partiel** : détection seulement | Gamertag reconnu via Discord | Jeux, succès, Gamerscore, temps de jeu | Réservée aux partenaires |
-| Epic Games | **Partiel** : détection seulement | Pseudo reconnu via Discord | Bibliothèque, temps de jeu, succès | Profil seulement |
-| Nintendo | **Indisponible** | Ajout manuel des jeux | Tout import (pas de connexion Discord Nintendo) | Aucune API publique |
+| Discord | **Implémenté, à valider en réel** | Connexion, profil, détection des comptes liés, renouvellement et révocation du jeton | — | Officiel (OAuth2) |
+| Steam | **Implémenté** ; clé vérifiée en réel, import par l'interface à valider | Vérification du compte (Discord ou Steam OpenID), bibliothèque, temps de jeu, succès, synchro manuelle et automatique | Profils dont les « détails des jeux » sont privés | Officiel (Web API + OpenID) |
+| PlayStation | **Expérimental, non officiel — à valider en réel** | Jeux PS4/PS5 joués, temps de jeu, première et dernière partie, progression des trophées, synchro | Profils privés, jeux jamais lancés, PS3/Vita | API privée de l'application PlayStation, jeton NPSSO **du serveur** |
+| Xbox | **Expérimental, non officiel — à valider en réel** | Historique de jeu, minutes jouées, succès, dernière partie, synchro | Profils privés ; quota horaire d'OpenXBL | Service tiers OpenXBL, clé **du serveur** |
+| Epic Games | **Expérimental, non officiel — à valider en réel** | Jeux possédés, temps de jeu, synchro | Succès ; la session peut expirer (recoller un code) | API privée du lanceur Epic, code collé par le joueur |
+| Nintendo | **Expérimental, non officiel — à valider en réel** | Historique Switch et Switch 2 : minutes, première et dernière partie, synchro | Succès (la Switch n'en a pas) | API privée de « My Nintendo », lien collé par le joueur |
 | Battle.net, Riot, Bungie, Roblox | **Partiel** : détection seulement | Compte reconnu via Discord | Bibliothèque | — |
 
-« À valider en réel » : tout le code est testé (35 tests automatisés, avec des réponses Discord, Steam et
-IGDB simulées), mais pas encore contre les vraies API, faute d'application Discord et de clé Steam
-configurées au moment de l'écriture. Ce tableau sera mis à jour après le premier essai réel.
+« À valider en réel » : le code est couvert par 49 tests automatisés (toutes les plateformes simulées), mais
+n'a pas encore tourné contre les vraies API avec un vrai compte. Les connecteurs non officiels peuvent
+**cesser de marcher sans prévenir** si la plateforme change son API : le compte passe alors en erreur avec un
+message clair, et rien n'est perdu dans la collection.
 
 ## Architecture
 
@@ -40,19 +42,26 @@ server/
     integrations/
       core/provider.js     interface commune des connecteurs et états des comptes
       core/sync.js         tâches de synchronisation, nouvelles tentatives, attente croissante
-      core/normalize.js    correspondance jeu de plateforme → jeu canonique IGDB
+      core/normalize.js    correspondance jeu Steam → jeu canonique IGDB
+      core/library.js      moteur commun PlayStation / Xbox / Epic / Nintendo (bibliothèque, import, synchro)
+      core/credentials.js  jetons chiffrés des plateformes
       discord/ steam/ playstation/ xbox/ epic/ nintendo/   un connecteur par plateforme
       index.js             registre des connecteurs
     tasks.js               ménage, sauvegarde quotidienne, synchro automatique
-  migrations/001_init.sql  schéma de la base
+  migrations/              schéma de la base (001 : base, 002 : liens jeux ↔ plateformes)
   test/                    tests (node --test)
 ```
 
 ### Ajouter une plateforme
 
-1. Créer `server/src/integrations/<plateforme>/index.js` avec `defineProvider({ id, name, capabilities, … })`.
-2. Déclarer **seulement** les capacités réellement disponibles (`library`, `playtime`, `achievements`, `sync`)
-   et, si besoin, `enable`, `sync`, `library`, `importGames` (voir `steam/index.js`).
+1. Créer `server/src/integrations/<plateforme>/index.js` :
+   - plateforme avec bibliothèque : `libraryProvider({ id, name, fetchLibrary, … })` (voir `xbox/index.js`) ;
+     `fetchLibrary` renvoie `{ id, name, platform, playtimeMinutes, firstPlayedAt, lastPlayedAt, achievements, image }`
+     et le moteur commun fait le reste (import, correspondances, synchro, règles de préservation) ;
+   - liaison directe par copier-coller : ajouter `link: { type, start, finish }` (voir `epic/` et `nintendo/`) ;
+   - détection seule : `defineProvider({ … })`.
+2. Déclarer **seulement** les capacités réellement disponibles (`library`, `playtime`, `achievements`, `sync`),
+   et `experimental: true` pour une API non officielle.
 3. L'ajouter dans `integrations/index.js`. La page « Comptes connectés » l'affiche toute seule.
 
 ### États d'un compte
@@ -102,19 +111,56 @@ Un compte **détecté n'est jamais affiché comme connecté** à son API tant qu
   - les chiffres bruts de Steam sont gardés à part (`platform_games`).
 - **Synchro automatique** toutes les 12 h (désactivable par compte), un compte à la fois.
 
-## PlayStation, Xbox, Epic, Nintendo
+## Connecteurs non officiels
 
-- **PlayStation** : pas d'API ouverte aux applications tierces. `psn-api` et `PSNAWP` exigent le jeton de session
-  « NPSSO » du compte, récupéré dans le navigateur : c'est un identifiant de connexion complet, qu'Asobi ne demande pas.
-- **Xbox** : les services Xbox Live (succès, Gamerscore, temps de jeu) sont réservés aux partenaires Microsoft ;
-  un jeton OAuth Microsoft classique n'y donne pas accès. **OpenXBL** (service tiers) pourrait être branché
-  plus tard avec une inscription et une clé d'application dédiées : non activé.
-- **Epic Games** : Epic Account Services ne donne que le profil, pas la bibliothèque ni le temps de jeu.
-  Les méthodes qui imitent le lanceur Epic ne sont pas utilisées.
-- **Nintendo** : aucune API publique de bibliothèque, et Discord ne propose pas de connexion Nintendo.
-  `nxapi` passe par l'application Nintendo Switch Online avec les jetons du compte : non utilisé.
-- Pour toutes : **ajout manuel assisté** (bouton « Ajouter un jeu à la main », console déjà choisie,
-  recherche IGDB qui trouve aussi les jeux rétro).
+Règles communes (moteur `core/library.js`, mêmes garanties que Steam) :
+
+- **Preuve de propriété** : PlayStation et Xbox exigent un compte **vérifié par Discord** ; Epic et Nintendo
+  sont reliés par une connexion du joueur lui-même chez la plateforme. Un compte vérifié n'appartient qu'à un
+  utilisateur d'Asobi.
+- **Correspondance** : titre strictement identique sur IGDB (fiabilité `title`, symboles ™ ® © ignorés),
+  sinon le jeu est gardé « à associer ». Un jeu déjà dans la collection sur la même console est **relié**,
+  pas dupliqué.
+- **Synchro** : met à jour temps de jeu, dernière partie et succès ; ne touche jamais au statut, à une saisie
+  manuelle, ni à une valeur venue d'une autre plateforme ; ne supprime rien.
+- Liens jeu ↔ compte dans `collection_links` ; données brutes dans `platform_games`. Déconnecter un compte
+  efface ses jetons, ses données brutes et ses liens, **pas les jeux**.
+
+### PlayStation (comme psn-api / PSNAWP)
+
+- Le **propriétaire du serveur** met son jeton NPSSO dans `PSN_NPSSO` (se connecter sur playstation.com puis
+  ouvrir <https://ca.account.sony.com/api/v1/ssocookie>). Il dure environ deux mois. Les jetons qui en
+  découlent restent **en mémoire** ; aucun joueur ne donne d'identifiant PlayStation.
+- Asobi retrouve l'`accountId` depuis l'ID en ligne donné par Discord, puis lit les **données publiques** :
+  `gamelist/v2/users/{id}/titles` (temps de jeu, dates) et `trophy/v1/users/{id}/trophyTitles`.
+- Le joueur doit rendre « Jeux » et « Trophées » visibles par **tout le monde** (Confidentialité PlayStation).
+
+### Xbox (service OpenXBL)
+
+- Le propriétaire du serveur crée une clé sur <https://xbl.io> (`OPENXBL_API_KEY`). OpenXBL relaie Xbox Live.
+- Asobi retrouve le XUID depuis le Gamertag donné par Discord, puis lit `player/titleHistory/{xuid}`
+  (jeux, succès, dernière partie) et `player/stats` (`MinutesPlayed`, par lots de 25).
+- L'historique de jeu du joueur doit être public. L'offre gratuite d'OpenXBL limite les requêtes par heure.
+
+### Epic Games (comme Legendary / Heroic)
+
+- Le joueur se connecte sur epicgames.com ; la page affiche un `authorizationCode` à usage unique qu'il colle
+  dans Asobi. Asobi l'échange contre une session du lanceur Epic (identifiants **publics** du lanceur,
+  remplaçables par `EPIC_CLIENT_ID` / `EPIC_CLIENT_SECRET`), jetons chiffrés en base.
+- Lus : bibliothèque (`library/api/public/items`, sans contenus Unreal ni extensions), titres et visuels
+  (catalogue, mis en cache 30 jours), temps de jeu (`playtime/account/{id}/all`). Pas de succès.
+- Si la session expire, le compte passe en « reconnexion nécessaire ». La déconnexion **ferme la session Epic**.
+
+### Nintendo (comme nxapi / Switch Game Play History)
+
+- Le joueur se connecte sur accounts.nintendo.com (lien généré par Asobi, avec **PKCE** et `state` lié au
+  navigateur), puis copie l'adresse du bouton « Choisir cette personne » (`npf5c38e31cd085304b://auth#…`)
+  et la colle dans Asobi. Le jeton de session obtenu (≈ 2 ans) est chiffré en base.
+- Lu : `mypage-api…/users/me/play_histories` (jeux, minutes, première et dernière partie). Seuls l'identifiant
+  et le pseudo du compte Nintendo sont gardés (ni e-mail, ni date de naissance).
+- Nintendo n'autorise pas officiellement cet usage : ses conditions d'utilisation peuvent l'interdire.
+
+Pour toutes, l'**ajout manuel** reste possible (bouton « Ajouter un jeu à la main », console déjà choisie).
 
 ## Normalisation des jeux
 
@@ -126,6 +172,7 @@ sont deux entrées de collection reliées au **même jeu canonique** (ID IGDB), 
 | Jeu canonique (fiche IGDB partagée) | `games` |
 | Jeu d'une plateforme ↔ jeu canonique, avec sa fiabilité | `external_games` |
 | Jeu possédé / joué sur un compte, chiffres bruts de la plateforme | `platform_games` |
+| Jeu de la collection ↔ jeu d'un compte (hors Steam) | `collection_links` |
 | Jeu de la collection, sur une console, avec les données personnelles | `collection` |
 
 Fiabilités acceptées : `exact` (lien officiel donné par IGDB), `title` (titre strictement identique après
@@ -145,7 +192,9 @@ et proposé dans **« Jeux à associer »**. Jamais de fusion sur une simple res
 - Cloisonnement : chaque requête est filtrée par l'utilisateur connecté ; un autre utilisateur reçoit 404.
 - Politique de sécurité du contenu (CSP), `X-Frame-Options`, `nosniff`, HSTS (nginx).
 - Conteneur : utilisateur non root, système de fichiers en lecture seule, aucune capacité, écoute sur 127.0.0.1.
-- Aucun mot de passe tiers demandé, aucun contournement de protection d'API.
+- Aucun mot de passe tiers demandé à Asobi : Epic et Nintendo se connectent sur leur propre site.
+- Connecteurs non officiels : identifiants de leurs applications publiques, aucun contournement de captcha
+  ni de protection anti-robot ; les jetons du serveur (NPSSO, OpenXBL) restent côté serveur.
 
 ## Données stockées (RGPD)
 
@@ -155,7 +204,9 @@ et proposé dans **« Jeux à associer »**. Jamais de fusion sur une simple res
 | Sessions (empreinte du jeton, dates) | Rester connecté | 30 jours |
 | Comptes de jeu détectés (plateforme, ID, pseudo, vérifié) | Proposer l'import | Jusqu'à la déconnexion du compte |
 | Jetons Discord (chiffrés) | Relire les connexions Discord | Jusqu'à la déconnexion ou la suppression |
-| Données Steam (jeux, temps de jeu, succès) | Remplir la collection | Jusqu'à la déconnexion du compte Steam |
+| Données des plateformes (jeux, temps de jeu, succès, dates) | Remplir la collection | Jusqu'à la déconnexion du compte |
+| Jetons Epic et Nintendo (chiffrés) | Relire la bibliothèque | Jusqu'à la déconnexion (session Epic fermée) |
+| ID interne PSN / XUID Xbox | Éviter de les rechercher à chaque synchro | Jusqu'à la déconnexion du compte |
 | Collection, notes, avis, listes | Le service lui-même | Jusqu'à la suppression du compte |
 | Historique des synchros | Diagnostic | 90 jours |
 
@@ -170,6 +221,8 @@ et proposé dans **« Jeux à associer »**. Jamais de fusion sur une simple res
 1. **Discord** : <https://discord.com/developers/applications> → *New Application* → *OAuth2* :
    copier *Client ID* et *Client Secret* ; *Redirects* : `https://asobi.sarizo.fr/api/auth/discord/callback`.
 2. **Steam** : clé sur <https://steamcommunity.com/dev/apikey> (domaine : `asobi.sarizo.fr`).
+   **PlayStation** (facultatif) : `PSN_NPSSO`. **Xbox** (facultatif) : `OPENXBL_API_KEY`.
+   Epic et Nintendo n'ont besoin d'aucune clé.
 3. **IGDB** : application Twitch (<https://dev.twitch.tv/console/apps>), *Client ID* et *Client Secret*.
 4. Copier `.env.example` en `.env`, remplir, `chmod 600 .env`.
 5. `docker compose up -d --build`, puis nginx et certbot (voir `deploy/nginx-asobi.conf`).
@@ -180,8 +233,11 @@ et proposé dans **« Jeux à associer »**. Jamais de fusion sur une simple res
 cd server && npm test
 ```
 
-35 tests, sans aucun appel réseau réel (Discord, Steam et IGDB simulés) : flux OAuth2 et `state`
-(absent, forgé, expiré, rejoué, autre navigateur), CSRF, sessions, découverte Discord, jeton expiré / révoqué,
-compte Steam déjà pris, profil Steam privé, import, correspondances (`Portal` ≠ `Portal 2`), doublons,
-préservation du statut et des saisies manuelles, non-suppression, cloisonnement entre utilisateurs,
-Steam OpenID trafiqué, chiffrement, nouvelles tentatives.
+49 tests, sans aucun appel réseau réel (Discord, Steam, IGDB, PlayStation, OpenXBL, Epic et Nintendo simulés) :
+flux OAuth2 et `state` (absent, forgé, expiré, rejoué, autre navigateur), CSRF, sessions, découverte Discord,
+jeton expiré / révoqué, compte déjà pris, profils privés (Steam, PlayStation), serveur non configuré,
+NPSSO expiré, import, correspondances (`Portal` ≠ `Portal 2`, `Bloodborne™` = `Bloodborne`), doublons et
+liaison à un jeu déjà présent, préservation du statut et des saisies manuelles, non-suppression, code Epic
+invalide ou rejoué, session Epic expirée puis fermée à la déconnexion, PKCE Nintendo, lien Nintendo collé depuis
+un autre navigateur ou rejoué, aucun e-mail Nintendo gardé, export RGPD sans jeton, cloisonnement entre
+utilisateurs, Steam OpenID trafiqué, chiffrement, nouvelles tentatives.

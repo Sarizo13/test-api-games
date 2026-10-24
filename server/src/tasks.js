@@ -1,5 +1,5 @@
 // Tâches de fond : ménage (sessions, « state », cache), sauvegarde quotidienne de la base,
-// synchronisation périodique des comptes Steam (seulement ceux qui l'ont activée).
+// synchronisation périodique des comptes de jeu (seulement ceux qui l'ont activée).
 
 import { mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';

@@ -1,15 +1,15 @@
 // Cartes de jeux façon TCG : une « puissance » (0–100) tirée de tes notes, de ton temps de jeu et des
-// trophées, et une rareté qui décide de l'effet holographique autour de la carte.
+// trophées, et une rareté qui décide des effets (holo, étincelles, cadre arc-en-ciel, carte parfaite à 100).
 
 import { platformMeta } from '../platforms.js';
 import { esc, safeUrl, clamp, avg, year, canHover, reduceMotion } from './util.js';
 
 export const STATUS = {
-  backlog: { label: 'Jamais joué', color: '#94a3b8', icon: '✦' },
-  playing: { label: 'En cours', color: '#22d3ee', icon: '▶' },
-  finished: { label: 'Terminé', color: '#34d399', icon: '✓' },
-  completed: { label: '100 %', color: '#fbbf24', icon: '★' },
-  dropped: { label: 'Abandonné', color: '#fb7185', icon: '✕' },
+  backlog: { label: 'Jamais joué', short: 'Jamais', color: 'var(--st-backlog)', icon: '✦' },
+  playing: { label: 'En cours', short: 'En cours', color: 'var(--st-playing)', icon: '▶' },
+  finished: { label: 'Terminé', short: 'Terminé', color: 'var(--st-finished)', icon: '✓' },
+  completed: { label: '100 %', short: '100 %', color: 'var(--st-completed)', icon: '★' },
+  dropped: { label: 'Abandonné', short: 'Abandon', color: 'var(--st-dropped)', icon: '✕' },
 };
 
 export const RATINGS = {
@@ -22,14 +22,17 @@ export const RATINGS = {
 };
 
 export const TIERS = {
-  sealed: { label: 'Sous blister', color: '#e2e8f0', min: -1 },
-  common: { label: 'Commune', color: '#cbd5e1', min: 0 },
-  uncommon: { label: 'Peu commune', color: '#6ee7b7', min: 22 },
-  rare: { label: 'Rare', color: '#93c5fd', min: 42 },
-  epic: { label: 'Épique', color: '#d8b4fe', min: 60 },
-  legendary: { label: 'Légendaire', color: '#fcd34d', min: 76 },
-  mythic: { label: 'Mythique', color: '#f472b6', min: 90 },
+  sealed: { label: 'Sous blister', color: 'var(--tier-sealed)', min: -1 },
+  common: { label: 'Commune', color: 'var(--tier-common)', min: 0 },
+  uncommon: { label: 'Peu commune', color: 'var(--tier-uncommon)', min: 22 },
+  rare: { label: 'Rare', color: 'var(--tier-rare)', min: 42 },
+  epic: { label: 'Épique', color: 'var(--tier-epic)', min: 60 },
+  legendary: { label: 'Légendaire', color: 'var(--tier-legendary)', min: 76 },
+  mythic: { label: 'Mythique', color: 'var(--tier-mythic)', min: 90 },
+  perfect: { label: 'Mythique · 100', color: 'var(--tier-perfect)', min: 100 },
 };
+const TIER_ORDER = Object.keys(TIERS);
+export const tierRank = (tier) => TIER_ORDER.indexOf(tier);
 
 /** Moyenne de tes notes (sur 10), ou null. */
 export function ratingAverage(g) {
@@ -44,7 +47,7 @@ export function ratingAverage(g) {
  *    ou sur une échelle logarithmique si la durée est inconnue (100 h ≈ 100)
  *  - trophées : pourcentage de succès
  * Ce qui manque compte pour 0 : une carte forte demande une note, du temps de jeu ET des trophées.
- * Bonus : terminé +4, 100 % +8, coup de cœur +4. Un jeu jamais joué reste « sous blister ».
+ * Bonus : terminé +4, 100 % +8, coup de cœur +4. Un jeu jamais joué reste « sous blister » ; 100 pile : carte parfaite.
  */
 export function cardStats(g) {
   const r = ratingAverage(g);
@@ -64,54 +67,84 @@ export function cardStats(g) {
   power = Math.round(clamp(power));
 
   const sealed = g.status === 'backlog' && !hours && r == null;
-  const tier = sealed ? 'sealed'
-    : Object.entries(TIERS).filter(([k]) => k !== 'sealed').reverse().find(([, t]) => power >= t.min)?.[0] ?? 'common';
+  let tier = 'sealed';
+  if (!sealed) {
+    tier = power >= 100 ? 'perfect'
+      : ['mythic', 'legendary', 'epic', 'rare', 'uncommon', 'common'].find((k) => power >= TIERS[k].min) ?? 'common';
+  }
   return { power, tier, rating, time, trophies, hours };
 }
 
-const meter = (label, value, color) => `
-  <span class="tcg-meter" style="--v:${value == null ? 0 : Math.round(value)}%;--mc:${color}">${label}<i></i></span>`;
+// Étincelles (x, y, taille, délai) : 3 en épique, 5 en légendaire, 7 en mythique, 9 pour la carte parfaite
+const STARS = [[14, 18, 1.1, 0], [72, 12, 0.8, 0.6], [84, 38, 1.2, 1.3], [26, 44, 0.7, 1.9], [58, 30, 1, 0.9], [40, 12, 0.6, 2.4], [80, 58, 0.7, 1.6], [10, 60, 0.9, 0.3], [50, 52, 0.6, 2.1]];
+const N_STARS = { epic: 3, legendary: 5, mythic: 7, perfect: 9 };
+const MOTES = ['#ff8fc0', '#ffd66b', '#5ef0d6', '#8fb8ff'];
 
-/** HTML d'une carte. `href` : lien vers la fiche ; `large` : grande carte de la fiche. */
-export function cardHtml(g, { large = false, i = 0, href = `#/jeu/${encodeURIComponent(g.id)}` } = {}) {
+const stars = (tier) => STARS.slice(0, N_STARS[tier] ?? 0).map(([x, y, z, d]) => `<i style="--x:${x}%;--y:${y}%;--z:${z}em;--d:${d}s"></i>`).join('');
+const motes = (tier) => (tier === 'perfect'
+  ? Array.from({ length: 7 }, (_, i) => `<i style="--x:${8 + i * 13}%;--d:${(i * 0.55).toFixed(2)}s;--c:${MOTES[i % 4]}"></i>`).join('')
+  : '');
+const meter = (k, label, value) => `<span class="tcg__meter" data-k="${k}" style="--v:${value == null ? 0 : Math.round(value)}%">${label}</span>`;
+
+/** Image de la carte (jaquette verticale). */
+export const cardArt = (g) => safeUrl(g.images?.grid) || safeUrl(g.images?.cover) || safeUrl(g.images?.gridThumb);
+
+/**
+ * HTML d'une carte. `href` : lien vers la fiche ; `large` : grande carte de la fiche (pas un lien) ;
+ * `mini` : miniature sans jauges ; `foreign` : carte d'un ami (pas d'identifiant : elle ne se déballe pas ici).
+ */
+export function cardHtml(g, { large = false, mini = false, foreign = false, i = 0, href = `#/jeu/${encodeURIComponent(g.id)}` } = {}) {
   const p = platformMeta(g.platform);
   const s = cardStats(g);
   const tier = TIERS[s.tier];
-  const img = safeUrl(g.images?.grid) || safeUrl(g.images?.cover) || safeUrl(g.images?.gridThumb);
-  const thumb = safeUrl(g.images?.gridThumb);
+  const img = cardArt(g);
   const tag = large ? 'div' : 'a';
+  const sealed = s.tier === 'sealed';
   return `
-    <${tag} class="tcg${large ? ' is-large' : ''}" ${large ? '' : `href="${href}"`} data-id="${esc(g.id)}" data-tier="${s.tier}"
-      style="--pc:${p.color};--i:${i}" aria-label="${esc(g.name)} — ${esc(tier.label)}, puissance ${s.power}">
-      <div class="tcg-inner">
-        <div class="tcg-card">
-          <div class="tcg-art"${thumb ? ` style="background:url('${esc(thumb)}') center/cover"` : ''}>
-            ${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" data-title="${esc(g.name)}">` : `<div class="fallback">${esc(g.name)}</div>`}
+    <${tag} class="tcg${mini ? ' tcg--mini' : ''}${large ? ' tcg--large' : ''}" ${large ? '' : `href="${href}"`}${foreign ? '' : ` data-id="${esc(g.id)}"`} data-tier="${s.tier}"
+      style="--power:${sealed ? 0 : s.power}%;--pc:${p.color};--i:${i}" aria-label="${esc(g.name)} — ${esc(tier.label)}${sealed ? '' : `, puissance ${s.power}`}">
+      <div class="tcg__card">
+        <div class="tcg__aura"></div>
+        <div class="tcg__frame"><div class="tcg__spin"></div><div class="tcg__glitter"></div><div class="tcg__sweep"></div></div>
+        <div class="tcg__inner">
+          ${img ? `<img class="tcg__art" src="${esc(img)}" alt="" loading="lazy" decoding="async" data-title="${esc(g.name)}">` : `<div class="tcg__fallback">${esc(g.name)}</div>`}
+          <div class="tcg__foil"></div><div class="tcg__holo"></div><div class="tcg__rays"></div>
+          <div class="tcg__stars">${stars(s.tier)}</div>
+          <div class="tcg__motes">${motes(s.tier)}</div>
+          <div class="tcg__glare"></div><div class="tcg__shade"></div>
+          <div class="tcg__watermark" aria-hidden="true">${esc(g.name)}</div>
+          <div class="tcg__top">
+            <div><span class="tcg__plat">${esc(p.short)}</span>${g.favorite ? '<span class="tcg__fav" title="Coup de cœur">♥</span>' : ''}</div>
+            <span class="tcg__power" title="Puissance"><span>${sealed ? '?' : s.power}</span></span>
           </div>
-          <div class="tcg-holo"></div>
-          <div class="tcg-sparkle"></div>
-          <div class="tcg-glare"></div>
-          <div class="tcg-top">
-            <span class="tcg-plat">${esc(p.short)}</span>
-            <span class="tcg-power" title="Puissance">${s.tier === 'sealed' ? '?' : s.power}</span>
+          <div class="tcg__info">
+            <h3 class="tcg__name">${esc(g.name)}</h3>
+            <div class="tcg__meters">${meter('note', 'Note', s.rating)}${meter('time', 'Temps', s.time)}${meter('troph', 'Troph.', s.trophies)}</div>
+            <div class="tcg__rarity"><span class="tcg__label">${esc(tier.label)}</span><i class="tcg__gem"></i></div>
           </div>
-          ${g.favorite ? '<span class="tcg-fav" title="Coup de cœur">♥</span>' : ''}
-          <div class="tcg-info">
-            <h3>${esc(g.name)}</h3>
-            <div class="tcg-meters">
-              ${meter('Note', s.rating, '#c084fc')}
-              ${meter('Temps', s.time, '#22d3ee')}
-              ${meter('Troph.', s.trophies, '#fbbf24')}
-            </div>
-            <div class="tcg-rarity" style="--rc:${tier.color}"><span>${esc(tier.label)}</span><span class="gem"></span></div>
-          </div>
-          ${s.tier === 'sealed' ? '<div class="tcg-wrap"></div>' : ''}
         </div>
+        <div class="tcg__wrap" aria-hidden="true"><div class="tcg__wrap-a"><span class="tcg__ribbon">NEUF</span></div><div class="tcg__wrap-b"></div></div>
       </div>
     </${tag}>`;
 }
 
-/** Effet holo et inclinaison 3D qui suivent la souris (délégué : un seul écouteur par conteneur). */
+/** Déballage : le film part en deux morceaux (0,95 s), puis `after()` redessine la carte. */
+export function tearCard(card, after) {
+  if (!card) { after?.(); return; }
+  card.classList.add('is-tearing');
+  setTimeout(() => { card.classList.remove('is-tearing'); after?.(); }, reduceMotion ? 0 : 950);
+}
+
+/** Montée de rareté : éclair blanc sur la carte. */
+export function flashCard(card) {
+  if (!card || reduceMotion) return;
+  card.classList.remove('is-flash');
+  void card.offsetWidth;
+  card.classList.add('is-flash');
+  setTimeout(() => card.classList.remove('is-flash'), 900);
+}
+
+/** Inclinaison 3D et reflet qui suivent la souris (délégué : un seul écouteur par conteneur). */
 export function attachHolo(root) {
   if (!canHover || reduceMotion || root.dataset.holo) return;
   root.dataset.holo = '1';
@@ -124,7 +157,7 @@ export function attachHolo(root) {
     card.style.setProperty('--o', '0');
   };
   root.addEventListener('pointermove', (e) => {
-    const card = e.target.closest('.tcg');
+    const card = e.target.closest('.tcg:not(.tcg--mini)');
     if (card !== current) { if (current) reset(current); current = card; }
     if (!card) return;
     cancelAnimationFrame(frame);

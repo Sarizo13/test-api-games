@@ -21,8 +21,8 @@ export const BADGES = [
   { id: 'marathon', emoji: '⏳', name: 'Marathonien', text: '500 h de jeu au total', test: (gs) => gs.reduce((a, g) => a + hours(g), 0) >= 500 },
   { id: 'nolife', emoji: '🌙', name: 'Nuit blanche', text: 'Plus de 200 h sur un seul jeu', test: (gs) => gs.some((g) => hours(g) >= 200) },
   { id: 'speedrun', emoji: '⚡', name: 'Plus vite que la moyenne', text: 'Finir un jeu plus vite que sa durée moyenne', test: (gs) => gs.some((g) => done(g) && g.timeToBeat?.normally && hours(g) > 0 && hours(g) < g.timeToBeat.normally) },
-  { id: 'legend', emoji: '🌟', name: 'Légende', text: 'Une carte légendaire', test: (gs) => gs.some((g) => ['legendary', 'mythic'].includes(cardStats(g).tier)) },
-  { id: 'myth', emoji: '🌈', name: 'Mythe vivant', text: 'Une carte mythique', test: (gs) => gs.some((g) => cardStats(g).tier === 'mythic') },
+  { id: 'legend', emoji: '🌟', name: 'Légende', text: 'Une carte légendaire', test: (gs) => gs.some((g) => ['legendary', 'mythic', 'perfect'].includes(cardStats(g).tier)) },
+  { id: 'myth', emoji: '🌈', name: 'Mythe vivant', text: 'Une carte mythique', test: (gs) => gs.some((g) => ['mythic', 'perfect'].includes(cardStats(g).tier)) },
   { id: 'heart', emoji: '💘', name: 'Coup de foudre', text: 'Un premier coup de cœur', test: (gs) => gs.some((g) => g.favorite) },
   { id: 'shame', emoji: '🙈', name: 'Pile de la honte', text: '20 jeux jamais joués', test: (gs) => gs.filter((g) => g.status === 'backlog').length >= 20 },
 ];

@@ -1,42 +1,39 @@
-// Comptes connectés : Discord (identité et découverte des comptes), Steam (import, temps de jeu, succès),
-// et les autres plateformes, affichées telles qu'elles sont : détectées, sans import possible quand leur API est fermée.
+// Comptes connectés : Discord (identité et découverte des comptes), Steam (API officielle) et les connecteurs
+// non officiels PlayStation, Xbox (via Discord), Epic et Nintendo (liaison par copier-coller), affichés tels qu'ils sont.
 
 import {
   state, TEST, fetchAccounts, discoverAccounts, enableAccount, accountLibrary, runAccountJob, setAutoSync,
-  disconnectAccount, matchGame, searchIgdb, login,
+  disconnectAccount, matchGame, searchIgdb, login, linkStart, linkFinish,
 } from '../state.js';
+import { platformMeta } from '../../platforms.js';
 import { providerLogo } from '../brands.js';
 import { openAdd } from '../add.js';
-import { sectionHead, emptyState, thumb } from './common.js';
-import { $, $$, esc, safeUrl, fmtDate, fmtHours, highlight, listbox, openModal, toast, confetti, ICONS } from '../util.js';
+import { pageHead, sectionHead, emptyState, thumb } from './common.js';
+import { $, $$, esc, safeUrl, fmtDate, fmtHours, highlight, listbox, openModal, toast, confetti } from '../util.js';
 
 const STATUS = {
-  detected: { label: 'Détecté', color: '#22d3ee' },
-  authorization_required: { label: 'Vérification nécessaire', color: '#fbbf24' },
-  connected: { label: 'Prêt à importer', color: '#34d399' },
-  syncing: { label: 'Synchronisation…', color: '#8b5cf6' },
-  synced: { label: 'Synchronisé', color: '#34d399' },
-  error: { label: 'Erreur', color: '#fb7185' },
-  unsupported: { label: 'Import indisponible', color: '#94a3b8' },
+  detected: { label: 'Détecté', color: 'var(--st-playing)' },
+  authorization_required: { label: 'À relier', color: 'var(--st-completed)' },
+  connected: { label: 'Prêt à importer', color: 'var(--st-finished)' },
+  syncing: { label: 'Synchronisation…', color: 'var(--tier-epic)', busy: true },
+  synced: { label: 'Synchronisé', color: 'var(--st-finished)' },
+  error: { label: 'Erreur', color: 'var(--st-dropped)' },
+  unsupported: { label: 'Import indisponible', color: 'var(--st-backlog)' },
 };
 const CAPS = [['library', 'Bibliothèque'], ['playtime', 'Temps de jeu'], ['achievements', 'Succès'], ['sync', 'Synchro auto']];
-// Plateformes montrées même sans compte détecté (les autres n'apparaissent que si Discord en a trouvé un)
+// Plateformes montrées même sans compte (les autres n'apparaissent que si Discord en a trouvé un)
 const ALWAYS = ['steam', 'playstation', 'xbox', 'epicgames', 'nintendo'];
+// Clé à mettre dans .env pour activer un connecteur côté serveur
+const SERVER_KEY = { steam: 'STEAM_API_KEY', playstation: 'PSN_NPSSO', xbox: 'OPENXBL_API_KEY' };
 
 const when = (iso) => fmtDate(iso, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const ready = (a) => ['connected', 'synced'].includes(a.status) || (a.status === 'error' && a.lastSyncAt);
 
 export function renderAccounts(view) {
-  if (TEST) {
-    view.innerHTML = emptyState('🧪', 'Indisponible en mode test', 'Connecte-toi avec Discord pour relier tes comptes de jeu.');
-    return null;
-  }
   view.innerHTML = `
-    <div class="page-head">
-      <div><p class="kicker">Réglages</p><h1>Comptes connectés</h1>
-      <p>Discord sert à retrouver tes comptes de jeu. Aujourd'hui, seul Steam ouvre ses données (bibliothèque, temps de jeu, succès) ; les autres plateformes sont reconnues, et tu ajoutes leurs jeux à la main.</p></div>
-      <button class="btn btn-primary btn-discord" type="button" id="discover">${providerLogo('discord', 'btn-logo')}Découvrir mes comptes avec Discord</button>
-    </div>
-    <div id="accounts"><div class="shimmer" style="height:320px;border-radius:22px"></div></div>`;
+    ${pageHead('Réglages', 'Comptes', 'connectés', 'Discord retrouve tes comptes de jeu. Steam passe par son API officielle ; PlayStation, Xbox, Epic et Nintendo par des connecteurs non officiels, signalés comme tels. Tes jetons restent chiffrés sur le serveur.',
+      `<button class="btn btn--discord" type="button" id="discover">${providerLogo('discord', 'btn-logo')}Découvrir mes comptes avec Discord</button>`)}
+    <div id="accounts" class="section"><div class="skeleton" style="height:110px"></div><div class="providers">${'<div class="skeleton" style="height:260px"></div>'.repeat(3)}</div></div>`;
 
   let data = null;
   let alive = true;
@@ -54,14 +51,16 @@ export function renderAccounts(view) {
     box.innerHTML = `
       ${identityCard(discord)}
       ${sectionHead('Plateformes de jeu')}
-      <div class="accounts-grid section">${cards.join('')}</div>
+      <div class="providers">${cards.join('')}</div>
       ${unmatched.length ? `
-        ${sectionHead('Jeux à associer', `<span class="muted" style="font-size:13px">${unmatched.length} importé${unmatched.length > 1 ? 's' : ''} sans fiche IGDB sûre</span>`)}
-        <p class="muted" style="margin:-6px 0 14px;font-size:14px">Asobi ne fusionne jamais deux jeux sur une simple ressemblance de titre. Choisis la bonne fiche pour ces jeux.</p>
-        <div class="grid-auto section" style="--min:260px">${unmatched.map((g, i) => `
-          <div class="now-item" style="--i:${i}">${thumb(g)}<div><strong>${esc(g.name)}</strong><small>${esc(g.platform)}${g.playtimeMinutes ? ` · ${fmtHours(g.playtimeMinutes)}` : ''}</small></div>
-            <button class="btn btn-ghost btn-sm" type="button" data-match="${esc(g.id)}">Associer</button></div>`).join('')}</div>` : ''}
-      <p class="source-note">Les jetons d'accès restent sur le serveur, chiffrés ; ils ne passent jamais par ton navigateur. Déconnecter un compte efface ses jetons et ses données brutes, pas les jeux de ta collection.</p>`;
+        <div class="section" style="margin-top:12px">
+          ${sectionHead('Jeux à associer', `<span class="note">${unmatched.length} importé${unmatched.length > 1 ? 's' : ''} sans fiche IGDB sûre</span>`)}
+          <p class="muted" style="margin:0">Asobi ne fusionne jamais deux jeux sur une simple ressemblance de titre. Choisis la bonne fiche pour ces jeux.</p>
+          <div class="pick-list">${unmatched.map((g) => `
+            <div class="pick">${thumb(g, 'thumb--sm')}<div style="min-width:0"><strong>${esc(g.name)}</strong><small>${esc(platformMeta(g.platform).short)}${g.playtimeMinutes ? ` · ${fmtHours(g.playtimeMinutes)}` : ''}</small></div>
+              <button class="btn" type="button" data-match="${esc(g.id)}">Associer</button></div>`).join('')}</div>
+        </div>` : ''}
+      <p class="note-line">Les jetons d'accès restent sur le serveur, chiffrés ; ils ne passent jamais par ton navigateur. Déconnecter un compte efface ses jetons et ses données brutes, pas les jeux de ta collection.</p>`;
   };
 
   const refresh = async (promise) => {
@@ -70,62 +69,66 @@ export function renderAccounts(view) {
       draw();
     } catch (err) {
       if (err.code === 'discord_reauth') {
-        toast('🔑', 'Reconnexion à Discord nécessaire', ` ${err.message}`, 8000);
+        toast('🔑', 'Reconnexion à Discord nécessaire', err.message, 8000);
         data ??= await fetchAccounts().catch(() => null);
         if (data) draw();
         return;
       }
       if (!data) $('#accounts', view).innerHTML = emptyState('📡', 'Comptes indisponibles', esc(err.message));
-      else toast('⚠️', 'Action impossible', ` ${err.message}`, 8000);
+      else toast('!', 'Action impossible', err.message, 8000, { color: 'var(--st-dropped)' });
     }
   };
+  if (TEST) { $('#accounts', view).innerHTML = emptyState('🔒', 'Indisponible en mode test', 'Connecte-toi avec Discord pour relier tes comptes de jeu.'); return null; }
   refresh(fetchAccounts());
 
-  const progressOf = (id) => $(`[data-account="${id}"] .progress`, view);
-  const busy = (button, on) => { if (button) { button.disabled = on; button.classList.toggle('is-busy', on); } };
+  const barOf = (id) => $(`[data-account="${id}"] .job-bar`, view);
+  const busy = (button, on) => { if (button) button.disabled = on; };
+  const providerOf = (id) => data.providers.find((p) => p.id === id);
 
   view.addEventListener('click', async (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
     const id = btn.closest('[data-account]')?.dataset.account;
+    const account = data?.accounts.find((a) => String(a.id) === id);
 
     if (btn.id === 'discover') {
       busy(btn, true);
-      await refresh(discoverAccounts().then((d) => { toast('🔍', 'Comptes Discord relus'); return d; }));
+      await refresh(discoverAccounts().then((d) => { toast('↻', 'Comptes Discord relus'); return d; }));
       busy(btn, false);
       return;
     }
     if (btn.dataset.reauth !== undefined) { login('#/comptes'); return; }
     if (btn.dataset.manual) { openAdd({ platform: btn.dataset.manual }); return; }
     if (btn.dataset.match) { openMatch(btn.dataset.match, draw); return; }
+    if (btn.dataset.link) { openLink(providerOf(btn.dataset.link), (d) => { data = d; draw(); }); return; }
 
     if (btn.dataset.enable !== undefined) {
       busy(btn, true);
-      await refresh(enableAccount(id).then((d) => { toast('✅', 'Import Steam activé', ' Tu peux maintenant importer tes jeux.'); return d; }));
+      const name = providerOf(account.provider)?.name ?? 'la plateforme';
+      await refresh(enableAccount(id).then((d) => { toast('✓', `Import ${name} activé`, 'Tu peux maintenant importer tes jeux.'); return d; }));
       busy(btn, false);
       return;
     }
     if (btn.dataset.sync !== undefined) {
       busy(btn, true);
-      const bar = progressOf(id);
+      const bar = barOf(id);
       bar.hidden = false;
       try {
-        const job = await runAccountJob(id, 'sync', undefined, (j) => bar.firstElementChild.style.setProperty('--p', `${j.total ? (j.progress / j.total) * 100 : 8}%`));
-        toast('🎮', 'Synchronisation terminée', ` ${job.stats.playtimeUpdated} temps de jeu et ${job.stats.achievementsUpdated} succès mis à jour.`);
+        const job = await runAccountJob(id, 'sync', undefined, (j) => bar.firstElementChild.style.setProperty('--v', `${j.total ? (j.progress / j.total) * 100 : 8}%`));
+        toast('↻', 'Synchronisation terminée', `${job.stats.playtimeUpdated} temps de jeu et ${job.stats.achievementsUpdated} succès mis à jour.`, 6000, { color: 'var(--st-finished)' });
       } catch (err) {
-        toast('⚠️', 'Synchronisation impossible', ` ${err.message}`, 9000);
+        toast('!', 'Synchronisation impossible', err.message, 9000, { color: 'var(--st-dropped)' });
       }
       await refresh(fetchAccounts());
       return;
     }
-    if (btn.dataset.import !== undefined) { openLibrary(id, () => refresh(fetchAccounts())); return; }
+    if (btn.dataset.import !== undefined) { openLibrary(providerOf(account.provider), id, () => refresh(fetchAccounts())); return; }
     if (btn.dataset.disconnect !== undefined) {
-      const account = data.accounts.find((a) => String(a.id) === id);
       const label = account.provider === 'discord'
         ? 'Révoquer l\'accès d\'Asobi à tes connexions Discord ? Tu resteras connecté, mais Asobi ne pourra plus retrouver tes comptes.'
         : 'Déconnecter ce compte ? Ses jetons et ses données brutes seront effacés ; les jeux déjà dans ta collection restent.';
       if (!confirm(label)) return;
-      await refresh(disconnectAccount(id).then((d) => { toast('🔌', 'Compte déconnecté'); return d; }));
+      await refresh(disconnectAccount(id).then((d) => { toast('⏏', 'Compte déconnecté'); return d; }));
     }
   });
 
@@ -144,133 +147,212 @@ function identityCard(account) {
   const u = state.user;
   const ok = account?.status === 'connected';
   return `
-    <section class="panel section identity-card" data-account="${account?.id ?? ''}">
-      ${safeUrl(u?.avatarUrl) ? `<img class="avatar" src="${esc(u.avatarUrl)}" alt="">` : `<span class="avatar">${providerLogo('discord')}</span>`}
-      <div>
-        <p class="kicker">Connecté avec Discord</p>
-        <strong class="identity-name">${esc(u?.displayName ?? u?.username ?? '')}</strong>
-        <div class="status-line"><span class="dot${ok ? ' is-on' : ''}"></span>${ok
-          ? `Accès aux connexions actif${account.lastSyncAt ? ` · relues le ${esc(when(account.lastSyncAt))}` : ''}`
-          : esc(account?.message ?? 'Accès aux connexions à rétablir')}</div>
+    <section class="tile provider" data-account="${account?.id ?? ''}">
+      <div class="provider__head">
+        <span class="provider__icon" style="background:#5865f2;color:#fff">${providerLogo('discord')}</span>
+        <div><strong>Discord</strong><small>Identité · ${esc(u?.displayName ?? u?.username ?? '')}</small></div>
+        <span class="state-tag" style="--c:${ok ? 'var(--st-finished)' : 'var(--st-completed)'}">${ok ? 'Accès actif' : 'À rétablir'}</span>
       </div>
-      <div class="chips">
-        ${ok ? '<button class="btn btn-ghost btn-sm" type="button" data-disconnect>Révoquer l\'accès</button>' : '<button class="btn btn-primary btn-sm" type="button" data-reauth>Reconnecter Discord</button>'}
-      </div>
+      <p>${ok ? `Asobi relit tes connexions Discord pour retrouver tes comptes de jeu${account.lastSyncAt ? ` · relues le ${esc(when(account.lastSyncAt))}` : ''}.` : esc(account?.message ?? 'Accès aux connexions à rétablir.')}</p>
+      <div class="actions">${ok ? '<button class="btn btn--ghost" type="button" data-disconnect>Révoquer l\'accès</button>' : '<button class="btn btn--primary" type="button" data-reauth>Reconnecter Discord</button>'}</div>
     </section>`;
 }
 
-function caps(provider) {
-  return `<div class="caps">${CAPS.map(([k, label]) => `<span class="cap${provider.capabilities[k] ? ' is-on' : ''}">${provider.capabilities[k] ? '✓' : '✕'} ${label}</span>`).join('')}</div>`;
-}
+const caps = (provider) => `<div class="caps">${CAPS.map(([k, label]) => `<span class="cap${provider.capabilities[k] ? ' is-on' : ''}">${provider.capabilities[k] ? '✓' : '✕'} ${label}</span>`).join('')}</div>`;
 
 function cardShell(provider, inner, { account } = {}) {
   const s = account ? STATUS[account.status] ?? STATUS.detected : null;
   return `
-    <article class="panel provider-card" ${account ? `data-account="${account.id}"` : ''}>
-      <header class="provider-head">
-        <span class="provider-icon">${providerLogo(provider.id)}</span>
-        <div><strong>${esc(provider.name)}</strong><small>${provider.official ? 'API officielle' : 'Pas d\'API ouverte aux sites tiers'}</small></div>
-        ${s ? `<span class="badge" style="--c:${s.color}">${s.label}</span>` : ''}
+    <article class="tile provider" ${account ? `data-account="${account.id}"` : ''}>
+      <header class="provider__head">
+        <span class="provider__icon">${providerLogo(provider.id)}</span>
+        <div><strong>${esc(provider.name)}</strong><small>${provider.official ? 'API officielle' : provider.experimental ? 'Connecteur non officiel' : 'Détection seulement'}</small></div>
+        ${s ? `<span class="state-tag${s.busy ? ' is-busy' : ''}" style="--c:${s.color}">${s.label}</span>` : provider.experimental ? '<span class="xp-tag">Expérimental</span>' : ''}
       </header>
       ${inner}
     </article>`;
 }
 
-function accountCard(provider, a) {
-  const steamLike = provider.capabilities.library;
-  const ready = ['connected', 'synced'].includes(a.status) || (a.status === 'error' && a.lastSyncAt);
-  const configured = provider.enabled;
-  let actions = '';
-  if (steamLike && !configured) {
-    actions = '<p class="modal-warning" style="margin:0">Import pas encore configuré sur ce serveur (clé STEAM_API_KEY manquante).</p>';
-  } else if (steamLike) {
-    actions = [
-      !a.verified && '<a class="btn btn-primary btn-sm" href="/api/accounts/steam/openid/start">Vérifier avec Steam</a>',
-      a.verified && !ready && `<button class="btn btn-primary btn-sm" type="button" data-enable>${ICONS.check}Activer l'import</button>`,
-      a.verified && ready && `<button class="btn btn-primary btn-sm" type="button" data-import>${ICONS.download}Importer des jeux</button>`,
-      a.verified && ready && `<button class="btn btn-ghost btn-sm" type="button" data-sync>${ICONS.refresh}Synchroniser</button>`,
-      '<button class="btn btn-ghost btn-sm" type="button" data-disconnect>Déconnecter</button>',
-    ].filter(Boolean).join('');
-  } else {
-    actions = [
-      provider.manualImport?.length && `<button class="btn btn-ghost btn-sm" type="button" data-manual="${esc(provider.manualImport[0])}">${ICONS.plus}Ajouter un jeu à la main</button>`,
-      '<button class="btn btn-ghost btn-sm" type="button" data-disconnect>Retirer</button>',
+/** Boutons d'un compte selon la plateforme et son état. */
+function accountActions(provider, a) {
+  const off = provider.capabilities.library && !provider.enabled;
+  if (off) return `<p class="warn">Pas encore configuré sur ce serveur${SERVER_KEY[provider.id] ? ` (clé ${SERVER_KEY[provider.id]} manquante)` : ''}.</p>`;
+  if (!provider.capabilities.library) {
+    return [
+      provider.manualImport?.length && `<button class="btn" type="button" data-manual="${esc(provider.manualImport[0])}">+ Ajouter un jeu à la main</button>`,
+      '<button class="btn btn--ghost" type="button" data-disconnect>Retirer</button>',
     ].filter(Boolean).join('');
   }
+  const linkable = Boolean(provider.link);
+  const needsLink = linkable && a.status === 'authorization_required';
+  return [
+    provider.id === 'steam' && !a.verified && '<a class="btn btn--primary" href="/api/accounts/steam/openid/start">Vérifier avec Steam</a>',
+    needsLink && `<button class="btn btn--primary" type="button" data-link="${esc(provider.id)}">Connecter ${esc(provider.name)}</button>`,
+    a.verified && !needsLink && !ready(a) && `<button class="btn btn--primary" type="button" data-enable>${a.status === 'error' ? '↻ Réessayer' : '✓ Activer l\'import'}</button>`,
+    a.verified && ready(a) && '<button class="btn btn--primary" type="button" data-import>↓ Importer des jeux</button>',
+    a.verified && ready(a) && provider.capabilities.sync && '<button class="btn" type="button" data-sync>↻ Synchroniser</button>',
+    linkable && !needsLink && ready(a) && `<button class="btn btn--ghost" type="button" data-link="${esc(provider.id)}">Reconnecter</button>`,
+    '<button class="btn btn--ghost" type="button" data-disconnect>Déconnecter</button>',
+  ].filter(Boolean).join('');
+}
+
+function accountCard(provider, a) {
   const facts = [
     a.gamesCount ? `${a.gamesCount} jeu${a.gamesCount > 1 ? 'x' : ''} sur le compte` : null,
-    a.lastSyncAt && steamLike ? `dernière synchro le ${when(a.lastSyncAt)}` : null,
+    a.lastSyncAt && provider.capabilities.sync ? `dernière synchro le ${when(a.lastSyncAt)}` : null,
     a.lastJob?.status === 'error' ? `dernier essai : ${a.lastJob.error}` : null,
   ].filter(Boolean);
+  const via = { discord: 'trouvé via Discord', openid: 'vérifié avec Steam', login: `relié sur ${provider.name}` }[a.detectedVia] ?? '';
   return cardShell(provider, `
-    <div class="provider-account">
+    <div class="provider__account">
       <span>${esc(a.username ?? a.externalId)}</span>
-      ${a.verified ? '<span class="verified" title="Propriété vérifiée">✓ vérifié</span>' : '<span class="unverified">non vérifié</span>'}
-      ${a.detectedVia === 'discord' ? '<small>trouvé via Discord</small>' : ''}
+      ${a.verified ? '<span class="verified">✓ vérifié</span>' : '<span class="unverified">non vérifié</span>'}
+      ${via ? `<small>${esc(via)}</small>` : ''}
     </div>
-    ${facts.length ? `<p class="provider-facts">${facts.map(esc).join(' · ')}</p>` : ''}
+    ${facts.length ? `<p class="provider__facts">${facts.map(esc).join(' · ')}</p>` : ''}
     ${caps(provider)}
-    <p class="source-note">${esc(a.message ?? provider.limitations ?? '')}</p>
-    ${steamLike && ready ? `<label class="toggle"><input type="checkbox" data-autosync${a.autoSync ? ' checked' : ''}> Synchroniser automatiquement toutes les 12 h</label>` : ''}
-    <div class="progress" hidden><span></span></div>
-    <div class="chips">${actions}</div>`, { account: a });
+    <p>${esc(a.message ?? provider.limitations ?? '')}</p>
+    ${provider.capabilities.sync && ready(a) ? `<label class="check"><input type="checkbox" data-autosync${a.autoSync ? ' checked' : ''}> Synchroniser automatiquement toutes les 12 h</label>` : ''}
+    <div class="bar job-bar" hidden><i style="--v:5%"></i></div>
+    <div class="actions">${accountActions(provider, a)}</div>`, { account: a });
 }
 
 function placeholderCard(provider) {
-  const steamLike = provider.capabilities.library;
-  const action = steamLike
-    ? (provider.enabled
-      ? '<a class="btn btn-primary btn-sm" href="/api/accounts/steam/openid/start">Relier mon compte Steam</a>'
-      : '<p class="modal-warning" style="margin:0">Import pas encore configuré sur ce serveur.</p>')
-    : provider.manualImport?.length ? `<button class="btn btn-ghost btn-sm" type="button" data-manual="${esc(provider.manualImport[0])}">${ICONS.plus}Ajouter un jeu à la main</button>` : '';
-  const hint = steamLike
-    ? 'Aucun compte Steam trouvé dans tes connexions Discord. Relie-le directement : Steam confirmera qu\'il est à toi.'
-    : provider.id === 'nintendo' ? provider.limitations : `Aucun compte ${provider.name} dans tes connexions Discord. ${provider.limitations ?? ''}`;
+  let action = '';
+  let hint = provider.limitations ?? '';
+  if (provider.capabilities.library && !provider.enabled) {
+    action = `<p class="warn">Pas encore configuré sur ce serveur${SERVER_KEY[provider.id] ? ` (clé ${SERVER_KEY[provider.id]} manquante)` : ''}.</p>`;
+  } else if (provider.id === 'steam') {
+    action = '<a class="btn btn--primary" href="/api/accounts/steam/openid/start">Relier mon compte Steam</a>';
+    hint = 'Aucun compte Steam dans tes connexions Discord. Relie-le directement : Steam confirmera qu\'il est à toi.';
+  } else if (provider.link) {
+    action = `<button class="btn btn--primary" type="button" data-link="${esc(provider.id)}">Connecter ${esc(provider.name)}</button>`;
+  } else if (provider.capabilities.library) {
+    hint = `Aucun compte ${provider.name} dans tes connexions Discord. Relie-le dans Discord (Paramètres → Connexions), puis « Découvrir mes comptes ». ${provider.limitations ?? ''}`;
+  }
+  const manual = provider.manualImport?.length ? `<button class="btn btn--ghost" type="button" data-manual="${esc(provider.manualImport[0])}">+ À la main</button>` : '';
   return cardShell(provider, `
     ${caps(provider)}
-    <p class="source-note">${esc(hint)}</p>
-    <div class="chips">${action}</div>`);
+    <p>${esc(hint)}</p>
+    <div class="actions">${action}${manual}</div>`);
+}
+
+/* ---------- Liaison directe : Epic (code) et Nintendo (lien « Choisir cette personne ») ---------- */
+
+const LINK_STEPS = {
+  epicgames: {
+    open: 'Ouvrir epicgames.com ↗',
+    steps: [
+      'Ouvre la page de connexion Epic et connecte-toi avec ton compte.',
+      'La page affiche un petit texte qui contient <code>"authorizationCode"</code> suivi de 32 caractères.',
+      'Copie ce code (ou tout le texte) et colle-le ci-dessous.',
+    ],
+    placeholder: 'Code Epic (32 caractères) ou tout le texte affiché',
+    note: 'Connecteur non officiel, comme les lanceurs libres Legendary et Heroic. Le code ne sert qu\'une fois et expire en quelques minutes ; Asobi ne voit jamais ton mot de passe.',
+  },
+  nintendo: {
+    open: 'Ouvrir accounts.nintendo.com ↗',
+    steps: [
+      'Ouvre la connexion Nintendo et connecte-toi avec ton compte.',
+      'Sur la page « Choisir cette personne », fais un <b>clic droit</b> (appui long sur téléphone) sur le bouton rouge <b>« Choisir cette personne »</b>, puis « Copier l\'adresse du lien ». Ne clique pas dessus.',
+      'Colle l\'adresse ci-dessous : elle commence par <code>npf5c38e31cd085304b://auth#</code>.',
+    ],
+    placeholder: 'npf5c38e31cd085304b://auth#session_token_code=…',
+    note: 'Connecteur non officiel (comme nxapi) : Nintendo ne l\'autorise pas officiellement et peut l\'interdire dans ses conditions d\'utilisation. Le lien expire en 10 minutes ; Asobi ne voit jamais ton mot de passe.',
+  },
+};
+
+function openLink(provider, onLinked) {
+  const conf = LINK_STEPS[provider.id];
+  const { el, close } = openModal(`
+    <h2 class="modal__title">Connecter ${esc(provider.name)}</h2>
+    <ol class="steps">${conf.steps.map((s) => `<li>${s}</li>`).join('')}</ol>
+    <button class="btn" type="button" id="link-open">${esc(conf.open)}</button>
+    <label class="field"><span class="field__label">À coller ici</span><input class="input" id="link-code" autocomplete="off" spellcheck="false" placeholder="${esc(conf.placeholder)}"></label>
+    <p class="warn warn--error" id="link-error" hidden></p>
+    <p class="note-line">${esc(conf.note)}</p>
+    <div class="modal__actions">
+      <button class="btn btn--ghost" type="button" data-close>Annuler</button>
+      <button class="btn btn--primary" type="button" id="link-go" disabled>Connecter</button>
+    </div>`);
+  const input = $('#link-code', el);
+  const go = $('#link-go', el);
+  const error = (msg) => { $('#link-error', el).textContent = msg; $('#link-error', el).hidden = !msg; input.setAttribute('aria-invalid', msg ? 'true' : 'false'); };
+  let started = false;
+
+  $('#link-open', el).addEventListener('click', async () => {
+    // Fenêtre ouverte tout de suite (sinon bloquée), puis envoyée à l'adresse donnée par le serveur
+    const win = window.open('about:blank', '_blank');
+    try {
+      const { url } = await linkStart(provider.id);
+      started = true;
+      if (win && safeUrl(url)) { win.opener = null; win.location.href = url; } else if (safeUrl(url)) location.assign(url);
+      setTimeout(() => input.focus(), 300);
+    } catch (err) {
+      win?.close();
+      error(err.message);
+    }
+  });
+  input.addEventListener('input', () => { go.disabled = !input.value.trim(); error(''); });
+  go.addEventListener('click', async () => {
+    if (provider.id === 'nintendo' && !started) { error('Ouvre d\'abord la connexion Nintendo depuis cette fenêtre (le lien est propre à chaque essai).'); return; }
+    go.disabled = true;
+    go.innerHTML = '<span class="spinner"></span>Connexion…';
+    try {
+      const data = await linkFinish(provider.id, input.value.trim());
+      close();
+      confetti();
+      toast('✓', `${provider.name} connecté`, 'Tu peux maintenant importer tes jeux.', 6000, { color: 'var(--st-finished)' });
+      onLinked(data);
+    } catch (err) {
+      error(err.message);
+      go.disabled = false;
+      go.textContent = 'Connecter';
+    }
+  });
 }
 
 /* ---------- Import : choix des jeux de la bibliothèque ---------- */
 
-async function openLibrary(accountId, onDone) {
+async function openLibrary(provider, accountId, onDone) {
+  const pc = provider.id === 'steam' || provider.id === 'epicgames';
   const { el, close } = openModal(`
-    <h2>Importer depuis Steam</h2>
-    <p class="modal-lead">Les jeux de ta bibliothèque qui ne sont pas encore dans ta collection. Ils seront rangés dans PC, avec leur temps de jeu et leurs succès.</p>
-    <div id="lib"><div class="shimmer" style="height:240px;border-radius:14px"></div></div>
-    <div class="progress" id="lib-progress" hidden><span></span></div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" type="button" data-close>Fermer</button>
-      <button class="btn btn-primary" type="button" id="lib-go" disabled>Importer</button>
+    <h2 class="modal__title">Importer depuis ${esc(provider.name)}</h2>
+    <p class="modal__lead" id="lib-lead">Les jeux de ton compte qui ne sont pas encore dans ta collection. ${pc ? 'Ils seront rangés dans PC' : 'Chacun sera rangé sur sa console'}, avec leur temps de jeu${provider.capabilities.achievements ? ' et leurs succès' : ''}.</p>
+    <div id="lib"><div class="skeleton" style="height:240px"></div></div>
+    <div class="bar" id="lib-progress" hidden><i style="--v:5%"></i></div>
+    <div class="modal__actions">
+      <button class="btn btn--ghost" type="button" data-close>Fermer</button>
+      <button class="btn btn--primary" type="button" id="lib-go" disabled>Importer</button>
     </div>`, { wide: true });
 
   let games = [];
   try {
     games = await accountLibrary(accountId);
   } catch (err) {
-    $('#lib', el).innerHTML = `<p class="modal-warning">${esc(err.message)}</p>`;
+    $('#lib', el).innerHTML = `<p class="warn warn--error">${esc(err.message)}</p>`;
     return;
   }
-  if (!games.length) { $('#lib', el).innerHTML = '<p class="muted">Tous tes jeux Steam sont déjà dans ta collection 🎉</p>'; return; }
+  if (!games.length) { $('#lib', el).innerHTML = `<p class="muted">Tous tes jeux ${esc(provider.name)} sont déjà dans ta collection 🎉</p>`; return; }
 
+  $('#lib-lead', el).insertAdjacentText('afterbegin', `${games.length} jeu${games.length > 1 ? 'x' : ''} trouvé${games.length > 1 ? 's' : ''}. `);
   $('#lib', el).innerHTML = `
-    <div class="chips" style="margin-bottom:6px">
+    <div class="row" style="margin-bottom:10px">
       <button class="chip" type="button" data-select="played">Tous ceux joués</button>
       <button class="chip" type="button" data-select="all">Tout (${games.length})</button>
       <button class="chip" type="button" data-select="none">Aucun</button>
     </div>
-    <div class="steam-lib">${games.map((g) => `
-      <label class="steam-row">
-        <input type="checkbox" value="${esc(g.id)}" style="accent-color:#8b5cf6">
-        ${safeUrl(g.icon) ? `<img src="${esc(g.icon)}" alt="" loading="lazy">` : '<span></span>'}
+    <div class="lib">${games.map((g) => `
+      <label class="check">
+        <input type="checkbox" value="${esc(g.id)}">
+        ${safeUrl(g.icon) ? `<img src="${esc(g.icon)}" alt="" loading="lazy">` : '<span class="thumb"></span>'}
         <span>${esc(g.name)}</span>
-        <small>${g.playtimeMinutes ? fmtHours(g.playtimeMinutes) : 'jamais lancé'}</small>
+        <small>${g.platform && !pc ? `${esc(platformMeta(g.platform).short)} · ` : ''}${g.playtimeMinutes ? fmtHours(g.playtimeMinutes) : 'jamais lancé'}</small>
       </label>`).join('')}</div>`;
 
   const go = $('#lib-go', el);
   const update = () => {
-    const n = $$('.steam-lib input:checked', el).length;
+    const n = $$('.lib input:checked', el).length;
     go.disabled = !n;
     go.textContent = n ? `Importer ${n} jeu${n > 1 ? 'x' : ''}` : 'Importer';
   };
@@ -278,28 +360,30 @@ async function openLibrary(accountId, onDone) {
   el.addEventListener('click', (e) => {
     const sel = e.target.closest('[data-select]')?.dataset.select;
     if (!sel) return;
-    $$('.steam-lib input', el).forEach((input, i) => { input.checked = sel === 'all' || (sel === 'played' && games[i].playtimeMinutes > 0); });
+    $$('.lib input', el).forEach((input, i) => { input.checked = sel === 'all' || (sel === 'played' && games[i].playtimeMinutes > 0); });
     update();
   });
 
   go.addEventListener('click', async () => {
-    const ids = $$('.steam-lib input:checked', el).map((input) => input.value);
+    const ids = $$('.lib input:checked', el).map((input) => input.value);
     go.disabled = true;
     const bar = $('#lib-progress', el);
     bar.hidden = false;
     try {
       const job = await runAccountJob(accountId, 'import', { ids }, (j) => {
-        bar.firstElementChild.style.setProperty('--p', `${j.total ? (j.progress / j.total) * 100 : 5}%`);
-        go.textContent = j.total ? `Import ${j.progress}/${j.total}…` : 'Préparation…';
+        bar.firstElementChild.style.setProperty('--v', `${j.total ? (j.progress / j.total) * 100 : 5}%`);
+        go.innerHTML = `<span class="spinner"></span>${j.total ? `Import ${j.progress}/${j.total}…` : 'Préparation…'}`;
       });
       close();
       const s = job.stats;
+      const n = s.added + s.unmatched;
       confetti();
-      toast('🎮', `${s.added + s.unmatched} jeu${s.added + s.unmatched > 1 ? 'x' : ''} importé${s.added + s.unmatched > 1 ? 's' : ''}`,
-        `${s.linked ? ` ${s.linked} relié${s.linked > 1 ? 's' : ''} à des jeux déjà présents.` : ''}${s.unmatched ? ` ${s.unmatched} à associer à la main.` : ''}${s.failed ? ` ${s.failed} en échec.` : ''}`, 9000);
+      toast('↓', `${n} jeu${n > 1 ? 'x' : ''} importé${n > 1 ? 's' : ''}`,
+        `${s.linked ? `${s.linked} relié${s.linked > 1 ? 's' : ''} à des jeux déjà présents. ` : ''}${s.unmatched ? `${s.unmatched} à associer à la main. ` : ''}${s.failed ? `${s.failed} en échec.` : ''}`, 9000, { color: 'var(--st-finished)' });
     } catch (err) {
-      toast('⚠️', 'Import interrompu', ` ${err.message}`, 9000);
+      toast('!', 'Import interrompu', err.message, 9000, { color: 'var(--st-dropped)' });
       go.disabled = false;
+      go.textContent = 'Importer';
     }
     onDone?.();
   });
@@ -310,10 +394,11 @@ async function openLibrary(accountId, onDone) {
 function openMatch(gameId, onDone) {
   const game = state.games.find((g) => g.id === gameId);
   const { el, close } = openModal(`
-    <h2>Associer « ${esc(game?.name ?? '')} »</h2>
-    <p class="modal-lead">Choisis la fiche IGDB qui correspond vraiment à ce jeu. Tes notes, ton statut et ton temps de jeu sont conservés.</p>
-    <div class="field">
-      <div class="combo">${ICONS.search}<input class="input" id="match-q" value="${esc(game?.name ?? '')}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="match-suggest"></div>
+    <h2 class="modal__title">Associer « ${esc(game?.name ?? '')} »</h2>
+    <p class="modal__lead">Choisis la fiche IGDB qui correspond vraiment à ce jeu. Tes notes, ton statut et ton temps de jeu sont conservés.</p>
+    <div class="search">
+      <span class="search__icon" aria-hidden="true">⌕</span>
+      <input class="input" id="match-q" value="${esc(game?.name ?? '')}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="match-suggest" aria-label="Rechercher la fiche">
       <ul class="suggest" id="match-suggest" role="listbox" hidden></ul>
     </div>`);
   const input = $('#match-q', el);
@@ -327,7 +412,7 @@ function openMatch(gameId, onDone) {
       toast('🔗', `${pick.name} associé`);
       onDone?.();
     } catch (err) {
-      toast('⚠️', 'Association impossible', ` ${err.message}`, 8000);
+      toast('!', 'Association impossible', err.message, 8000, { color: 'var(--st-dropped)' });
     }
   });
   let timer = 0;
@@ -337,10 +422,10 @@ function openMatch(gameId, onDone) {
     try { results = await searchIgdb(q); } catch { results = []; }
     if (input.value.trim() !== q) return;
     box.open(results.length ? results.map((r, i) => `
-      <li role="option" id="ms-${i}" class="suggest-item" data-index="${i}">
-        ${safeUrl(r.cover) ? `<img class="suggest-cover" src="${esc(r.cover)}" alt="" loading="lazy">` : '<span class="suggest-cover">🎮</span>'}
-        <span class="suggest-text"><strong>${highlight(r.name, q)}</strong><small>${esc([r.year, r.platforms.slice(0, 4).join(', ')].filter(Boolean).join(' · '))}</small></span>
-      </li>`).join('') : `<li class="suggest-empty">Aucun jeu trouvé pour « ${esc(q)} ».</li>`);
+      <li role="option" id="ms-${i}" class="suggest__item" data-index="${i}" aria-selected="false">
+        ${safeUrl(r.cover) ? `<img src="${esc(r.cover)}" alt="" loading="lazy">` : '<span class="suggest__ph"></span>'}
+        <span class="suggest__text"><strong>${highlight(r.name, q)}</strong><small>${esc([r.year, r.platforms.slice(0, 4).join(', ')].filter(Boolean).join(' · '))}</small></span>
+      </li>`).join('') : `<li class="suggest__empty">Aucun jeu trouvé pour « ${esc(q)} ».</li>`);
   };
   input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(suggest, 220); });
   setTimeout(() => { input.focus(); input.select(); suggest(); }, 60);

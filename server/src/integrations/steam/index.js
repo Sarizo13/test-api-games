@@ -140,7 +140,7 @@ async function refreshAchievements(ctx, account, entries, job, offset = 0) {
       db.prepare('UPDATE platform_games SET achievements_unlocked = ?, achievements_total = ? WHERE connected_account_id = ? AND external_game_id = ?')
         .run(a.unlocked, a.total, account.id, String(entry.steam_app_id));
       const current = parseJson(entry.achievements);
-      if (current?.source !== 'manual') {
+      if (!current?.source || current.source === 'steam') {
         db.prepare('UPDATE collection SET achievements = ?, updated_at = ? WHERE user_id = ? AND id = ?').run(JSON.stringify(a), now(), entry.user_id, entry.id);
         updated++;
       }
@@ -166,7 +166,7 @@ async function sync(ctx, account, job) {
     transaction(db, () => {
       for (const e of entries) {
         const s = byApp.get(e.steam_app_id);
-        if (e.playtime_source === 'manual') continue; // saisi à la main : on n'y touche pas
+        if (e.playtime_source && e.playtime_source !== 'steam') continue; // saisi à la main ou venu d'Epic… : on n'y touche pas
         const lastPlayed = s.rtime_last_played ? new Date(s.rtime_last_played * 1000).toISOString().slice(0, 10) : e.last_played_at;
         db.prepare("UPDATE collection SET playtime_minutes = ?, playtime_source = 'steam', last_played_at = ?, updated_at = ? WHERE user_id = ? AND id = ?")
           .run(s.playtime_forever ?? 0, lastPlayed, now(), e.user_id, e.id);

@@ -1,19 +1,27 @@
-// Découvrir : la roulette parmi tes jeux jamais joués, tes cartes encore sous blister,
+// Découvrir : la roulette (machine à sous) parmi tes jeux jamais joués, tes cartes encore sous blister,
 // et des suggestions IGDB « Pour toi » (d'après ton profil) et « Découvertes » (hors de tes habitudes).
 
 import { platformMeta } from '../../platforms.js';
 import { state, updateGame, fetchRecommend, fetchDiscover, knownIgdbIds } from '../state.js';
-import { cardHtml, attachHolo } from '../card.js';
+import { cardHtml, attachHolo, cardArt } from '../card.js';
 import { playerProfile, PROFILE_MIN } from '../taste.js';
 import { requireEdit } from '../add.js';
-import { sectionHead, emptyState, miniCover, bindStubs, thumb } from './common.js';
-import { $, esc, reduceMotion, local, confetti, ICONS } from '../util.js';
+import { pageHead, sectionHead, emptyState, miniCover, bindStubs } from './common.js';
+import { $, esc, reduceMotion, local } from '../util.js';
 
 const LENGTHS = {
   all: ['Toutes durées', () => true],
   short: ['Court (< 10 h)', (h) => h != null && h < 10],
   medium: ['Moyen (10–30 h)', (h) => h != null && h >= 10 && h <= 30],
   long: ['Long (30 h +)', (h) => h != null && h > 30],
+};
+const LOOPS = 6; // tours complets du rouleau avant de s'arrêter
+const STRIP_MAX = 16; // jaquettes différentes sur le rouleau
+
+const shuffle = (list) => {
+  const a = [...list];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
 };
 
 export function renderDiscover(view) {
@@ -25,151 +33,171 @@ export function renderDiscover(view) {
   if (!LENGTHS[length]) length = 'all';
   if (platform && !consoles.includes(platform)) platform = '';
 
+  const bulbs = '<i></i>'.repeat(22);
   view.innerHTML = `
-    <div class="page-head">
-      <div><p class="kicker">Découvrir</p><h1>À quoi je joue ?</h1>
-      <p>Laisse le hasard choisir parmi tes jeux jamais lancés, ou trouve ton prochain coup de cœur.</p></div>
-    </div>
+    ${pageHead('Découvrir', 'À quoi je joue ?', '', 'Laisse le hasard choisir parmi tes jeux jamais lancés, ou trouve ton prochain coup de cœur.')}
 
-    <section class="roulette">
-      <div>
-        <h2>La roulette 🎰</h2>
-        <p>${backlog.length
-          ? `${backlog.length} jeu${backlog.length > 1 ? 'x' : ''} jamais lancé${backlog.length > 1 ? 's' : ''} dans ta collection. Choisis une envie, la machine fait le reste.`
-          : 'Aucun jeu jamais joué dans ta collection : la roulette n\'a rien à tirer.'}</p>
+    <section class="roulette" id="roulette">
+      <div class="roulette__bulbs roulette__bulbs--top" aria-hidden="true">${bulbs}</div>
+      <div class="roulette__bulbs roulette__bulbs--bottom" aria-hidden="true">${bulbs}</div>
+      <div class="roulette__panel">
+        <h2 class="h-section">La roulette</h2>
+        <p id="pool"></p>
         ${backlog.length ? `
-          <div class="chips" id="lengths" style="margin-bottom:12px">${Object.entries(LENGTHS).map(([k, [label]]) => `<button class="chip${k === length ? ' is-on' : ''}" type="button" data-length="${k}">${label}</button>`).join('')}</div>
-          ${consoles.length > 1 ? `<select class="select" id="roulette-platform" style="max-width:280px;margin-bottom:18px" aria-label="Console">
-            <option value="">Toutes les consoles</option>
-            ${consoles.map((id) => `<option value="${esc(id)}"${id === platform ? ' selected' : ''}>${esc(platformMeta(id).id)}</option>`).join('')}
-          </select>` : ''}
-          <div class="chips" style="gap:10px">
-            <button class="btn btn-primary" type="button" id="spin">${ICONS.dice}Lancer la roulette</button>
-            <span class="muted" id="pool" style="align-self:center;font-size:13px"></span>
-          </div>
-          <div id="roulette-actions" class="chips" style="margin-top:16px" hidden></div>` : ''}
+          <div class="roulette__group"><span>Durée</span><div class="row" role="radiogroup" aria-label="Durée">${Object.entries(LENGTHS).map(([k, [label]]) => `<button class="chip" type="button" role="radio" data-length="${k}" aria-checked="${k === length}">${label}</button>`).join('')}</div></div>
+          ${consoles.length > 1 ? `<div class="roulette__group"><span>Console</span><div class="row" role="radiogroup" aria-label="Console">
+            <button class="chip" type="button" role="radio" data-platform="" aria-checked="${!platform}">Toutes</button>
+            ${consoles.map((id) => `<button class="chip" type="button" role="radio" data-platform="${esc(id)}" aria-checked="${id === platform}">${esc(platformMeta(id).short)}</button>`).join('')}
+          </div></div>` : ''}
+          <button class="btn btn--arcade" type="button" id="spin">▶ Lancer la roulette</button>` : '<p>Aucun jeu jamais joué dans ta collection : la roulette n\'a rien à tirer.</p>'}
       </div>
-      <div class="slot" id="slot">
-        <div class="slot-reel" id="reel">${backlog.slice(0, 1).map((g) => thumb(g)).join('') || '<span class="ph"></span>'}</div>
-        <div class="slot-result" id="slot-result" hidden></div>
+      <div class="roulette__reel" id="reel">
+        <span class="roulette__arrow roulette__arrow--top" aria-hidden="true">▼</span>
+        <div class="roulette__strip" id="strip"></div>
+        <div class="roulette__frame" aria-hidden="true"></div>
+        <span class="roulette__arrow roulette__arrow--bottom" aria-hidden="true">▲</span>
       </div>
     </section>
 
     <section class="section" id="for-you"></section>
     <section class="section" id="explore"></section>
-
     ${backlog.length ? `
-      ${sectionHead('Encore sous blister', `<span class="muted" style="font-size:13px">${backlog.length} carte${backlog.length > 1 ? 's' : ''} à révéler</span>`)}
-      <div class="cards section">${[...backlog].sort((a, b) => (b.igdbRating ?? 0) - (a.igdbRating ?? 0)).map((g, i) => cardHtml(g, { i })).join('')}</div>` : ''}`;
+      <section class="section">
+        ${sectionHead('Encore sous blister', `<span class="note">${backlog.length} carte${backlog.length > 1 ? 's' : ''} · clique une carte pour la déballer</span>`)}
+        <div class="grid-cards">${[...backlog].sort((a, b) => (b.igdbRating ?? 0) - (a.igdbRating ?? 0)).map((g, i) => cardHtml(g, { i })).join('')}</div>
+      </section>` : ''}`;
 
   attachHolo(view);
   bindStubs(view);
 
   /* ----- Roulette ----- */
 
+  const machine = $('#roulette', view);
+  const reel = $('#reel', view);
+  const strip = $('#strip', view);
   const pool = () => backlog.filter((g) => (!platform || g.platform === platform) && LENGTHS[length][1](g.timeToBeat?.normally));
-  const showPool = () => {
-    const n = pool().length;
-    const el = $('#pool', view);
-    if (el) el.textContent = n ? `${n} jeu${n > 1 ? 'x' : ''} en jeu` : 'Aucun jeu ne correspond';
-    const spin = $('#spin', view);
-    if (spin) spin.disabled = !n;
-  };
-  showPool();
-
-  let winner = null;
+  let items = [];
+  let index = 0; // jaquette actuellement sous le cadre
   let spinning = false;
 
-  const spin = () => {
+  const step = () => {
+    const img = strip.firstElementChild;
+    return img ? img.getBoundingClientRect().width + parseFloat(getComputedStyle(strip).columnGap || 12) : 162;
+  };
+  const xFor = (i) => reel.clientWidth / 2 - (strip.firstElementChild?.getBoundingClientRect().width ?? 150) / 2 - i * step();
+  const place = (i) => { strip.style.setProperty('--x', `${xFor(i)}px`); };
+
+  const fill = () => {
     const list = pool();
-    if (!list.length || spinning) return;
+    const n = list.length;
+    $('#pool', view).textContent = backlog.length ? (n ? `${n} jeu${n > 1 ? 'x' : ''} jamais lancé${n > 1 ? 's' : ''} en jeu.` : 'Aucun jeu ne correspond à ces filtres.') : '';
+    const spin = $('#spin', view);
+    if (spin) spin.disabled = !n;
+    items = shuffle(list).slice(0, STRIP_MAX);
+    const loops = items.length ? LOOPS + 2 : 0;
+    strip.innerHTML = Array.from({ length: loops }, () => items.map((g) => `<img src="${esc(cardArt(g))}" alt="" loading="lazy" data-title="${esc(g.name)}">`).join('')).join('');
+    index = 0;
+    machine.classList.remove('is-spinning');
+    requestAnimationFrame(() => place(index));
+  };
+  fill();
+
+  const showResult = (winner) => {
+    reel.querySelector('.roulette__result')?.remove();
+    reel.insertAdjacentHTML('beforeend', `
+      <div class="roulette__result" role="status">
+        ${cardHtml(winner)}
+        <div class="actions">
+          <span class="eyebrow">La roulette a choisi</span>
+          <button class="btn btn--primary" type="button" data-start="${esc(winner.id)}" data-edit>▶ Je m'y mets</button>
+          <a class="btn" href="#/jeu/${encodeURIComponent(winner.id)}">Voir la fiche</a>
+          <button class="btn btn--ghost" type="button" id="respin">↻ Relancer</button>
+        </div>
+      </div>`);
+  };
+
+  const spin = () => {
+    if (spinning || !items.length) return;
+    reel.querySelector('.roulette__result')?.remove();
+    const target = Math.floor(Math.random() * items.length);
+    const winner = items[target];
+    if (reduceMotion) { index = target; place(index); showResult(winner); return; }
     spinning = true;
-    winner = list[Math.floor(Math.random() * list.length)];
-    const reel = $('#reel', view);
-    const result = $('#slot-result', view);
-    result.hidden = true;
-    $('#roulette-actions', view).hidden = true;
-
-    // Une bande de jaquettes au hasard, le gagnant en dernier
-    const strip = Array.from({ length: reduceMotion ? 0 : 18 }, () => list[Math.floor(Math.random() * list.length)]);
-    reel.style.transition = 'none';
-    reel.style.transform = 'none';
-    reel.style.opacity = '1';
-    reel.innerHTML = [...strip, winner].map((g) => thumb(g)).join('');
-
-    const land = () => {
-      reel.style.opacity = '0';
-      result.innerHTML = cardHtml(winner);
-      result.hidden = false;
-      const actions = $('#roulette-actions', view);
-      actions.innerHTML = `
-        <button class="btn btn-primary" type="button" data-start="${esc(winner.id)}">${ICONS.play}Je m'y mets</button>
-        <a class="btn btn-ghost" href="#/jeu/${encodeURIComponent(winner.id)}">Voir la fiche</a>
-        <button class="btn btn-ghost" type="button" id="respin">${ICONS.refresh}Relancer</button>`;
-      actions.hidden = false;
+    // On repart de la même jaquette dans le premier tour, puis 6 tours + l'écart jusqu'au gagnant
+    machine.classList.remove('is-spinning');
+    index %= items.length;
+    place(index);
+    void strip.offsetWidth;
+    machine.classList.add('is-spinning');
+    index = LOOPS * items.length + target;
+    place(index);
+    const done = () => {
       spinning = false;
+      machine.classList.remove('is-spinning');
+      index = target;
+      place(index);
+      showResult(winner);
     };
-
-    if (reduceMotion) { land(); return; }
-    requestAnimationFrame(() => {
-      const item = reel.firstElementChild;
-      const step = item.getBoundingClientRect().height + parseFloat(getComputedStyle(reel).rowGap || 14);
-      reel.style.transition = 'transform 3.2s cubic-bezier(.12, .7, .14, 1)';
-      reel.style.transform = `translateY(${-step * strip.length}px)`;
-      reel.addEventListener('transitionend', () => setTimeout(land, 250), { once: true });
-    });
+    let finished = false;
+    strip.addEventListener('transitionend', () => { if (!finished) { finished = true; done(); } }, { once: true });
+    setTimeout(() => { if (!finished) { finished = true; done(); } }, 3900);
   };
 
   view.addEventListener('click', (e) => {
     const l = e.target.closest('[data-length]');
-    if (l) {
+    if (l && !spinning) {
       length = l.dataset.length;
       local.set('roulette:length', length);
-      view.querySelectorAll('[data-length]').forEach((b) => b.classList.toggle('is-on', b === l));
-      showPool();
+      view.querySelectorAll('[data-length]').forEach((b) => b.setAttribute('aria-checked', String(b === l)));
+      reel.querySelector('.roulette__result')?.remove();
+      fill();
+      return;
+    }
+    const pf = e.target.closest('[data-platform]');
+    if (pf && !spinning) {
+      platform = pf.dataset.platform;
+      local.set('roulette:platform', platform);
+      view.querySelectorAll('[data-platform]').forEach((b) => b.setAttribute('aria-checked', String(b === pf)));
+      reel.querySelector('.roulette__result')?.remove();
+      fill();
       return;
     }
     if (e.target.closest('#spin, #respin')) { spin(); return; }
     const start = e.target.closest('[data-start]');
     if (start) {
+      const card = reel.querySelector('.roulette__result .tcg');
+      if (card?.dataset.tier === 'sealed') { card.click(); return; } // déballage (voir main.js)
       requireEdit(async () => {
-        const id = start.dataset.start;
-        $('#slot-result .tcg', view)?.classList.add('is-unwrapping');
-        const r = start.getBoundingClientRect();
-        confetti(r.left + r.width / 2, r.top);
-        await updateGame(id, { status: 'playing' });
-        setTimeout(() => { location.hash = `#/jeu/${encodeURIComponent(id)}`; }, 700);
+        await updateGame(start.dataset.start, { status: 'playing' });
+        location.hash = `#/jeu/${encodeURIComponent(start.dataset.start)}`;
       });
     }
   });
-  $('#roulette-platform', view)?.addEventListener('change', (e) => {
-    platform = e.target.value;
-    local.set('roulette:platform', platform);
-    showPool();
-  });
+  const onResize = () => { if (!spinning) place(index); };
+  addEventListener('resize', onResize);
 
   /* ----- Suggestions IGDB ----- */
 
   const known = knownIgdbIds();
   const forYou = $('#for-you', view);
   const explore = $('#explore', view);
-  const loading = (title) => `${sectionHead(title)}<div class="shimmer" style="height:250px;border-radius:14px"></div>`;
-  const row = (list, flag) => `<div class="scroller" style="--col:140px">${list.map((s, i) => miniCover(s, { i, flag: flag(s) })).join('')}</div>`;
+  const loading = (title) => `${sectionHead(title)}<div class="covers">${Array.from({ length: 6 }, () => '<div class="skeleton" style="aspect-ratio:3/4"></div>').join('')}</div>`;
+  const row = (list, flag, accent = () => false) => `<div class="covers">${list.map((s, i) => miniCover(s, { i, flag: flag(s), accent: accent(s) })).join('')}</div>`;
   const failed = (title) => `${sectionHead(title)}<p class="muted">Suggestions indisponibles pour le moment.</p>`;
 
   if (profile.locked) {
     forYou.innerHTML = `
       ${sectionHead('Pour toi')}
-      <div class="panel" style="display:grid;gap:12px">
-        <strong>🔒 Débloqué à ${PROFILE_MIN} jeux</strong>
-        <span class="muted">Encore ${profile.missing} jeu${profile.missing > 1 ? 'x' : ''} dans ta collection et Asobi te proposera des jeux taillés pour tes goûts.</span>
-        <div class="progress"><span style="--p:${(profile.count / PROFILE_MIN) * 100}%"></span></div>
+      <div class="tile" style="display:flex;flex-direction:column;gap:12px;max-width:640px">
+        <div class="row"><span style="font-size:22px">🔒</span><strong class="tile__title">Encore ${profile.missing} jeu${profile.missing > 1 ? 'x' : ''}</strong></div>
+        <span class="muted">À ${PROFILE_MIN} jeux, Asobi te proposera des jeux taillés pour tes goûts. En attendant, voici les incontournables.</span>
+        <div class="xpbar"><i style="--v:${(profile.count / PROFILE_MIN) * 100}%"></i></div>
       </div>`;
     explore.innerHTML = loading('Les incontournables');
     fetchRecommend([], 'explore', known)
-      .then((list) => { explore.innerHTML = list.length ? `${sectionHead('Les incontournables', '<span class="muted" style="font-size:13px">les mieux notés sur IGDB</span>')}${row(list, (s) => s.igdbRating ? `★ ${s.igdbRating}` : '')}` : ''; })
+      .then((list) => { explore.innerHTML = list.length ? `${sectionHead('Les incontournables', '<span class="note">les mieux notés sur IGDB</span>')}${row(list, (s) => (s.igdbRating ? `★ ${s.igdbRating}` : ''))}` : ''; })
       .catch(() => { explore.innerHTML = failed('Les incontournables'); });
-    return null;
+    return () => removeEventListener('resize', onResize);
   }
 
   const genres = profile.favoriteGenres;
@@ -185,7 +213,7 @@ export function renderDiscover(view) {
       for (const s of [a[i], b[i]]) if (s && !seen.has(s.igdbId)) { seen.add(s.igdbId); mixed.push(s); }
     }
     forYou.innerHTML = mixed.length
-      ? `${sectionHead('Pour toi', `<span class="muted" style="font-size:13px">d'après ton profil : ${esc(genres.join(', '))}</span>`)}${row(mixed.slice(0, 20), (s) => s.why)}`
+      ? `${sectionHead('Pour toi', `<span class="note">d'après ton profil : ${esc(genres.join(', '))}</span>`)}${row(mixed.slice(0, 20), (s) => s.why, (s) => s.why === 'Proche de tes favoris')}`
       : `${sectionHead('Pour toi')}${emptyState('🧭', 'Rien de neuf', 'Tu as déjà tout ce qui te correspond… impressionnant.')}`;
   });
 
@@ -193,10 +221,10 @@ export function renderDiscover(view) {
   fetchRecommend(genres, 'explore', known)
     .then((list) => {
       explore.innerHTML = list.length
-        ? `${sectionHead('Découvertes', '<span class="muted" style="font-size:13px">des pépites hors de tes genres habituels</span>')}${row(list, (s) => s.genres[0] ?? '')}`
+        ? `${sectionHead('Découvertes', '<span class="note">des pépites hors de tes genres habituels</span>')}${row(list, (s) => s.genres[0] ?? '')}`
         : '';
     })
     .catch(() => { explore.innerHTML = failed('Découvertes'); });
 
-  return null;
+  return () => removeEventListener('resize', onResize);
 }

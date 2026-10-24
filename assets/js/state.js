@@ -257,6 +257,7 @@ export async function removeWish(igdbId) {
 export async function saveSettings(patch) {
   if (TEST) {
     if ('name' in patch) state.settings.name = patch.name;
+    if (Array.isArray(patch.friends)) state.settings.friends = patch.friends;
     if (patch.consoleTrailers) state.settings.consoleTrailers = { ...(state.settings.consoleTrailers ?? {}), ...patch.consoleTrailers };
     emit({ type: 'settings' });
     return state.settings;
@@ -284,6 +285,9 @@ export const enableAccount = (id) => post(`/accounts/${id}/enable`);
 export const accountLibrary = (id) => get(`/accounts/${id}/library`).then((r) => r.results);
 export const setAutoSync = (id, autoSync) => request('PATCH', `/accounts/${id}`, { autoSync });
 export const disconnectAccount = (id) => request('DELETE', `/accounts/${id}`);
+/** Liaison directe (Epic, Nintendo) : adresse où se connecter, puis le code ou le lien collé par le joueur. */
+export const linkStart = (provider) => post(`/accounts/link/${encodeURIComponent(provider)}/start`);
+export const linkFinish = (provider, code) => post(`/accounts/link/${encodeURIComponent(provider)}/finish`, { code });
 
 /**
  * Lance une synchronisation ou un import (`kind` : 'sync' | 'import') et suit son avancement jusqu'à la fin.
