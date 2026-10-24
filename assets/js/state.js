@@ -1,18 +1,27 @@
 // Données d'Asobi : chargement, modifications (affichées tout de suite, enregistrées en arrière-plan)
-// et appels au mini-serveur. Avec ?test dans l'adresse, on travaille sur data/test-games.json, en mémoire.
+// et appels au serveur (/api, même adresse que le site). Trois modes :
+//   - connecté avec Discord : sa propre collection, modifiable ;
+//   - /u/<pseudo> : la collection publique de quelqu'un, en lecture seule ;
+//   - ?test : data/test-games.json, en mémoire (rien n'est enregistré).
+// La session est un cookie HttpOnly posé par le serveur : aucun jeton n'est gardé dans le navigateur.
 
-import { local, toast } from './util.js';
+import { toast } from './util.js';
 
-export const API = 'https://ludotheque.theopacheco5.workers.dev';
+export const API = '/api';
 export const TEST = new URLSearchParams(location.search).has('test');
+/** Pseudo du profil public affiché (/u/<pseudo>), ou null. */
+export const PROFILE = TEST ? null : location.pathname.match(/^\/u\/([\w.\-]{1,40})\/?$/)?.[1] ?? null;
 
 export const state = {
   games: [],
   wishlist: [],
   playlist: [],
   settings: {},
+  user: null,          // utilisateur connecté (pseudo, nom, avatar, profil public ?)
+  owner: null,         // propriétaire de la collection affichée en mode /u/<pseudo>
+  discordConfigured: true,
   loaded: false,
-  canEdit: TEST || Boolean(local.get('password', '')),
+  canEdit: TEST,
 };
 
 /* ---------- Abonnements : les pages se redessinent quand les données changent ---------- */
@@ -27,21 +36,22 @@ const emit = (detail = {}) => bus.dispatchEvent(new CustomEvent('change', { deta
 /* ---------- Appels au serveur ---------- */
 
 async function request(method, path, body) {
-  const headers = { 'Content-Type': 'application/json' };
-  const password = local.get('password', '');
-  if (password) headers.Authorization = `Bearer ${password}`;
-  const res = await fetch(`${API}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  const headers = {};
+  if (method !== 'GET') headers['X-Asobi'] = '1'; // le serveur refuse toute écriture sans cet en-tête (CSRF)
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  const res = await fetch(`${API}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), credentials: 'same-origin' });
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401 && method !== 'GET') {
-    local.set('password', '');
+  if (res.status === 401 && data.code === 'login_required' && state.user) {
+    state.user = null; // session expirée
     state.canEdit = TEST;
     emit({ type: 'auth' });
   }
-  if (!res.ok) throw Object.assign(new Error(data.error || `Erreur ${res.status}`), { status: res.status });
+  if (!res.ok) throw Object.assign(new Error(data.error || `Erreur ${res.status}`), { status: res.status, code: data.code });
   return data;
 }
 
 export const get = (path) => request('GET', path);
+export const post = (path, body) => request('POST', path, body ?? {});
 
 /** Écriture : en mode test, rien n'est envoyé. */
 async function write(method, path, body) {
@@ -56,51 +66,58 @@ function fail(err, title = 'Modification non enregistrée') {
 
 /* ---------- Chargement ---------- */
 
-export async function load() {
-  const data = TEST
-    ? await fetch(`data/test-games.json?t=${Date.now()}`).then((r) => r.json())
-    : await get('/collection');
+function apply(data) {
   state.games = data.games ?? [];
   state.wishlist = data.wishlist ?? [];
   state.playlist = data.playlist ?? [];
   state.settings = data.settings ?? {};
+}
+
+export async function load() {
+  if (TEST) {
+    apply(await fetch(`/data/test-games.json?t=${Date.now()}`).then((r) => r.json()));
+  } else {
+    const me = await get('/me');
+    state.user = me.user;
+    state.discordConfigured = me.discordConfigured;
+    if (PROFILE) {
+      const data = await get(`/users/${encodeURIComponent(PROFILE)}`);
+      state.owner = data.user;
+      apply(data);
+    } else if (state.user) {
+      apply(await get('/collection'));
+    } else {
+      apply({});
+    }
+    state.canEdit = Boolean(state.user) && !PROFILE;
+  }
   state.loaded = true;
   emit({ type: 'load' });
 }
 
 export const gameById = (id) => state.games.find((g) => g.id === id);
 
-/* ---------- Connexion ---------- */
+/* ---------- Connexion (Discord) ---------- */
 
-export async function login(password) {
-  local.set('password', password);
-  try {
-    await request('POST', '/login');
-    state.canEdit = true;
-    emit({ type: 'auth' });
-    return true;
-  } catch (err) {
-    local.set('password', '');
-    state.canEdit = TEST;
-    throw err;
-  }
+/** Part vers Discord ; on revient ensuite sur la page en cours. */
+export function login(next = location.hash || '#/') {
+  location.href = `${API}/auth/discord/login?next=${encodeURIComponent(next)}`;
 }
 
-export function logout() {
-  local.set('password', '');
-  state.canEdit = TEST;
-  emit({ type: 'auth' });
+export async function logout() {
+  await post('/auth/logout').catch(() => {});
+  location.href = '/';
 }
 
 /* ---------- Jeux ---------- */
 
 /** Ajoute un jeu. `pick` (proposition de recherche) sert à simuler l'ajout en mode test. */
-export async function addGame({ igdbId, steamAppId, name, platform, status = 'backlog', playlist = false }, pick = null) {
+export async function addGame({ igdbId, platform, status = 'backlog', playlist = false }, pick = null) {
   let game;
   if (TEST) {
     game = {
-      id: `test-${igdbId ?? steamAppId ?? Date.now()}-${String(platform).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-      name: pick?.name ?? name ?? 'Jeu de test',
+      id: `test-${igdbId ?? Date.now()}-${String(platform).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      name: pick?.name ?? 'Jeu de test',
       platform,
       addedAt: new Date().toISOString(),
       releaseDate: pick?.releaseDate ?? null,
@@ -114,7 +131,7 @@ export async function addGame({ igdbId, steamAppId, name, platform, status = 'ba
       throw new Error('Déjà dans ta collection sur cette console.');
     }
   } else {
-    ({ game } = await write('POST', '/games', { igdbId, steamAppId, name, platform, status, playlist }));
+    ({ game } = await write('POST', '/games', { igdbId, platform, status, playlist }));
   }
   state.games.push(game);
   state.wishlist = state.wishlist.filter((w) => w.igdbId !== game.igdbId);
@@ -178,6 +195,15 @@ export async function removeGame(id) {
   }
 }
 
+/** Associe un jeu importé sans correspondance à sa fiche IGDB. */
+export async function matchGame(id, igdbId) {
+  const { game } = await write('POST', `/games/${encodeURIComponent(id)}/match`, { igdbId });
+  const index = state.games.findIndex((g) => g.id === id);
+  if (index >= 0) state.games[index] = game;
+  emit({ type: 'games' });
+  return game;
+}
+
 /* ---------- Liste « à jouer » ---------- */
 
 export async function setPlaylist(ids) {
@@ -226,7 +252,7 @@ export async function removeWish(igdbId) {
   }
 }
 
-/* ---------- Réglages, Steam ---------- */
+/* ---------- Réglages, compte ---------- */
 
 export async function saveSettings(patch) {
   if (TEST) {
@@ -235,30 +261,46 @@ export async function saveSettings(patch) {
     emit({ type: 'settings' });
     return state.settings;
   }
-  const { settings } = await write('PATCH', '/settings', patch);
+  const { settings, user } = await write('PATCH', '/settings', patch);
   state.settings = settings;
+  state.user = user;
   emit({ type: 'settings' });
   return settings;
 }
 
-/** Synchronise temps de jeu et succès Steam, par paquets. */
-export async function steamSync(onProgress) {
-  if (TEST) throw new Error('Indisponible en mode test.');
-  let offset = 0;
-  let total = 0;
-  do {
-    const res = await write('POST', '/steam/sync', { offset });
-    total = res.steamGames;
-    offset = res.next;
-    onProgress?.(offset ?? total, total);
-  } while (offset !== null);
-  await load();
-  return total;
+/** Supprime le compte et toutes ses données (il faut retaper son pseudo). */
+export async function deleteAccount(confirm) {
+  await request('DELETE', '/me', { confirm });
+  location.href = '/';
 }
 
-export async function steamLibrary() {
-  if (TEST) throw new Error('Indisponible en mode test.');
-  return (await request('GET', '/steam/library')).results;
+/* ---------- Comptes de jeu connectés ---------- */
+
+const NO_TEST = () => Promise.reject(new Error('Indisponible en mode test.'));
+
+export const fetchAccounts = () => (TEST ? NO_TEST() : get('/accounts'));
+export const discoverAccounts = () => (TEST ? NO_TEST() : post('/accounts/discover'));
+export const enableAccount = (id) => post(`/accounts/${id}/enable`);
+export const accountLibrary = (id) => get(`/accounts/${id}/library`).then((r) => r.results);
+export const setAutoSync = (id, autoSync) => request('PATCH', `/accounts/${id}`, { autoSync });
+export const disconnectAccount = (id) => request('DELETE', `/accounts/${id}`);
+
+/**
+ * Lance une synchronisation ou un import (`kind` : 'sync' | 'import') et suit son avancement jusqu'à la fin.
+ * `onProgress(job)` est appelé à chaque étape ; la collection est rechargée à la fin.
+ */
+export async function runAccountJob(id, kind, body, onProgress) {
+  const { job } = await post(`/accounts/${id}/${kind}`, body);
+  let current = job;
+  while (current.status === 'running' || current.status === 'queued') {
+    onProgress?.(current);
+    await new Promise((r) => setTimeout(r, 1200));
+    current = (await get(`/jobs/${current.id}`)).job;
+  }
+  onProgress?.(current);
+  if (current.status === 'error') throw Object.assign(new Error(current.error || 'Synchronisation impossible.'), { job: current });
+  await load();
+  return current;
 }
 
 /* ---------- Contenus publics (IGDB) ---------- */

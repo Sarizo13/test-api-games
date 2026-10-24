@@ -1,47 +1,35 @@
 // Fenêtre d'ajout : propositions IGDB pendant la frappe, puis destination (collection ou envies).
-// Aussi : fenêtre de connexion, demandée dès qu'une modification nécessite le mot de passe.
+// Aussi : fenêtre de connexion (avec Discord), proposée dès qu'une modification demande d'être connecté.
 
 import { PLATFORMS, FAMILIES, platformMeta } from '../platforms.js';
 import { STATUS } from './card.js';
-import { state, TEST, addGame, addWish, searchIgdb, login } from './state.js';
+import { state, TEST, PROFILE, addGame, addWish, searchIgdb, login } from './state.js';
+import { providerLogo } from './brands.js';
 import { $, $$, esc, norm, safeUrl, highlight, listbox, openModal, toast, confetti, ICONS } from './util.js';
 
 /* ---------- Connexion ---------- */
 
-export function openLogin({ then } = {}) {
-  const { el, close } = openModal(`
+export function openLogin() {
+  if (PROFILE) {
+    toast('👀', 'Collection en lecture seule', ` C'est la collection de ${state.owner?.displayName ?? PROFILE}.`);
+    return;
+  }
+  const { el } = openModal(`
     <h2>Connexion</h2>
-    <p class="modal-lead">Le mot de passe de ton mini-serveur permet de modifier ta collection. Il est retenu sur cet appareil.</p>
-    <form id="login-form">
-      <label class="field"><span>Mot de passe</span><input class="input" id="login-password" type="password" autocomplete="current-password" required></label>
-      <p class="modal-warning" id="login-error" hidden></p>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" type="button" data-close>Annuler</button>
-        <button class="btn btn-primary" type="submit">Se connecter</button>
-      </div>
-    </form>`);
-  setTimeout(() => $('#login-password', el).focus(), 60);
-  $('#login-form', el).addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = $('button[type="submit"]', el);
-    btn.disabled = true;
-    try {
-      await login($('#login-password', el).value);
-      close();
-      toast('🔓', 'Connecté', ' Tu peux modifier ta collection.');
-      then?.();
-    } catch (err) {
-      $('#login-error', el).textContent = err.status === 401 ? 'Mot de passe incorrect.' : err.message;
-      $('#login-error', el).hidden = false;
-      btn.disabled = false;
-    }
-  });
+    <p class="modal-lead">Asobi utilise ton compte Discord : aucun mot de passe à créer. Tes jeux restent privés tant que tu ne rends pas ton profil public.</p>
+    ${state.discordConfigured ? '' : '<p class="modal-warning">La connexion Discord n\'est pas encore configurée sur ce serveur.</p>'}
+    <p class="source-note" style="margin:0 0 18px">Asobi lit seulement ton pseudo, ton avatar et la liste des comptes de jeu reliés à Discord (Steam, Xbox, PlayStation…), pour te proposer de les importer.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" type="button" data-close>Annuler</button>
+      <button class="btn btn-primary btn-discord" type="button" id="discord-login"${state.discordConfigured ? '' : ' disabled'}>${providerLogo('discord', 'btn-logo')}Se connecter avec Discord</button>
+    </div>`);
+  $('#discord-login', el).addEventListener('click', () => login());
 }
 
-/** Exécute `fn` si l'on peut modifier, sinon demande la connexion d'abord. */
+/** Exécute `fn` si l'on peut modifier, sinon propose de se connecter. */
 export function requireEdit(fn) {
   if (state.canEdit) fn();
-  else openLogin({ then: fn });
+  else openLogin();
 }
 
 /* ---------- Ajout d'un jeu ---------- */
@@ -70,7 +58,7 @@ export function platformPicker(selected, available = []) {
  * `target` : 'collection' ou 'wishlist'.
  */
 export function openAdd({ query = '', pick = null, target = 'collection', platform = null } = {}) {
-  if (!state.canEdit) { openLogin({ then: () => openAdd({ query, pick, target, platform }) }); return; }
+  if (!state.canEdit) { openLogin(); return; }
 
   let chosen = pick;
   let dest = target;

@@ -1,0 +1,14 @@
+{
+  "name": "asobi-server",
+  "private": true,
+  "type": "module",
+  "description": "Serveur d'Asobi : site, API, comptes Discord et synchronisation des plateformes de jeu. Aucune dépendance.",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/*.test.js\"",
+    "import-legacy": "node --disable-warning=ExperimentalWarning scripts/import-legacy.mjs"
+  }
+}

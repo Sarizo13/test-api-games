@@ -1,0 +1,29 @@
+# Asobi sur le serveur : `docker compose up -d --build`, derrière nginx (deploy/nginx-asobi.conf).
+# Les secrets sont dans .env (jamais versionné, voir .env.example) ; la base et ses sauvegardes dans server/data.
+services:
+  asobi:
+    build: .
+    container_name: asobi
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8095
+      DATA_DIR: /data
+    volumes:
+      - ./server/data:/data
+    ports:
+      - "127.0.0.1:8095:8095"   # seulement nginx, sur la même machine, peut l'atteindre
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,8 +1,8 @@
 // Asobi : navigation (adresses en #/…), barre latérale, recherche du haut et chargement des données.
 
 import { platformMeta } from '../platforms.js';
-import { state, load, onChange, gameById, TEST } from './state.js';
-import { openAdd } from './add.js';
+import { state, load, onChange, gameById, TEST, PROFILE } from './state.js';
+import { openAdd, openLogin } from './add.js';
 import { gameLine } from './card.js';
 import { renderHome } from './views/home.js';
 import { renderConsoles, renderConsole, platformFromSlug, consoleHref } from './views/consoles.js';
@@ -10,8 +10,11 @@ import { renderGame } from './views/game.js';
 import { renderLists } from './views/lists.js';
 import { renderDiscover } from './views/discover.js';
 import { renderProfile } from './views/profile.js';
+import { renderAccounts } from './views/accounts.js';
+import { renderLanding } from './views/landing.js';
 import { emptyState, thumb } from './views/common.js';
-import { $, esc, norm, highlight, listbox, ICONS } from './util.js';
+import { providerLogo } from './brands.js';
+import { $, esc, safeUrl, norm, highlight, listbox, toast, ICONS } from './util.js';
 
 /* ---------- Pages ---------- */
 
@@ -24,6 +27,7 @@ const ROUTES = [
   { re: /^\/envies$/, nav: 'wish', title: 'Envies', live: true, render: (v) => renderLists(v, 'envies') },
   { re: /^\/decouvrir$/, nav: 'discover', title: 'Découvrir', render: (v) => renderDiscover(v) },
   { re: /^\/profil$/, nav: 'profile', title: 'Profil', render: (v) => renderProfile(v) },
+  { re: /^\/comptes$/, nav: 'profile', title: 'Comptes connectés', live: true, own: true, render: (v) => renderAccounts(v) },
 ];
 
 const NAV = [
@@ -35,7 +39,27 @@ const NAV = [
 ];
 const TABBAR = ['home', 'consoles', 'queue', 'discover', 'profile'];
 
-const path = () => decodeURI(location.hash.replace(/^#/, '')) || '/';
+// « #/comptes?steam=verifie » : la partie après « ? » porte un message de retour, pas la page
+const path = () => decodeURI(location.hash.replace(/^#/, '').split('?')[0]) || '/';
+
+/** Messages laissés dans l'adresse par le serveur après une redirection (connexion, vérification Steam…). */
+const NOTICES = {
+  'connexion=annulee': ['🚪', 'Connexion annulée', ' Tu peux réessayer quand tu veux.'],
+  'steam=verifie': ['✅', 'Compte Steam vérifié', ' Tu peux maintenant activer l\'import.'],
+  'steam=deja-pris': ['⚠️', 'Compte Steam déjà utilisé', ' Il est relié à un autre compte Asobi.'],
+  'steam=refuse': ['⚠️', 'Vérification Steam refusée', ' Recommence depuis cette page.'],
+};
+function showNotices() {
+  const [page, query] = location.hash.split('?');
+  if (!query) return;
+  const params = new URLSearchParams(query);
+  for (const [key, value] of params) {
+    if (key === 'erreur') toast('⚠️', 'Connexion impossible', ` ${value}`, 9000);
+    const notice = NOTICES[`${key}=${value}`];
+    if (notice) toast(...notice, 7000);
+  }
+  history.replaceState(null, '', `${location.pathname}${location.search}${page}`);
+}
 const match = () => {
   const p = path();
   for (const r of ROUTES) {
@@ -59,8 +83,13 @@ function render({ keepScroll = false } = {}) {
 
   const m = match();
   current = m;
+  const guest = state.loaded && !TEST && !PROFILE && !state.user;
   if (!state.loaded) {
     view.innerHTML = '<div class="shimmer" style="height:180px;border-radius:22px;margin:18px 0 26px"></div><div class="shimmer" style="height:420px;border-radius:22px"></div>';
+  } else if (guest) {
+    cleanup = renderLanding(view); // pas connecté : la présentation d'Asobi, quelle que soit la page demandée
+  } else if (m?.route.own && PROFILE) {
+    view.innerHTML = emptyState('🔒', 'Page privée', 'Cette page n\'existe que pour le propriétaire de la collection.', '<a class="btn btn-ghost" href="#/">Retour</a>');
   } else if (!m) {
     view.innerHTML = emptyState('🧭', 'Page introuvable', 'Cette adresse ne mène nulle part.', '<a class="btn btn-ghost" href="#/">Retour à l\'accueil</a>');
   } else {
@@ -79,6 +108,7 @@ function render({ keepScroll = false } = {}) {
 
 function renderChrome() {
   const active = current?.route.nav;
+  document.body.classList.toggle('is-readonly', Boolean(PROFILE));
   const count = (n) => {
     const c = n.count?.();
     return c ? `<span class="nav-count">${c}</span>` : '';
@@ -86,9 +116,16 @@ function renderChrome() {
   $('#nav').innerHTML = NAV.map((n) => `
     <a class="nav-link${n.id === active ? ' is-active' : ''}" href="${n.href}"${n.id === active ? ' aria-current="page"' : ''}>${n.icon}<span>${n.label}</span>${count(n)}</a>`).join('');
 
+  // Compte : avatar Discord une fois connecté, sinon « Se connecter »
   const account = $('#account-link');
   account.className = `nav-link${active === 'profile' ? ' is-active' : ''}`;
-  account.innerHTML = `${ICONS.user}<span>${esc(state.settings.name || 'Profil')}</span>${state.canEdit ? '' : `<span class="nav-count" title="Lecture seule">${ICONS.lock.replace('<svg', '<svg style="width:12px;vertical-align:-2px"')}</span>`}`;
+  const who = PROFILE ? state.owner : state.user;
+  const avatar = safeUrl(who?.avatarUrl) ? `<img class="nav-avatar" src="${esc(who.avatarUrl)}" alt="">` : ICONS.user;
+  if (TEST || who) {
+    account.innerHTML = `${TEST ? ICONS.user : avatar}<span>${esc(state.settings.name || who?.displayName || 'Profil')}</span>${state.canEdit ? '' : `<span class="nav-count" title="Lecture seule">${ICONS.lock.replace('<svg', '<svg style="width:12px;vertical-align:-2px"')}</span>`}`;
+  } else {
+    account.innerHTML = `${providerLogo('discord')}<span>Se connecter</span>`;
+  }
 
   const all = [...NAV, { id: 'profile', href: '#/profil', label: 'Profil', icon: ICONS.user }];
   $('#tabbar').innerHTML = TABBAR.map((id) => all.find((n) => n.id === id)).map((n) => `
@@ -175,6 +212,12 @@ function setupSearch() {
 
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-action="add"]')) openAdd();
+  // Pas connecté : le lien « Se connecter » de la barre latérale ouvre la connexion Discord
+  if (e.target.closest('#account-link') && state.loaded && !TEST && !PROFILE && !state.user) {
+    e.preventDefault();
+    openLogin();
+  }
+  if (e.target.closest('[data-reload]')) location.reload();
 });
 
 // Image cassée : le titre du jeu sur une carte, sinon l'image disparaît simplement
@@ -188,7 +231,7 @@ document.addEventListener('error', (e) => {
 }, true);
 
 addEventListener('scroll', () => $('.topbar').classList.toggle('is-scrolled', scrollY > 8), { passive: true });
-addEventListener('hashchange', () => render());
+addEventListener('hashchange', () => { showNotices(); render(); });
 
 onChange((e) => {
   const type = e.detail.type;
@@ -202,9 +245,18 @@ if (TEST) {
 }
 
 setupSearch();
+showNotices();
 render();
-load().catch((err) => {
+load().then(() => {
+  // Collection de quelqu'un d'autre : bandeau « lecture seule »
+  if (PROFILE && state.owner) {
+    document.body.insertAdjacentHTML('beforeend', `<div class="test-banner profile-banner">Collection de ${esc(state.owner.displayName ?? state.owner.username)} · lecture seule${state.user ? '' : ' · <a href="/">Crée la tienne</a>'}</div>`);
+  }
+}).catch((err) => {
   console.error(err);
-  $('#view').innerHTML = emptyState('📡', 'Impossible de charger ta collection', `Le serveur ne répond pas (${esc(err.message)}).`,
-    '<button class="btn btn-primary" type="button" onclick="location.reload()">Réessayer</button>');
+  const missing = PROFILE && err.status === 404;
+  $('#view').innerHTML = missing
+    ? emptyState('🔒', 'Profil introuvable ou privé', 'Cette collection n\'existe pas, ou son propriétaire ne l\'a pas rendue publique.', '<a class="btn btn-ghost" href="/">Aller sur Asobi</a>')
+    : emptyState('📡', 'Impossible de charger ta collection', `Le serveur ne répond pas (${esc(err.message)}).`,
+      '<button class="btn btn-primary" type="button" data-reload>Réessayer</button>');
 });
